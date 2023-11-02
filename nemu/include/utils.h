@@ -67,6 +67,51 @@ uint64_t get_time();
   } while (0) \
 )
 
+#define memory_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* memory_log_fp; \
+    extern bool memory_log_enable(); \
+    if (memory_log_enable()) { \
+      fprintf(memory_log_fp, __VA_ARGS__); \
+      fflush(memory_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define function_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* function_log_fp; \
+    extern bool function_log_enable(); \
+    if (function_log_enable()) { \
+      fprintf(function_log_fp, __VA_ARGS__); \
+      fflush(function_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define device_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* device_log_fp; \
+    extern bool device_log_enable(); \
+    if (device_log_enable()) { \
+      fprintf(device_log_fp, __VA_ARGS__); \
+      fflush(device_log_fp); \
+    } \
+  } while (0) \
+)
+
+#define exception_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* exception_log_fp; \
+    extern bool exception_log_enable(); \
+    if (exception_log_enable()) { \
+      fprintf(exception_log_fp, __VA_ARGS__); \
+      fflush(exception_log_fp); \
+    } \
+  } while (0) \
+)
+
+
 #define _Log(...) \
   do { \
     printf(__VA_ARGS__); \

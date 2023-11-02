@@ -18,6 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -30,14 +31,62 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+bool check_watchpoint();
+bool check_breakpoint(word_t pc);
+void ftrace_check_address(int, uint32_t, uint32_t);
+void sdb_mainloop();
+
 void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+#ifdef CONFIG_ITRACE
+  log_write("%s\n", _this->logbuf);
 #endif
+
+#ifdef CONFIG_FTRACE
+  char *p = _this->logbuf + 24; // inst start
+  uint32_t addr = dnpc; 
+  if(strncmp(p, "jal\t", 4) == 0){
+    // if(strncmp("zero", p+4, 4) == 0){
+    //   p = p + 12;
+    // }else{
+    //   p = p + 10;
+    // }
+    // sscanf(p, "%8X", &addr);
+    ftrace_check_address(0, _this->pc, addr);
+  }else if(strncmp(p, "jalr\t", 5) == 0){
+    // int type = 0;
+    // char rega[3] = {};
+    // bool success = false;
+    // if(strncmp("zero", p+5, 4) == 0){
+    //   while(p[0] != '(') { p++; }
+    //   p = p + 1;
+    //   type = 1;
+    // }else{
+    //   while(p[0] != '(') { p++; }
+    //   p = p + 1;
+    // }
+    // strncpy(rega, p, 2);
+    // addr = isa_reg_str2val(rega, &success);
+    // assert(success);
+    ftrace_check_address(1, _this->pc, addr);
+  }
+#endif
+
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+#ifdef CONFIG_WATCHPOINT
+  if(check_watchpoint()) { 
+    nemu_state.state = NEMU_STOP;
+    printf("reach watchpoint\n");
+    sdb_mainloop();
+  }
+  if(check_breakpoint(_this->pc)) { 
+    nemu_state.state = NEMU_STOP;
+    printf("reach breakpoint\n");
+    sdb_mainloop();
+  }
+#endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

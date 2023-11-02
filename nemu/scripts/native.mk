@@ -24,14 +24,14 @@ $(BINARY): compile_git
 
 # Some convenient rules
 
-override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
+override ARGS ?= --log=$(BUILD_DIR)/nemulog.txt --mlog=$(BUILD_DIR)/memory-nemu-log.txt --flog=$(BUILD_DIR)/function-nemu-log.txt --vlog=$(BUILD_DIR)/device-nemu-log.txt --xlog=$(BUILD_DIR)/exception-nemu-log.txt
 override ARGS += $(ARGS_DIFF)
 
 # Command to execute NEMU
 IMG ?=
 NEMU_EXEC := $(BINARY) $(ARGS) $(IMG)
 
-run-env: $(BINARY) $(DIFF_REF_SO)
+run-env: $(BINARY) $(DIFF_REF_SO) 
 
 run: run-env
 	$(call git_commit, "run NEMU")
@@ -39,6 +39,7 @@ run: run-env
 
 gdb: run-env
 	$(call git_commit, "gdb NEMU")
+	@echo $(BINARY)
 	gdb -s $(BINARY) --args $(NEMU_EXEC)
 
 clean-tools = $(dir $(shell find ./tools -maxdepth 2 -mindepth 2 -name "Makefile"))

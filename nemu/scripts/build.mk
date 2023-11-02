@@ -21,9 +21,9 @@ else
 CXX := g++
 endif
 LD := $(CXX)
-INCLUDES = $(addprefix -I, $(INC_PATH))
-CFLAGS  := -O2 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS)
-LDFLAGS := -O2 $(LDFLAGS)
+INCLUDES = $(addprefix -I, $(INC_PATH))  # 通过添加-I选项,使得include<>这种编译可被通过
+CFLAGS  := -O0 -MMD -Wall -Werror $(INCLUDES) $(CFLAGS) -g
+LDFLAGS := -O0 $(LDFLAGS)
 
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
@@ -49,9 +49,11 @@ $(OBJ_DIR)/%.o: %.cc
 
 app: $(BINARY)
 
+# LIBS = -lreadline -ldl -pie -lLLVM-14
 $(BINARY): $(OBJS) $(ARCHIVES)
 	@echo + LD $@
-	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)
+	@$(LD) -o $@ $(OBJS) $(LDFLAGS) $(ARCHIVES) $(LIBS)  
+	
 
 clean:
 	-rm -rf $(BUILD_DIR)

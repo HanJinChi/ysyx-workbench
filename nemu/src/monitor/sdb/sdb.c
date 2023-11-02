@@ -17,12 +17,14 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <memory/paddr.h>
 #include "sdb.h"
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+void init_bp_pool();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -47,9 +49,95 @@ static int cmd_c(char *args) {
   return 0;
 }
 
-
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
+}
+
+static int cmd_si(char *args){
+  int num;
+  if(args == NULL){
+    num = 1;
+  }
+  else{
+    num = atoi(args);
+  }
+  cpu_exec(num);
+  return 0;
+}
+
+static int cmd_info(char *args){
+  if(strcmp(args, "r") == 0){
+    isa_reg_display();
+  }
+  else if(strcmp(args, "w") == 0){
+    info_watchpoint();
+  }
+  else if(strcmp(args, "b") == 0){
+    info_breakpoint();
+  }
+  return 0;
+}
+
+static int cmd_x(char *args){
+  int N;
+  word_t value;
+  // extract first parameters 
+  char* args_0 = strtok(args, " ");
+  /* treat the remaining string as the arguments,
+  *  which may need further parsing
+  */
+  args = args_0 + strlen(args_0) + 1;
+  
+  // Convert a string to a number
+  bool success = false;
+  N = atoi(args_0); value = expr(args, &success); // TODO : EXPR
+  for(int i = 0; i < N/16; i++){
+    for(int j = 0; j<16; j++){
+      if(j == 0) 
+        printf("0x%-9x: ", value+16*i);
+      printf("%02x ", paddr_read(value+i*16+j,1));
+      if(j == 15)
+        printf("\n");
+    }
+  }
+  for(int j = 0; j < N%16; j++){
+    if(j == 0) 
+      printf("0x%-9x: ", value+16*(N/16));
+    printf("%02x ", paddr_read(value+16*(N/16)+j,1));
+    if(j == (N%16-1))
+      printf("\n");
+  }
+  return 0;
+}
+
+static int cmd_p(char *args){
+  bool success;
+  int val = expr(args, &success);
+  if(success) printf("%u\n", val);
+  return 0;
+}
+
+static int cmd_w(char* args){
+  store_watchpoint(args);
+  return 0;
+}
+
+static int cmd_b(char* args){
+  store_breakpoint(args);
+  return 0;
+}
+
+static int cmd_dw(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_watchpoint(n);
+  return 0;
+}
+
+static int cmd_db(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_breakpoint(n);
+  return 0;
 }
 
 static int cmd_help(char *args);
@@ -62,6 +150,14 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "Pause Nemu after running [N] instructions", cmd_si },
+  { "info", "Print relevant information", cmd_info },
+  { "x", "Scan Memory", cmd_x },
+  { "p", "Calculate the value of [expr]", cmd_p },
+  { "w", "watch the value of [expr]", cmd_w },
+  { "b", "set breakpoint", cmd_b },
+  { "dw", "delete all watchpoint", cmd_dw },
+  { "db", "delete all breakpoint", cmd_db },
 
   /* TODO: Add more commands */
 
@@ -140,4 +236,7 @@ void init_sdb() {
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();
+
+  /* Initialize the breakpoint pool. */
+  init_bp_pool();
 }
