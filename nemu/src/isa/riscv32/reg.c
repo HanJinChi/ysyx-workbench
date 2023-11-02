@@ -24,8 +24,28 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  printf("%-15s 0x%-15x %-15d\n", "pc", cpu.pc, cpu.pc);
+  printf("%-15s 0x%-15x %-15d\n", "mstatus", cpu.csr.mstatus, cpu.csr.mstatus);
+  printf("%-15s 0x%-15x %-15d\n", "mepc", cpu.csr.mepc, cpu.csr.mepc);
+  printf("%-15s 0x%-15x %-15d\n", "mcause", cpu.csr.mcause, cpu.csr.mcause);
+  printf("%-15s 0x%-15x %-15d\n", "mtvec", cpu.csr.mtvec, cpu.csr.mtvec);
+  for(int i = 0 ; i < sizeof(regs)/sizeof(regs[0]); i++){
+    printf("%-15s 0x%-15x %-15d\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
+  }
+
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  if(strcmp("pc", s) == 0){
+    *success = true;
+    return cpu.pc;
+  }
+  for(int i = 0 ; i < sizeof(regs)/sizeof(regs[0]); i++){
+    if(strcmp(regs[i], s) == 0){
+      *success = true;
+      return cpu.gpr[i];
+    }
+  }
+  *success = false;
   return 0;
 }
