@@ -118,6 +118,7 @@ void add_elf_array(const char *elf_file){
           strcpy(elf_array[count].name, symtab_str + symtab[j].st_name);
           elf_array[count].size = symtab[j].st_size;
           elf_array[count].value = symtab[j].st_value;
+          printf("name is %s, size is %d, value is 0x%x\n", elf_array[count].name, elf_array[count].size, elf_array[count].value);
           count++;
         }
       }
