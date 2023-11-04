@@ -2,12 +2,14 @@
 #include "syscall.h"
 #include "fs.h"
 #include <sys/time.h>
+#include <proc.h>
 
 extern int fs_open(const char *pathname, int flags, int mode);
 extern int fs_close(int fd);
 extern size_t fs_read(int fd, void *buf, size_t len);
 extern size_t fs_lseek(int fd, size_t offset, int whence);
 size_t fs_write(int fd, const void *buf, size_t len);
+extern void naive_uload(PCB *pcb, const char *filename);
 
 extern Finfo file_table[];
 
@@ -52,6 +54,10 @@ void do_syscall(Context *c) {
       val->tv_sec = time / 1000000;
       val->tv_usec = time % 1000000;
       c->GPRx = 0;
+      break;
+    case SYS_execve:
+      SYSCALL_Log("syscall execve, param0 is %s, param1 is %s, oaram is %s", a[1], a[2], a[3]);
+      naive_uload(NULL, (const char*)a[1]);
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
