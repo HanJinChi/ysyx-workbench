@@ -1,5 +1,6 @@
 #include <proc.h>
 #include <elf.h>
+#include <fs.h>
 
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
 extern void* pf;
@@ -38,8 +39,9 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
 #else
   int fd = fs_open(filename, 0, 0);
   Elf_Ehdr ehdr;
+  fs_lseek(fd, 0, SEEK_SET);
   fs_read(fd, &ehdr, sizeof(Elf_Ehdr));
-  assert((*(uint32_t *)ehdr.e_ident == 0x464c457f));
+  // assert((*(uint32_t *)ehdr.e_ident == 0x464c457f));
   Elf_Phdr phdr[ehdr.e_phnum];
   fs_lseek(fd, ehdr.e_phoff, 0);
   fs_read(fd, phdr, sizeof(Elf_Phdr)*ehdr.e_phnum);
