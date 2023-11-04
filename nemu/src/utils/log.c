@@ -83,9 +83,7 @@ void init_exception_log(const char* log_file){
   Log("Exception Log is written to %s", log_file ? log_file : "stdout");
 }
 
-
-
-void init_read_elf(const char* elf_file, char* elf_file_array){
+void add_elf_array(const char *elf_file){
   FILE *file = fopen(elf_file, "rb");
   Log("elf file is %s", elf_file);
   if (!file) {
@@ -128,15 +126,19 @@ void init_read_elf(const char* elf_file, char* elf_file_array){
     }
   }
   read = read + 1;
+}
 
+void init_read_elf(const char* elf_file, char* elf_file_array){
+  add_elf_array(elf_file);
   glob_t result;
   strcat(elf_file_array,"/*");
   glob(elf_file_array, 0, NULL, &result);
   for(int i = 0; i < result.gl_pathc; i++){
-    printf("%s\n", result.gl_pathv[i]);    
+    add_elf_array(result.gl_pathv[i]);
   }
   globfree(&result);
 }
+
 
 void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){
   char *ftrace_input = malloc(100000);
