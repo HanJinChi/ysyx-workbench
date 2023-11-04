@@ -130,9 +130,10 @@ void add_elf_array(const char *elf_file){
 
 void init_read_elf(const char* elf_file, char* elf_file_array){
   add_elf_array(elf_file);
+  Log("elf file array is %s\n", elf_file_array);
   if(elf_file_array){
     glob_t result;
-    strcat(elf_file_array,"/*");
+    strcat(elf_file_array, "/*");
     glob(elf_file_array, 0, NULL, &result);
     for(int i = 0; i < result.gl_pathc; i++){
       add_elf_array(result.gl_pathv[i]);
