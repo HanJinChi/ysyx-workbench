@@ -132,7 +132,7 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
   glob_t result;
   glob(elf_file_array, 0, NULL, &result);
   for(int i = 0; i < result.gl_pathc; i++){
-    printf("result.gl_pathv[i]");    
+    printf("%s\n", result.gl_pathv[i]);    
   }
   globfree(&result);
 }
