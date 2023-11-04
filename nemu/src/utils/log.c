@@ -85,7 +85,7 @@ void init_exception_log(const char* log_file){
 
 
 
-void init_read_elf(const char* elf_file, const char* elf_file_array){
+void init_read_elf(const char* elf_file, char* elf_file_array){
   FILE *file = fopen(elf_file, "rb");
   Log("elf file is %s", elf_file);
   if (!file) {
@@ -130,6 +130,7 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
   read = read + 1;
 
   glob_t result;
+  strcat(elf_file_array,"/*");
   glob(elf_file_array, 0, NULL, &result);
   for(int i = 0; i < result.gl_pathc; i++){
     printf("%s\n", result.gl_pathv[i]);    
