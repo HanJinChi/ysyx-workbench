@@ -185,6 +185,7 @@ void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){
     }
     function_log_write("%s\n", ftrace_input);
   }else{
+    printf("pc is 0x%x, address is 0x%x\n", pc, address);
     assert(0);
   }
   free(ftrace_input);
