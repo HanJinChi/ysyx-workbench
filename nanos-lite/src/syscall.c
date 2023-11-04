@@ -22,7 +22,10 @@ void do_syscall(Context *c) {
 
   switch (a[0]) {
     case SYS_yield: SYSCALL_Log("syscall yield"); yield(); c->GPRx = 0; ;break;
-    case SYS_exit: SYSCALL_Log("syscall exit, param0 is %d, param1 is %d", a[1], a[2]); halt(a[2]); break;
+    case SYS_exit: 
+      SYSCALL_Log("syscall exit, param0 is %d, param1 is %d", a[1], a[2]); 
+      naive_uload(NULL, "/bin/menu"); 
+      break;
     case SYS_write:
       SYSCALL_Log("syscall write, param0 is %s, param1 is 0x%x, param2 is %d", file_table[a[1]].name, a[2], a[3]);
       c->GPRx = fs_write(a[1], (const void*)a[2], a[3]);
