@@ -12,7 +12,7 @@
 //   gg - first page
 
 // number of slides
-const int N = 10;
+const int N = 17;
 // slides path pattern (starts from 0)
 const char *path = "/share/slides/slides-%d.bmp";
 
@@ -79,6 +79,8 @@ int main() {
             rep = 0; g = 0;
           }
           break;
+        case SDLK_Q:
+          return 0;
       }
     }
   }

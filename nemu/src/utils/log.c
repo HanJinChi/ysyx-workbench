@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include <elf.h>
+#include <glob.h>
 
 typedef struct{
   char name[100];
@@ -28,7 +29,7 @@ FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
 FILE *exception_log_fp = NULL;
-ELF32 elf_array[1000];
+ELF32 elf_array[10000];
 uint32_t count = 0;
 int32_t space_count = 0;
 
@@ -82,9 +83,9 @@ void init_exception_log(const char* log_file){
   Log("Exception Log is written to %s", log_file ? log_file : "stdout");
 }
 
-void init_read_elf(const char* elf_file){
-  FILE *file = fopen(elf_file, "rb");
+void add_elf_array(const char *elf_file){
   Log("elf file is %s", elf_file);
+  FILE *file = fopen(elf_file, "rb");
   if (!file) {
     perror("fopen");
     return;
@@ -124,9 +125,25 @@ void init_read_elf(const char* elf_file){
       free(symtab_str);
     }
   }
-
   read = read + 1;
 }
+
+void init_read_elf(const char* elf_file, const char* elf_file_array){
+  add_elf_array(elf_file);
+  Log("elf file array is %s", elf_file_array);
+  if(elf_file_array){
+    char copy_array[1000];
+    strcpy(copy_array, elf_file_array);
+    strcat(copy_array, "/*");
+    glob_t result;
+    glob(copy_array, 0, NULL, &result);
+    for(int i = 0; i < result.gl_pathc; i++){
+      add_elf_array(result.gl_pathv[i]);
+    }
+    globfree(&result);
+  }
+}
+
 
 void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){
   char *ftrace_input = malloc(100000);
@@ -173,6 +190,10 @@ void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){
     }
     function_log_write("%s\n", ftrace_input);
   }
+  // else{
+  //   printf("pc is 0x%x, address is 0x%x\n", pc, address);
+  //   assert(0);
+  // }
   free(ftrace_input);
 }
 
