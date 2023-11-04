@@ -130,13 +130,16 @@ void add_elf_array(const char *elf_file){
 
 void init_read_elf(const char* elf_file, char* elf_file_array){
   add_elf_array(elf_file);
-  glob_t result;
-  strcat(elf_file_array,"/*");
-  glob(elf_file_array, 0, NULL, &result);
-  for(int i = 0; i < result.gl_pathc; i++){
-    add_elf_array(result.gl_pathv[i]);
+  if(elf_file_array){
+    glob_t result;
+    strcat(elf_file_array,"/*");
+    glob(elf_file_array, 0, NULL, &result);
+    for(int i = 0; i < result.gl_pathc; i++){
+      add_elf_array(result.gl_pathv[i]);
+    }
+    globfree(&result);
   }
-  globfree(&result);
+
 }
 
 

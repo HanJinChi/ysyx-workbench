@@ -24,7 +24,7 @@ $(BINARY): compile_git
 
 # Some convenient rules
 
-override ARGS ?= --log=$(BUILD_DIR)/nemulog.txt --mlog=$(BUILD_DIR)/memory-nemu-log.txt --flog=$(BUILD_DIR)/function-nemu-log.txt --vlog=$(BUILD_DIR)/device-nemu-log.txt --xlog=$(BUILD_DIR)/exception-nemu-log.txt
+override ARGS ?= --log=$(BUILD_DIR)/nemulog.txt --mlog=$(BUILD_DIR)/memory-nemu-log.txt --flog=$(BUILD_DIR)/function-nemu-log.txt --vlog=$(BUILD_DIR)/device-nemu-log.txt --xlog=$(BUILD_DIR)/exception-nemu-log.txt -a 
 override ARGS += $(ARGS_DIFF)
 
 # Command to execute NEMU
