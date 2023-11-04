@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include <elf.h>
+#include <glob.h>
 
 typedef struct{
   char name[100];
@@ -82,7 +83,9 @@ void init_exception_log(const char* log_file){
   Log("Exception Log is written to %s", log_file ? log_file : "stdout");
 }
 
-void init_read_elf(const char* elf_file){
+
+
+void init_read_elf(const char* elf_file, const char* elf_file_array){
   FILE *file = fopen(elf_file, "rb");
   Log("elf file is %s", elf_file);
   if (!file) {
@@ -124,8 +127,14 @@ void init_read_elf(const char* elf_file){
       free(symtab_str);
     }
   }
-
   read = read + 1;
+
+  glob_t result;
+  glob(elf_file_array, 0, NULL, &result);
+  for(int i = 0; i < result.gl_pathc; i++){
+    printf("result.gl_pathv[i]");    
+  }
+  globfree(&result);
 }
 
 void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){

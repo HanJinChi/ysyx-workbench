@@ -61,7 +61,7 @@ static inline void get_fsimg_path(char *newpath, const char *path) {
   if (scancode == SDL_SCANCODE_##k) name = #k;
 
 static void update_screen() {
-  printf("disp_w is %d, disp_h is %d\n", disp_w, disp_h);
+  // printf("disp_w is %d, disp_h is %d\n", disp_w, disp_h);
   for(int i = 0 ; i < disp_w * disp_h; i++){
     fb[i] = i;
   }

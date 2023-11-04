@@ -166,12 +166,13 @@ $(CLEAN_ALL):
 .PHONY: clean-all $(CLEAN_ALL)
 
 ### Build fsimg and ramdisk for Nanos-lite
-APPS = nslider
+APPS = nslider menu nterm bird
 TESTS = dummy hello file-test timer-test event-test bmp-test 
 
 fsimg: $(addprefix apps/, $(APPS)) $(addprefix tests/, $(TESTS))
 	-for t in $^; do $(MAKE) -s -C $(NAVY_HOME)/$$t install; done
 
+# eval函数会查找fsimg目录下所有普通文件，并将文件名列表输出并赋值给变量FSIMG_FILES
 RAMDISK = build/ramdisk.img
 RAMDISK_H = build/ramdisk.h
 $(RAMDISK): fsimg

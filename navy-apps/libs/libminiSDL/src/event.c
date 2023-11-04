@@ -29,30 +29,15 @@ static int inline read_keyinfo(uint8_t *type, uint8_t *sym){
     return 0;
   }
 
-  #ifdef _DEBUG_
-    printf("%s\n", key_buf);
-  #endif
   //deal with key_action
-  key_action = key_buf;
-  int i;
-  for (i = 0; key_buf[i] != ' '; i++){}
-  key_buf[i] = '\0';
+  char keys[100], typeo[5]; 
+  int sym_sym;
+  sscanf(key_buf, "Got kbd: %s (%d) %s\n", keys, &sym_sym, typeo);
+  // printf("keys is %s, sym_sym is %d, type0 is %s\n", keys, sym_sym, typeo);
+  *sym = (uint8_t)sym_sym;
+  if(typeo[0] == 'U') *type = SDL_KEYUP;
+  else                *type = SDL_KEYDOWN;
 
-  //deal with key_key
-  key_key = &key_buf[i + 1]; 
-  for (i = 0;  key_key[i] != '\0' && key_key[i] != '\n'; i++){}
-  if (key_key[i] == '\n'){
-    key_key[i] = '\0';
-  }
-
-  //deal with paramaters
-  if (key_action[1] == 'd')   *type = SDL_KEYDOWN;
-  else                        *type = SDL_KEYUP;
-  for (i = 0; i < sizeof(keyname) / sizeof(char *); ++i){
-    if (key_key[0] == keyname[i][0] && strcmp(key_key, keyname[i]) == 0){
-      *sym = i;
-    }
-  }
   return 1;
 }
 
