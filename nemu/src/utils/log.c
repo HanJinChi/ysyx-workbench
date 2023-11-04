@@ -137,7 +137,7 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
     strcpy(copy_array, elf_file_array);
     strcat(copy_array, "/*");
     glob_t result;
-    glob(elf_file_array, 0, NULL, &result);
+    glob(copy_array, 0, NULL, &result);
     for(int i = 0; i < result.gl_pathc; i++){
       add_elf_array(result.gl_pathv[i]);
     }
