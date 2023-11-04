@@ -84,8 +84,8 @@ void init_exception_log(const char* log_file){
 }
 
 void add_elf_array(const char *elf_file){
-  FILE *file = fopen(elf_file, "rb");
   Log("elf file is %s", elf_file);
+  FILE *file = fopen(elf_file, "rb");
   if (!file) {
     perror("fopen");
     return;
@@ -130,7 +130,7 @@ void add_elf_array(const char *elf_file){
 
 void init_read_elf(const char* elf_file, char* elf_file_array){
   add_elf_array(elf_file);
-  Log("elf file array is %s\n", elf_file_array);
+  Log("elf file array is %s", elf_file_array);
   if(elf_file_array){
     glob_t result;
     strcat(elf_file_array, "/*");
