@@ -14,8 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
-
-
+#include <cpu/difftest.h>
 
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
@@ -24,8 +23,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   cpu.csr.mcause = NO;
   cpu.csr.mepc = epc;
 
-  extern bool is_skip_ref;
-  is_skip_ref = true;
+  difftest_skip_ref();
 
 #ifdef CONFIG_XTRACE
   exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", epc, NO);
