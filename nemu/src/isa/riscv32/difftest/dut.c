@@ -27,11 +27,11 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     return false;
   }
   if(ref_r->csr.mstatus != cpu.csr.mstatus){
-    // printf("pc is : 0x%8X\n", pc);
-    // printf("error reg name is : %s \n", "mstatus");
-    // printf("DUT mstatus value is : %x \n", cpu.csr.mstatus);
-    // printf("REF mstatus value is : %x \n", ref_r->csr.mstatus);
-    // return false;
+    printf("pc is : 0x%8X\n", pc);
+    printf("error reg name is : %s \n", "mstatus");
+    printf("DUT mstatus value is : %x \n", cpu.csr.mstatus);
+    printf("REF mstatus value is : %x \n", ref_r->csr.mstatus);
+    return false;
   }
   if(ref_r->csr.mepc != cpu.csr.mepc){
     printf("pc is : 0x%8X\n", pc);
@@ -41,10 +41,10 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     return false;
   }
   if( ref_r->csr.mcause != cpu.csr.mcause){
-    // printf("pc is : 0x%8X\n", pc);
-    // printf("error reg name is : %s \n", "mcause");
-    // printf("DUT mcause value is : %x \n", cpu.csr.mcause);
-    // printf("REF mcause value is : %x \n", ref_r->csr.mcause);
+    printf("pc is : 0x%8X\n", pc);
+    printf("error reg name is : %s \n", "mcause");
+    printf("DUT mcause value is : %x \n", cpu.csr.mcause);
+    printf("REF mcause value is : %x \n", ref_r->csr.mcause);
   }
   if(ref_r->csr.mtvec != cpu.csr.mtvec){
     printf("pc is : 0x%8X\n", pc);

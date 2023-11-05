@@ -58,6 +58,9 @@ case $1 in
   nvboard)
     init NJU-ProjectN/nvboard master nvboard false NVBOARD_HOME
     ;;
+  rt-thread-am)
+    init NJU-ProjectN/rt-thread-am master rt-thread-am false 
+    ;;
   npc-chisel)
     if [ -d npc/playground ]; then
       echo "chisel repo is already initialized, skipping..."
