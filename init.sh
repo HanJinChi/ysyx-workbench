@@ -59,7 +59,7 @@ case $1 in
     init NJU-ProjectN/nvboard master nvboard false NVBOARD_HOME
     ;;
   rt-thread-am)
-    init NJU-ProjectN/rt-thread-am master rt-thread-am false 
+    init NJU-ProjectN/rt-thread-am master rt-thread-am true
     ;;
   npc-chisel)
     if [ -d npc/playground ]; then
