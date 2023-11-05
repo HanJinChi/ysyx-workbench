@@ -142,6 +142,7 @@ module top(
                  (BOp == 3'b100) & (eResult == 32'h1)  |
                  (BOp == 3'b110) & (eResult == 32'h1)  |
                  (BOp == 3'b001) & (zero == 0)   ;
+  // Bop = 3'b010 代表着不是一条B指令
   assign pcOpActual = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
 
   // pc choose
