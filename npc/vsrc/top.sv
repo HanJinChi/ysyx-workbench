@@ -1,19 +1,21 @@
-`define YSYX_23060059_IMM  4'b0000
-`define YSYX_23060059_ADD  4'b0001
-`define YSYX_23060059_SUB  4'b0010
-`define YSYX_23060059_AND  4'b0011
-`define YSYX_23060059_XOR  4'b0100
-`define YSYX_23060059_OR   4'b0101
-`define YSYX_23060059_SL   4'b0110 // <<, unsigned
-`define YSYX_23060059_SR   4'b0111 // >>, unsigned 
-`define YSYX_23060059_DIV 4'b1000 // >=, unsigned
-`define YSYX_23060059_SSR  4'b1001 // >>, signed
-`define YSYX_23060059_SLES 4'b1010 // <, signed
-`define YSYX_23060059_ULES 4'b1011 // <, unsigned
-`define YSYX_23060059_REMU 4'b1100 // %, unsigned
-`define YSYX_23060059_MUL  4'b1101 // *, unsigned 
-`define YSYX_23060059_DIVU 4'b1110 // /, unsigned
-`define YSYX_23060059_REM  4'b1111 
+`define YSYX_23060059_IMM  5'b00000
+`define YSYX_23060059_ADD  5'b00001
+`define YSYX_23060059_SUB  5'b00010
+`define YSYX_23060059_AND  5'b00011
+`define YSYX_23060059_XOR  5'b00100
+`define YSYX_23060059_OR   5'b00101
+`define YSYX_23060059_SL   5'b00110 // <<, unsigned
+`define YSYX_23060059_SR   5'b00111 // >>, unsigned 
+`define YSYX_23060059_DIV  5'b01000 // >=, unsigned
+`define YSYX_23060059_SSR  5'b01001 // >>, signed
+`define YSYX_23060059_SLES 5'b01010 // <, signed
+`define YSYX_23060059_ULES 5'b01011 // <, unsigned
+`define YSYX_23060059_REMU 5'b01100 // %, unsigned
+`define YSYX_23060059_MUL  5'b01101 // *, unsigned 
+`define YSYX_23060059_DIVU 5'b01110 // /, unsigned
+`define YSYX_23060059_REM  5'b01111 
+`define YSYX_23060059_SRC  5'b10000 
+
 
 // define ALU TYPE
 import "DPI-C" function void end_sim (input int end_simluation);
@@ -34,7 +36,9 @@ module top(
   wire [31:0] inst;
   wire [4:0] rs1;
   wire [4:0] rs2;
+  wire [1:0] csr_rs;
   wire [4:0] rd;
+  wire [1:0] csr_rd;
   wire [31:0] imm;
   wire [1:0] pcOp;
   wire [1:0] pcOpActual;
@@ -44,7 +48,7 @@ module top(
   wire [1:0] wdOp;
   wire [31:0] src1;
   wire [31:0] src2;
-  wire [3:0] aluOp;
+  wire [4:0] aluOp;
   wire [2:0] BOp;
   wire Bjump;
   wire ren;
@@ -53,14 +57,17 @@ module top(
   wire [31:0] rmask;
   wire rwd_signed;
   wire rwEnable;
-
+  wire csrwEnable;
+  wire ecall;
 
   // Instruction Decode Unit
   idu id(
     .inst(inst),
     .rs1(rs1),
     .rs2(rs2),
+    .csr_rs(csr_rs),
     .rd(rd),
+    .csr_rd(csr_rd),
     .imm(imm),
     .pcOp(pcOp),
     .aluOp(aluOp),
@@ -74,27 +81,35 @@ module top(
     .rmask(rmask),
     .rwd_signed(rwd_signed),
     .rwEnable(rwEnable),
+    .csrwEnable(csrwEnable),
+    .ecall(ecall),
     .ebreak(end_simluation)
   );
 
   // Reg Array Unit
   wire [31:0] rsa;
   wire [31:0] rsb;
-  wire [31:0] rdd;
   wire [31:0] eResult;
   wire [31:0] wd;
-  reg [31:0] r_wd;
+  wire [31:0] csr_wd;
+  wire [31:0] csra;
+  reg [31:0]  r_wd;
   RegArray ra(
     .clk(clk),
     .rst(rst),
     .rs1(rs1),
     .rs2(rs2),
+    .csr_rs(csr_rs),
     .rd(rd)  ,
+    .csr_rd(csr_rd),
     .wd(wd)  ,
+    .csr_wd(csr_wd),
     .rwEnable(rwEnable),
+    .csrwEnable(csrwEnable),
+    .ecall(ecall),
     .rsa(rsa),
     .rsb(rsb),
-    .rdd(rdd)
+    .csra(csra)
   );
 
   // Exection Unit
@@ -130,10 +145,11 @@ module top(
   });
 
   // wd choose
-  MuxKeyWithDefault #(3, 2, 32) wdc (wd, wdOp, eResult, {
+  MuxKeyWithDefault #(4, 2, 32) wdc (wd, wdOp, eResult, {
     2'b00, eResult,
     2'b01, r_wdActual,
-    2'b10, pc+4
+    2'b10, pc+4,
+    2'b11, src2
   });
 
   assign Bjump = (BOp == 3'b111) & (eResult == 32'h0) | 
@@ -146,10 +162,11 @@ module top(
   assign pcOpActual = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
 
   // pc choose
-  MuxKeyWithDefault #(3, 2, 32) pcc (pc_next, pcOpActual, pc+4, {
+  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpActual, pc+4, {
     2'b00, pc+4,
     2'b01, pc+imm,
-    2'b10, eResult&(~1)
+    2'b10, eResult&(~1),
+    2'b11, src2
   });
 
   always@(posedge clk) begin
