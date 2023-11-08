@@ -81,6 +81,7 @@ module idu(
     32'h305, 2'b11    
   });
   assign csr_rs = (ecall == 1'b1) ? (2'b11) : ((mret == 1'b1) ? (2'b01) : csr_rsA); 
+  assign csr_rd = (ecall == 1'b1) ? (2'b01) : csr_rsA;
 
   assign rs1  = inst[19:15];
   assign rs2  = inst[24:20];

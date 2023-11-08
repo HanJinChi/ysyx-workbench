@@ -6,9 +6,17 @@
 void isa_reg_display();
 word_t isa_reg_str2val(const char *name, bool *success);
 
+typedef struct{
+  word_t mcause;
+  vaddr_t mepc;
+  word_t mstatus;
+  word_t mtvec;
+}riscv32_CPU_CSR;
+
 typedef struct {
-    word_t gpr[32];
-    vaddr_t pc;
+  word_t gpr[32];
+  riscv32_CPU_CSR csr;
+  vaddr_t pc;
 }CPU_state;
 
 
