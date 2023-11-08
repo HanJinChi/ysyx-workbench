@@ -70,7 +70,15 @@ module top(
 
   Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, 1); // assign pc value
 
-  // instructionruction Decode Unit
+  // instruction fetch Unit
+  ifu ifufetch(
+    .clk(clk),
+    .rst(rst),
+    .pc_next(pc_next),
+    .instruction(instruction)
+  );
+
+  // instruction Decode Unit
   idu id(
     .instruction(instruction),
     .rs1(rs1),
@@ -136,16 +144,16 @@ module top(
   );
 
   always @(*) begin
-    if(ren) n_pmem_read(exu_result, memory_read);
+    if(ren)    n_pmem_read(exu_result, memory_read);
     else       memory_read = 0;
-    if(wen) n_pmem_write(exu_result, rsb, wmask);
-    else n_pmem_write(exu_result, rsb, 0);
+    if(wen)    n_pmem_write(exu_result, rsb, wmask);
+    else       n_pmem_write(exu_result, rsb, 0);
   end
 
 
   MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
-    32'hff, memory_read_signed ? {{24{memory_read[7]}}, memory_read[7:0]} : memory_read & rmask,
-    32'hffff, memory_read_signed ? {{16{memory_read[15]}},memory_read[15:0]} : memory_read & rmask,
+    32'hff,       memory_read_signed ? {{24{memory_read[7]}} , memory_read[7:0]}  : memory_read & rmask,
+    32'hffff,     memory_read_signed ? {{16{memory_read[15]}}, memory_read[15:0]} : memory_read & rmask,
     32'hffffffff, memory_read
   });
 
@@ -184,11 +192,11 @@ module top(
     set_decode_inst(pc, instruction);
   end
 
-  always@(posedge clk) begin
-    if(!rst) begin
-      n_pmem_read(pc_next, instruction);
-    end
-  end
+  // always@(posedge clk) begin
+  //   if(!rst) begin
+  //     n_pmem_read(pc_next, instruction);
+  //   end
+  // end
 
 
 endmodule
