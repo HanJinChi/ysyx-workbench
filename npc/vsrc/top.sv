@@ -64,11 +64,16 @@ module top(
   wire   [31:0]         wd;
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
-  // reg    [31:0]         memory_read;
   wire   [31:0]         memory_read_wd;
+
+  // wire                  ifu_valid;
+  // wire                  ifu_ready;
+  // wire                  idu_valid;
+  // wire                  idu_ready;
 
 
   Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, 1); // assign pc value
+
 
   // instruction fetch Unit
   ifu ifufetch(
@@ -76,10 +81,16 @@ module top(
     .rst(rst),
     .pc_next(pc_next),
     .instruction(instruction)
+    // .ifu_ready(ifu_ready),
+    // .ifu_valid(ifu_valid)
   );
 
   // instruction Decode Unit
   idu id(
+    // .clk(clk),
+    // .rst(rst),
+    // .idu_valid(idu_valid),
+    // .idu_ready(idu_ready),
     .instruction(instruction),
     .rs1(rs1),
     .rs2(rs2),

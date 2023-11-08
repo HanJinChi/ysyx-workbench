@@ -10,7 +10,11 @@
 
 
 module idu(
+  // input             clk,
+  // input             rst,
+  // input             idu_ready,
   input    [31:0]   instruction,
+  // output            idu_valid,
   output   [4 :0]   rs1,
   output   [4 :0]   rs2,
   output   [1 :0]   csr_rs, 
@@ -34,6 +38,38 @@ module idu(
   output            ecall, 
   output            ebreak
 );
+
+  // reg idu_state;
+  // reg reg_idu_valid;
+  
+  // always@(posedge clk) begin
+  //   if(rst) begin
+  //     idu_state <= 0;
+  //     reg_idu_valid <= 0;
+  //   end
+  // end
+
+  // always@(idu_state or idu_valid or idu_ready) begin
+  //   case(idu_state)
+  //     0: begin // idle
+  //       if(idu_valid == 1)
+  //         idu_state = 1;
+  //     end
+  //     1: begin  // wait_ready
+  //       if(idu_ready == 1)
+  //         idu_state = 0;
+  //     end
+  //   endcase
+  // end
+
+  // always@(posedge clk) begin
+  //   if(!rst)
+  //     if(idu_state == 0) begin // idu idle
+  //       reg_idu_valid <= 1;
+  //     end 
+  // end
+
+  // assign idu_valid = reg_idu_valid;
 
   wire [2: 0] instruction_type;
   wire [31:0] immI, immU, immS, immJ, immB, immV;
