@@ -59,6 +59,7 @@ module top(
   wire rwEnable;
   wire csrwEnable;
   wire ecall;
+  wire csrwdOp;
 
   // Instruction Decode Unit
   idu id(
@@ -75,6 +76,7 @@ module top(
     .src2Op(src2Op),
     .BOp(BOp),
     .wdOp(wdOp),
+    .csrwdOp(csrwdOp),
     .ren(ren),
     .wen(wen),
     .wmask(wmask),
@@ -150,6 +152,11 @@ module top(
     2'b01, r_wdActual,
     2'b10, pc+4,
     2'b11, src2
+  });
+
+  MuxKeyWithDefault #(2, 1, 32) csrwdc (csr_wd, csrwdOp, eResult, {
+    1'b0, eResult,
+    1'b1, pc
   });
 
   assign Bjump = (BOp == 3'b111) & (eResult == 32'h0) | 

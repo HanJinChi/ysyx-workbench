@@ -22,6 +22,7 @@ module idu(
   output        src1Op        ,
   output        src2Op        ,
   output [ 1:0] wdOp          ,
+  output        csrwdOp       ,
   output [ 2:0] BOp           ,
   output        ren           ,
   output        wen           ,
@@ -235,6 +236,8 @@ module idu(
     10'b0011110011, 1'b1
   });
   assign csrwEnable = csrwEnableA | ecall; // csrrs | csrrw | ecall 
+
+  assign csrwdOp = ecall; // ecall : 1, csrwd choose pc, else choose eResult;
 
   // ren
   MuxKeyWithDefault #(1, 7, 1) idu_i11(ren, inst[6:0], 1'b0, {
