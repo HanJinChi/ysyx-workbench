@@ -226,7 +226,7 @@ module idu(
     10'b0101110011, 1'b1,
     10'b0011110011, 1'b1
   }); 
-  assign rwEnable = (inst[6:0] == 7'b1100111) ? rwEnableB : rwEnableA;
+  assign rwEnable = (inst[6:0] == 7'b1110011) ? rwEnableB : rwEnableA;
 
   wire csrwEnableA;
   // csrwEnableA
