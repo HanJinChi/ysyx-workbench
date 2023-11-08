@@ -62,6 +62,11 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 
 void copy_cpu_state(){
   for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__ra->__PVT__w_regarray_subsequent[i];
+  cpu.csr.mcause = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[0];
+  cpu.csr.mepc   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[1];
+  cpu.csr.mstatus   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[2];
+  cpu.csr.mtvec   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[3];
+
 }
 
 void trace_and_difftest(){

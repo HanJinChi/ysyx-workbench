@@ -18,9 +18,14 @@
 #include <difftest-def.h>
 #include <memory/paddr.h>
 
+
 struct difftest_npc {
   word_t gpr[32];
-  word_t pc;
+  word_t mcause;
+  vaddr_t mepc;
+  word_t mstatus;
+  word_t mtvec;
+  vaddr_t pc;
 };
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
@@ -34,11 +39,19 @@ __EXPORT void difftest_regcpy(void *dut, bool direction) {
     for(int i = 0; i < 32; i++){
       cpu.gpr[i] = npc->gpr[i];
     }
+    cpu.csr.mcause = npc->mcause;
+    cpu.csr.mepc = npc->mepc;
+    cpu.csr.mstatus = npc->mstatus;
+    cpu.csr.mtvec = npc->mtvec;
     cpu.pc = npc->pc;
   }else{
     for(int i = 0; i < 32; i++){
       npc->gpr[i] = cpu.gpr[i];
     }
+    npc->mcause = cpu.csr.mcause;
+    npc->mepc = cpu.csr.mepc;
+    npc->mstatus = cpu.csr.mstatus;
+    npc->mtvec = cpu.csr.mtvec;
     npc->pc = cpu.pc;
   }
 }
