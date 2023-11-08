@@ -35,7 +35,7 @@ void do_syscall(Context *c) {
       // SYSCALL_Log("syscall brk, param0 is 0x%x", a[1]);
       break;
     case SYS_close:
-      SYSCALL_Log("syscall close, param0 is %s", file_table[a[1]].name);
+      // SYSCALL_Log("syscall close, param0 is %s", file_table[a[1]].name);
       c->GPRx = fs_close(a[1]);
       break;
     case SYS_open:
