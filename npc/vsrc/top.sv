@@ -64,7 +64,7 @@ module top(
   wire   [31:0]         wd;
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
-  reg    [31:0]         memory_read;
+  // reg    [31:0]         memory_read;
   wire   [31:0]         memory_read_wd;
 
 
@@ -143,19 +143,16 @@ module top(
     .alu_result(exu_result)
   );
 
-  always @(*) begin
-    if(ren)    n_pmem_read(exu_result, memory_read);
-    else       memory_read = 0;
-    if(wen)    n_pmem_write(exu_result, rsb, wmask);
-    else       n_pmem_write(exu_result, rsb, 0);
-  end
-
-
-  MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
-    32'hff,       memory_read_signed ? {{24{memory_read[7]}} , memory_read[7:0]}  : memory_read & rmask,
-    32'hffff,     memory_read_signed ? {{16{memory_read[15]}}, memory_read[15:0]} : memory_read & rmask,
-    32'hffffffff, memory_read
-  });
+  meu me(
+    .ren(ren),
+    .wen(wen),
+    .memory_read_signed(memory_read_signed),
+    .rsb(rsb),
+    .wmask(wmask),
+    .rmask(rmask),
+    .exu_result(exu_result),
+    .memory_read_wd(memory_read_wd)
+  );
 
   // wd choose
   MuxKeyWithDefault #(4, 2, 32) wdc (wd, wdOp, exu_result, {
@@ -191,13 +188,6 @@ module top(
     end_sim({32{endflag}});
     set_decode_inst(pc, instruction);
   end
-
-  // always@(posedge clk) begin
-  //   if(!rst) begin
-  //     n_pmem_read(pc_next, instruction);
-  //   end
-  // end
-
 
 endmodule
 
