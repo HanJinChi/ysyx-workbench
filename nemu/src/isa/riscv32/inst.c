@@ -47,6 +47,7 @@ void csrrwrs(word_t dest, word_t src1, word_t imm, bool temp){
 		*ptr = t | src1;
 	}
 	gpr(dest) = t;
+  printf("imm is %d, dest is %d, src1 is 0x%x\n", imm, dest, src1);
 }
 
 #define src1R()  *src1 = Reg(rs1);
