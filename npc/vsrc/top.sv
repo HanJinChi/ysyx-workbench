@@ -173,7 +173,7 @@ module top(
     2'b00, pc+4,
     2'b01, pc+imm,
     2'b10, eResult&(~1),
-    2'b11, src2
+    2'b11, csra
   });
 
   always@(posedge clk) begin
