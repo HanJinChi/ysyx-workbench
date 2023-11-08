@@ -52,7 +52,7 @@ module RegArray(
 
   generate
     for(i = 1; i < 4; i = i+1) begin
-      assign w_csrarray_subsequent[i] = (csrwEnable == 1) ? ((csr_wd == i) ? csr_wd : w_csrarray_previous[i]) : w_csrarray_previous[i];
+      assign w_csrarray_subsequent[i] = (csrwEnable == 1) ? ((csr_rd == i) ? csr_wd : w_csrarray_previous[i]) : w_csrarray_previous[i];
     end
   endgenerate
 
