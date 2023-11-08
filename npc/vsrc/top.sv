@@ -43,7 +43,7 @@ module top(
   wire [1:0] pcOp;
   wire [1:0] pcOpActual;
   wire src1Op;
-  wire src2Op;
+  wire [1:0] src2Op;
   wire zero;
   wire [1:0] wdOp;
   wire [31:0] src1;
@@ -120,9 +120,10 @@ module top(
     1'b1, pc
   });
 
-  MuxKeyWithDefault #(2, 1, 32) exsrc2(src2, src2Op, rsb, {
-    1'b0, rsb,
-    1'b1, imm
+  MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
+    2'b00, rsb,
+    2'b01, imm,
+    2'b10, csra
   });  
   exu ex(
     .src1(src1),

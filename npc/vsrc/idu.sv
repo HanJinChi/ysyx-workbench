@@ -20,7 +20,7 @@ module idu(
   output [ 1:0] pcOp          ,
   output [ 4:0] aluOp         ,
   output        src1Op        ,
-  output        src2Op        ,
+  output [ 1:0] src2Op        ,
   output [ 1:0] wdOp          ,
   output        csrwdOp       ,
   output [ 2:0] BOp           ,
@@ -193,12 +193,13 @@ module idu(
   });
 
   // src2Op
-  MuxKeyWithDefault #(5, 7, 1) idu_i8 (src2Op, inst[6:0], 1'b0, {
-    7'b0010111, 1'b1,
-    7'b0110111, 1'b1,
-    7'b0000011, 1'b1,
-    7'b0010011, 1'b1,
-    7'b0100011, 1'b1
+  MuxKeyWithDefault #(6, 7, 2) idu_i8 (src2Op, inst[6:0], 2'b00, {
+    7'b0010111, 2'b01,
+    7'b0110111, 2'b01,
+    7'b0000011, 2'b01,
+    7'b0010011, 2'b01,
+    7'b0100011, 2'b01,
+    7'b1110011, 2'b10
   });
 
   // wdOpA
