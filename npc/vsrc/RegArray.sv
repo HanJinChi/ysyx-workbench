@@ -33,6 +33,12 @@ module RegArray(
   endgenerate
 
   generate
+      for(i = 0; i < 4; i = i+1) begin
+        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], 1);
+      end
+  endgenerate
+
+  generate
     for(i = 0; i < 32; i = i+1) begin
       assign w_regarray_previous[i] = regarray[i];
     end
