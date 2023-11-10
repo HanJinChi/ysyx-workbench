@@ -1,6 +1,7 @@
-module RegArray(
+module wbu(
     input           clk,
     input           rst,
+    // input           wbu_valid,
     input   [4 :0]  rs1,
     input   [4 :0]  rs2,
     input   [1 :0]  csr_rs, // read csr reg

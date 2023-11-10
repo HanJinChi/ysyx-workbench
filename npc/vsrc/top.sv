@@ -65,12 +65,8 @@ module top(
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
-
-  // wire                  ifu_valid;
-  // wire                  ifu_ready;
   // wire                  idu_valid;
-  // wire                  idu_ready;
-
+  // wire                  wbu_valid;
 
   Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, 1); // assign pc value
 
@@ -80,18 +76,14 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
+    // .idu_valid(idu_valid),
     .instruction(instruction)
-    // .ifu_ready(ifu_ready),
-    // .ifu_valid(ifu_valid)
   );
 
   // instruction Decode Unit
   idu id(
-    // .clk(clk),
-    // .rst(rst),
-    // .idu_valid(idu_valid),
-    // .idu_ready(idu_ready),
     .instruction(instruction),
+    // .idu_valid(idu_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -117,9 +109,10 @@ module top(
   );
 
   // Reg Array Unit
-  RegArray ra(
+  wbu wb(
     .clk(clk),
     .rst(rst),
+    // .wbu_valid(wbu_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -154,7 +147,9 @@ module top(
     .alu_result(exu_result)
   );
 
-  meu me(
+  lsu ls(
+    .clk(clk),
+    .rst(rst),
     .ren(ren),
     .wen(wen),
     .memory_read_signed(memory_read_signed),
@@ -162,6 +157,7 @@ module top(
     .wmask(wmask),
     .rmask(rmask),
     .exu_result(exu_result),
+    // .wbu_valid(wbu_valid),
     .memory_read_wd(memory_read_wd)
   );
 
