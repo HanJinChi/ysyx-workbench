@@ -48,7 +48,10 @@ module sram(
   end
 
   always @(*) begin
-    if(ren) n_pmem_read(addr, reg_data);    
+    if(ren) begin
+      $display("ren is %d, addr is 0x%x", ren, addr);
+      n_pmem_read(addr, reg_data);  
+    end  
     else    reg_data = 32'h0;
     if(wen) n_pmem_write(addr, wdata, wmask);
     else    n_pmem_write(addr, wdata, 0);
