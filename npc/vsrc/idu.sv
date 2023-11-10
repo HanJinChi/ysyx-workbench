@@ -10,9 +10,8 @@
 
 
 module idu(
-  // input    [31:0]   ifu_instruction,
-  input    [31:0]   instruction,
-  // input             idu_valid,
+  input    [31:0]   ifu_instruction,
+  input             idu_valid,
   output   [4 :0]   rs1,
   output   [4 :0]   rs2,
   output   [1 :0]   csr_rs, 
@@ -39,12 +38,11 @@ module idu(
 
 
   wire [2: 0] instruction_type;
-  // wire [31:0] instruction;
+  wire [31:0] instruction;
   wire [31:0] immI, immU, immS, immJ, immB, immV;
   wire [31:0] immJa, immJb;
 
-  // assign instruction = (idu_valid == 1) ? 32'h0 : ifu_instruction;
-  // assign instruction = ifu_instruction;
+  assign instruction = (idu_valid == 1) ? 32'h0 : ifu_instruction;
 
   MuxKeyWithDefault #(10, 7, 3) idu_i0 (instruction_type, instruction[6:0], 3'b0, {
     7'b0010111, `YSYX_23060059_TYPE_U,

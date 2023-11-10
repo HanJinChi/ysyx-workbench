@@ -65,10 +65,10 @@ module top(
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
-  // wire                  idu_valid;
-  // wire                  wbu_valid;
+  wire                  idu_valid;
+  wire                  wbu_valid;
 
-  Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, 1); // assign pc value
+  Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, wbu_valid); // assign pc value
 
 
   // instruction fetch Unit
@@ -76,14 +76,14 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
-    // .idu_valid(idu_valid),
+    .idu_valid(idu_valid),
     .instruction(instruction)
   );
 
   // instruction Decode Unit
   idu id(
-    .instruction(instruction),
-    // .idu_valid(idu_valid),
+    .ifu_instruction(instruction),
+    .idu_valid(idu_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -112,7 +112,7 @@ module top(
   wbu wb(
     .clk(clk),
     .rst(rst),
-    // .wbu_valid(wbu_valid),
+    .wbu_valid(wbu_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -157,7 +157,7 @@ module top(
     .wmask(wmask),
     .rmask(rmask),
     .exu_result(exu_result),
-    // .wbu_valid(wbu_valid),
+    .wbu_valid(wbu_valid),
     .memory_read_wd(memory_read_wd)
   );
 

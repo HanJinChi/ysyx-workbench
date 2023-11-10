@@ -8,22 +8,22 @@ module lsu (
     input   [7 :0]        wmask,
     input   [31:0]        rmask,
     input   [31:0]        exu_result,
-    // output                wbu_valid,
+    output                wbu_valid,
     output  [31:0]        memory_read_wd
 );
   
   reg  [31:0]     data;
   wire            sram_valid;
   sram srb(
-    // .clk(clk),
-    // .rst(rst),
+    .clk(clk),
+    .rst(rst),
     .ren(ren),
     .wen(wen),
     .wmask(wmask),
     .addr(exu_result),
     .wdata(rsb),
-    .data(data)
-    // .sram_valid(sram_valid)
+    .data(data),
+    .sram_valid(sram_valid)
   );
 
   MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
@@ -33,6 +33,6 @@ module lsu (
   });
 
   
-  // assign wbu_valid = (ren == 1) ? (sram_valid) : 1; // 只有取值命令才需要等待sram返回值
+  assign wbu_valid = (ren == 1) ? (sram_valid) : 1; // 只有取值命令才需要等待sram返回值
     
 endmodule
