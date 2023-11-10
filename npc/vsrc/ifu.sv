@@ -33,6 +33,7 @@ module ifu(
   assign wen = 1'b0; // 写不使能
   assign wmask = 8'b0;
   assign wdata = 32'h0;
+  assign ren = 1'b1;
   // assign idu_valid = sram_valid;
 
   // always@(posedge clk) begin
