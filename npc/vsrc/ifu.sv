@@ -1,7 +1,7 @@
 module ifu(
     input                 clk,
     input                 rst,
-    input      [31:0]     pc_next,
+    input      [31:0]     pc,
     output                ifu_send_valid,
     output  reg   [31:0]  instruction
 );
@@ -38,7 +38,7 @@ module ifu(
 
   always@(posedge clk) begin
     if(!rst) begin
-      reg_pc_next <= pc_next;  
+      reg_pc_next <= pc;  
       reg_ren <= 1;
     end
     else begin

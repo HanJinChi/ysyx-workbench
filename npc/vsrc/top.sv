@@ -75,7 +75,7 @@ module top(
   ifu ifufetch(
     .clk(clk),
     .rst(rst),
-    .pc_next(pc_next),
+    .pc(pc),
     .ifu_send_valid(ifu_send_valid),
     .instruction(instruction)
   );
