@@ -15,11 +15,13 @@ module lsu (
   
   reg  [31:0]     data;
   wire            sram_valid;
+  wire            sram_ren;
+  wire            sram_wen;
   sram srb(
     .clk(clk),
     .rst(rst),
-    .ren(ren),
-    .wen(wen),
+    .ren(sram_ren),
+    .wen(sram_wen),
     .wmask(wmask),
     .addr(exu_result),
     .wdata(rsb),
@@ -35,5 +37,7 @@ module lsu (
 
   
   assign lsu_send_valid = (lsu_receive_valid == 1) ? ((ren == 1) ? (sram_valid) : 1) : 0; // 只有取值命令才需要等待sram返回值
+  assign sram_ren = (lsu_receive_valid == 1) ? ren : 0;
+  assign sram_wen = (lsu_receive_valid == 1) ? wen : 0;
     
 endmodule
