@@ -2,7 +2,7 @@ module ifu(
     input                 clk,
     input                 rst,
     input      [31:0]     pc_next,
-    output                idu_valid,
+    output                ifu_send_valid,
     output  reg   [31:0]  instruction
 );
 
@@ -33,7 +33,7 @@ module ifu(
   assign wmask = 8'b0;
   assign wdata = 32'h0;
   assign ren = reg_ren;
-  assign idu_valid = sram_valid;
+  assign ifu_send_valid = sram_valid;
   assign sram_addr = (reg_pc_next == 32'h0) ? 32'h80000000 : reg_pc_next;
 
   always@(posedge clk) begin

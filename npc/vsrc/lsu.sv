@@ -1,6 +1,7 @@
 module lsu (
     input                 clk,
     input                 rst,
+    input                 lsu_receive_valid,
     input                 ren,
     input                 wen,
     input                 memory_read_signed,
@@ -8,7 +9,7 @@ module lsu (
     input   [7 :0]        wmask,
     input   [31:0]        rmask,
     input   [31:0]        exu_result,
-    output                wbu_valid,
+    output                lsu_send_valid,
     output  [31:0]        memory_read_wd
 );
   
@@ -33,6 +34,6 @@ module lsu (
   });
 
   
-  assign wbu_valid = (ren == 1) ? (sram_valid) : 1; // 只有取值命令才需要等待sram返回值
+  assign lsu_send_valid = (lsu_receive_valid == 1) ? ((ren == 1) ? (sram_valid) : 1) : 0; // 只有取值命令才需要等待sram返回值
     
 endmodule
