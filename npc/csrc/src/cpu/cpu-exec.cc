@@ -162,8 +162,12 @@ void step_and_dump_wave(){ // 执行一次函数是半个周期
 
 void exec_once(){
   // 执行两个周期是一条指令
-  step_and_dump_wave();
-  step_and_dump_wave(); 
+  while(true){
+    step_and_dump_wave();
+    step_and_dump_wave();
+    if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
+  }
+
   cpu.pc = top->pc_next;
   copy_cpu_state();
 
