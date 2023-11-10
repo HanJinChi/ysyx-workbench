@@ -68,7 +68,7 @@ module top(
   wire                  ifu_send_valid;
   wire                  lsu_send_valid;
 
-  Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, lsu_send_valid); // assign pc value
+  Reg #(32, 32'h80000000) regd(clk, rst, pc_next, pc, lsu_send_valid); // assign pc value
 
 
   // instruction fetch Unit
