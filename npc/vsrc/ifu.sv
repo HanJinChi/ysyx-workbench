@@ -12,7 +12,7 @@ module ifu(
   // wire   [7: 0]      wmask;
   // wire   [31:0]      wdata;
   // wire               sram_valid;   
-  // reg    [31:0]      reg_pc_next;
+  reg    [31:0]      reg_pc_next;
 
 
   // Reg #(32, 32'h80000000) regdx(clk, rst, pc_next, reg_pc_next, 1); // assign pc value
@@ -37,9 +37,12 @@ module ifu(
   // assign idu_valid = sram_valid;
 
   always@(posedge clk) begin
-    if(!rst) begin
-      n_pmem_read(pc_next, instruction);
-    end
+    if(!rst) reg_pc_next <= pc_next;  
+    else     reg_pc_next <= 32'h80000000;
+  end
+
+  always@(*) begin
+    n_pmem_read(reg_pc_next, instruction);
   end 
 
 endmodule
