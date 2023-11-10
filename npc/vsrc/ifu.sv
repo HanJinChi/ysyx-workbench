@@ -3,7 +3,7 @@ module ifu(
     input                 rst,
     input      [31:0]     pc_next,
     // output                idu_valid,
-    output     [31:0]     instruction
+    output  reg   [31:0]  instruction
 );
 
   // wire   [31:0]      data;
@@ -42,7 +42,10 @@ module ifu(
   end
 
   always@(*) begin
-    n_pmem_read(reg_pc_next, instruction);
+    if(reg_pc_next != 0)
+      n_pmem_read(reg_pc_next, instruction);
+    else
+      instruction = 0;
   end 
 
 endmodule
