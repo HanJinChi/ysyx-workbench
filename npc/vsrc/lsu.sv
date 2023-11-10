@@ -12,7 +12,7 @@ module lsu (
     output  [31:0]        memory_read_wd
 );
   
-  reg  [31:0]    data;
+  reg  [31:0]     data;
   wire            sram_valid;
   // sram srb(
   //   // .clk(clk),

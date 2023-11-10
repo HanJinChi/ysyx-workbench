@@ -48,7 +48,10 @@ module sram(
 //   end
 
   always @(*) begin
-    if(ren) n_pmem_read(addr, reg_data);
+    if(ren) begin
+      if(addr != 0) n_pmem_read(addr, reg_data);    // 未来要把这个判断删掉
+      else          reg_data = 0;
+    end
     else    reg_data = 32'h0;
     if(wen) n_pmem_write(addr, wdata, wmask);
     else    n_pmem_write(addr, wdata, 0);
