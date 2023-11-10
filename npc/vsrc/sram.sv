@@ -54,7 +54,7 @@ module sram(
     else    n_pmem_write(addr, wdata, 0);
   end
 
-//   assign sram_valid = reg_valid;
+  assign sram_valid = reg_valid;
   assign data = reg_data;
 
 endmodule
