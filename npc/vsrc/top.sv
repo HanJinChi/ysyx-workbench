@@ -1,20 +1,21 @@
-`define YSYX_23060059_IMM  5'b00000
-`define YSYX_23060059_ADD  5'b00001
-`define YSYX_23060059_SUB  5'b00010
-`define YSYX_23060059_AND  5'b00011
-`define YSYX_23060059_XOR  5'b00100
-`define YSYX_23060059_OR   5'b00101
-`define YSYX_23060059_SL   5'b00110 // <<, unsigned
-`define YSYX_23060059_SR   5'b00111 // >>, unsigned 
-`define YSYX_23060059_DIV  5'b01000 // >=, unsigned
-`define YSYX_23060059_SSR  5'b01001 // >>, signed
-`define YSYX_23060059_SLES 5'b01010 // <, signed
-`define YSYX_23060059_ULES 5'b01011 // <, unsigned
-`define YSYX_23060059_REMU 5'b01100 // %, unsigned
-`define YSYX_23060059_MUL  5'b01101 // *, unsigned 
-`define YSYX_23060059_DIVU 5'b01110 // /, unsigned
-`define YSYX_23060059_REM  5'b01111 
-`define YSYX_23060059_SRC  5'b10000 
+`define YSYX_23060059_IMM   5'b00000
+`define YSYX_23060059_ADD   5'b00001
+`define YSYX_23060059_SUB   5'b00010
+`define YSYX_23060059_AND   5'b00011
+`define YSYX_23060059_XOR   5'b00100
+`define YSYX_23060059_OR    5'b00101
+`define YSYX_23060059_SL    5'b00110 // <<, unsigned
+`define YSYX_23060059_SR    5'b00111 // >>, unsigned 
+`define YSYX_23060059_DIV   5'b01000 // >=, unsigned
+`define YSYX_23060059_SSR   5'b01001 // >>, signed
+`define YSYX_23060059_SLES  5'b01010 // <, signed
+`define YSYX_23060059_ULES  5'b01011 // <, unsigned
+`define YSYX_23060059_REMU  5'b01100 // %, unsigned
+`define YSYX_23060059_MUL   5'b01101 // *, unsigned 
+`define YSYX_23060059_DIVU  5'b01110 // /, unsigned
+`define YSYX_23060059_REM   5'b01111 
+`define YSYX_23060059_SRC   5'b10000 
+`define YSYS_23060059_MULHU 5'b10001 // *, unsigned, mulhu
 
 
 // define ALU TYPE
@@ -65,14 +66,11 @@ module top(
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
+  wire                  ifu_send_valid;
+  wire                  lsu_send_valid;
+  wire                  ifu_receive_valid;
 
-  // wire                  ifu_valid;
-  // wire                  ifu_ready;
-  // wire                  idu_valid;
-  // wire                  idu_ready;
-
-
-  Reg #(32, 32'h80000000-32'h4) regd(clk, rst, pc_next, pc, 1); // assign pc value
+  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
 
 
   // instruction fetch Unit
@@ -80,18 +78,15 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
+    .ifu_receive_valid(ifu_receive_valid),
+    .ifu_send_valid(ifu_send_valid),
     .instruction(instruction)
-    // .ifu_ready(ifu_ready),
-    // .ifu_valid(ifu_valid)
   );
 
   // instruction Decode Unit
   idu id(
-    // .clk(clk),
-    // .rst(rst),
-    // .idu_valid(idu_valid),
-    // .idu_ready(idu_ready),
     .instruction(instruction),
+    .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -117,9 +112,10 @@ module top(
   );
 
   // Reg Array Unit
-  RegArray ra(
+  wbu wb(
     .clk(clk),
     .rst(rst),
+    .wbu_receive_valid(lsu_send_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
@@ -154,7 +150,10 @@ module top(
     .alu_result(exu_result)
   );
 
-  meu me(
+  lsu ls(
+    .clk(clk),
+    .rst(rst),
+    .lsu_receive_valid(ifu_send_valid),
     .ren(ren),
     .wen(wen),
     .memory_read_signed(memory_read_signed),
@@ -162,6 +161,7 @@ module top(
     .wmask(wmask),
     .rmask(rmask),
     .exu_result(exu_result),
+    .lsu_send_valid(lsu_send_valid),
     .memory_read_wd(memory_read_wd)
   );
 
@@ -195,7 +195,9 @@ module top(
     2'b11, csra
   });
 
-  always@(posedge clk) begin
+  assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : lsu_send_valid;
+
+  always@(*) begin
     end_sim({32{endflag}});
     set_decode_inst(pc, instruction);
   end

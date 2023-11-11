@@ -11,6 +11,8 @@ void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 
+extern void cpu_exit();
+
 static bool is_skip_ref = false;
 // static int skip_dut_nr_inst = 0;
 
@@ -50,6 +52,7 @@ static void checkregs(CPU_state *ref, vaddr_t pc) {
     npc_state.state = NPC_ABORT;
     npc_state.halt_pc = pc;
     isa_reg_display();
+    // cpu_exit();
   }
 }
 

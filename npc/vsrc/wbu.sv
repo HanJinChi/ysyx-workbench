@@ -1,6 +1,7 @@
-module RegArray(
+module wbu(
     input           clk,
     input           rst,
+    input           wbu_receive_valid,
     input   [4 :0]  rs1,
     input   [4 :0]  rs2,
     input   [1 :0]  csr_rs, // read csr reg
@@ -28,13 +29,13 @@ module RegArray(
   genvar i;
   generate
       for(i = 0; i < 32; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_regarray_subsequent[i], regarray[i], 1);
+        Reg #(32, 32'b0) regx(clk, rst, w_regarray_subsequent[i], regarray[i], wbu_receive_valid);
       end
   endgenerate
 
   generate
       for(i = 0; i < 4; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], 1);
+        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], wbu_receive_valid);
       end
   endgenerate
 

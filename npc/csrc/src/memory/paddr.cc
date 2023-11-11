@@ -8,6 +8,7 @@ extern CPU_state cpu;
 
 static uint8_t pmem[MSIZE] = {};
 
+extern void cpu_exit();
 
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + MBASE; }

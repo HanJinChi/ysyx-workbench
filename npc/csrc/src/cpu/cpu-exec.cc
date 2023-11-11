@@ -61,11 +61,11 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 }
 
 void copy_cpu_state(){
-  for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__ra->__PVT__w_regarray_subsequent[i];
-  cpu.csr.mcause = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[0];
-  cpu.csr.mepc   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[1];
-  cpu.csr.mstatus   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[2];
-  cpu.csr.mtvec   = top->__PVT__top->__PVT__ra->__PVT__w_csrarray_subsequent[3];
+  for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__wb->__PVT__w_regarray_subsequent[i];
+  cpu.csr.mcause = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[0];
+  cpu.csr.mepc   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[1];
+  cpu.csr.mstatus   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[2];
+  cpu.csr.mtvec   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[3];
 
 }
 
@@ -75,31 +75,13 @@ void trace_and_difftest(){
   #endif
 
   #ifdef CONFIG_FTRACE
-    char *p = s.logbuf + 24; // inst start
-    uint32_t addr = 0; 
-    if(strncmp(p, "jal\t", 4) == 0){
-      if(strncmp("zero", p+4, 4) == 0){
-        p = p + 12;
-      }else{
-        p = p + 10;
-      }
-      sscanf(p, "%8X", &addr);
-      ftrace_check_address(0, s.pc, addr);
-    }else if(strncmp(p, "jalr\t", 5) == 0){
-      int type = 0;
-      char rega[3] = {};
-      bool success = false;
-      if(strncmp("zero", p+5, 4) == 0){
-        p = p + 13;
-        type = 1;
-      }else{
-        p = p + 11;
-      }
-      strncpy(rega, p, 2);
-      addr = isa_reg_str2val(rega, &success);
-      assert(success);
-      ftrace_check_address(type, s.pc, addr);
-    }
+  char *p = s.logbuf + 24; // inst start
+  uint32_t addr = s.dnpc; 
+  if(strncmp(p, "jal\t", 4) == 0){
+    ftrace_check_address(0, s.pc, addr);
+  }else if(strncmp(p, "jalr\t", 5) == 0){
+    ftrace_check_address(1, s.pc, addr);
+  }
   #endif
 
   #ifdef CONFIG_DIFFTEST
@@ -162,8 +144,12 @@ void step_and_dump_wave(){ // 执行一次函数是半个周期
 
 void exec_once(){
   // 执行两个周期是一条指令
-  step_and_dump_wave();
-  step_and_dump_wave(); 
+  while(true){
+    step_and_dump_wave();
+    step_and_dump_wave();
+    if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
+  } 
+
   cpu.pc = top->pc_next;
   copy_cpu_state();
 

@@ -1,6 +1,8 @@
 
 #include <common.h>
 #include <elf.h>
+#include <glob.h>
+
 
 typedef struct{
   char name[100];
@@ -57,9 +59,9 @@ void init_device_log(const char *log_file){
   Log("Device Log is written to %s", log_file ? log_file : "stdout");
 }
 
-void init_read_elf(const char* elf_file){
-  FILE *file = fopen(elf_file, "rb");
+void add_elf_array(const char *elf_file){
   Log("elf file is %s", elf_file);
+  FILE *file = fopen(elf_file, "rb");
   if (!file) {
     perror("fopen");
     return;
@@ -99,45 +101,75 @@ void init_read_elf(const char* elf_file){
       free(symtab_str);
     }
   }
-
   read = read + 1;
 }
 
+void init_read_elf(const char* elf_file, const char* elf_file_array){
+  add_elf_array(elf_file);
+  Log("elf file array is %s", elf_file_array);
+  if(elf_file_array){
+    char copy_array[1000];
+    strcpy(copy_array, elf_file_array);
+    strcat(copy_array, "/*");
+    glob_t result;
+    glob(copy_array, 0, NULL, &result);
+    for(int i = 0; i < result.gl_pathc; i++){
+      add_elf_array(result.gl_pathv[i]);
+    }
+    globfree(&result);
+  }
+}
+
+
 void ftrace_check_address(int func_type, uint32_t pc, uint32_t address){
-  char *ftrace_input = (char *)malloc(10000);
+  char *ftrace_input = (char*)malloc(100000);
   char func_name[100] = {};
   char *p = ftrace_input;
+  bool include = false;
   for(int i = 0; i < count; i++){
-    if(address >= elf_array[i].value && address < (elf_array[i].value+elf_array[i].size)){
-      strcpy(func_name, elf_array[i].name);
+    if(func_type == 0){
+      if(address == elf_array[i].value){
+        strcpy(func_name, elf_array[i].name);
+        include = true;
+        break;
+      }
+    }else{
+      if(address >= elf_array[i].value && address < (elf_array[i].value + elf_array[i].size)){
+        strcpy(func_name, elf_array[i].name);
+        include = true;
+      }
+    }
+  }
+  if(include){
+    sprintf(p, FMT_WORD ":", pc);
+    p = p + 11; // only consider 32 bit 
+    switch (func_type)
+    {
+    case 0: // jal
+      space_count++;
+      for(int i = 0 ; i < space_count; i++){
+        strcpy(p, " ");
+        p = p + 1;
+      }
+      sprintf(p, "call [%s@0x%08x]", func_name, address);
+      break;
+    case 1:
+      space_count--;
+      for(int i = 0 ; i < space_count; i++){
+        strcpy(p, " ");
+        p = p + 1;
+      }
+      sprintf(p, "ret [%s]", func_name);
+      break;
+    default:
       break;
     }
+    function_log_write("%s\n", ftrace_input);
   }
-  sprintf(p, FMT_WORD ":", pc);
-  p = p + 11; // only consider 32 bit 
-
-  switch (func_type)
-  {
-  case 0: // jal
-    space_count++;
-    for(int i = 0 ; i < space_count; i++){
-      strcpy(p, " ");
-      p = p + 1;
-    }
-    sprintf(p, "call [%s@0x%08x]", func_name, address);
-    break;
-  case 1:
-    space_count--;
-    for(int i = 0 ; i < space_count; i++){
-      strcpy(p, " ");
-      p = p + 1;
-    }
-    sprintf(p, "ret [%s]", func_name);
-    break;
-  default:
-    break;
-  }
-  function_log_write("%s\n", ftrace_input); 
+  // else{
+  //   printf("pc is 0x%x, address is 0x%x\n", pc, address);
+  //   assert(0);
+  // }
   free(ftrace_input);
 }
 
