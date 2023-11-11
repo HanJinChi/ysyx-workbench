@@ -6,8 +6,8 @@ module exu(
   output zero
 );
 
-  wire [31:0] result_arr [16:0];
-  wire zero_arr [16:0];
+  wire [31:0] result_arr [17:0];
+  wire zero_arr [17:0];
   // IMM 
   assign result_arr[0] = src2;
   assign zero_arr[0] = 0;
@@ -71,8 +71,12 @@ module exu(
   assign result_arr[16] = src1;
   assign zero_arr[16] = 0;
 
+  // MULHU 
+  assign result_arr[17] = (src1 * src2) >> 32;
+  assign zero_arr[17] = 0;
 
-  MuxKeyWithDefault #(17, 5, 32) exu_m0 (alu_result, aluOp, 32'b0, {
+
+  MuxKeyWithDefault #(18, 5, 32) exu_m0 (alu_result, aluOp, 32'b0, {
     `YSYX_23060059_IMM,  result_arr[0],
     `YSYX_23060059_ADD,  result_arr[1],
     `YSYX_23060059_SUB,  result_arr[2],
@@ -89,10 +93,11 @@ module exu(
     `YSYX_23060059_MUL , result_arr[13],
     `YSYX_23060059_DIVU, result_arr[14],
     `YSYX_23060059_REM,  result_arr[15],
-    `YSYX_23060059_SRC,  result_arr[16]
+    `YSYX_23060059_SRC,  result_arr[16],
+    `YSYX_23060059_MUL,  result_arr[17]
   });
 
-  MuxKeyWithDefault #(17, 5, 1) exu_m1 (zero, aluOp, 0, {
+  MuxKeyWithDefault #(18, 5, 1) exu_m1 (zero, aluOp, 0, {
     `YSYX_23060059_IMM,  zero_arr[0],
     `YSYX_23060059_ADD,  zero_arr[1],
     `YSYX_23060059_SUB,  zero_arr[2],
@@ -109,7 +114,8 @@ module exu(
     `YSYX_23060059_MUL,  zero_arr[13],
     `YSYX_23060059_DIVU, zero_arr[14],
     `YSYX_23060059_REM,  zero_arr[15],
-    `YSYX_23060059_SRC,  zero_arr[16]
+    `YSYX_23060059_SRC,  zero_arr[16],
+    `YSYS_23060059_MULHU, zero_arr[17]
   });
 
 endmodule

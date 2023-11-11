@@ -131,7 +131,7 @@ module idu(
   // aluOpS 
   assign aluOpS = `YSYX_23060059_ADD;
 
-  MuxKeyWithDefault #(15, 10, 5) idu_i12(aluOpR, {instruction[31:25], instruction[14:12]}, 5'b0, {
+  MuxKeyWithDefault #(16, 10, 5) idu_i12(aluOpR, {instruction[31:25], instruction[14:12]}, 5'b0, {
     10'b0000000000, `YSYX_23060059_ADD,
     10'b0100000000, `YSYX_23060059_SUB,
     10'b0000001000, `YSYX_23060059_MUL,
@@ -146,7 +146,8 @@ module idu(
     10'b0000000101, `YSYX_23060059_SR,
     10'b0000001101, `YSYX_23060059_DIVU,
     10'b0000001110, `YSYX_23060059_REM,
-    10'b0000001100, `YSYX_23060059_DIV
+    10'b0000001100, `YSYX_23060059_DIV,
+    10'b0000001011, `YSYS_23060059_MULHU
   });
 
   // aluOpB 
