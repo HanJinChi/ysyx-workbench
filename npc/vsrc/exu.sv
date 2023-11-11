@@ -71,8 +71,10 @@ module exu(
   assign result_arr[16] = src1;
   assign zero_arr[16] = 0;
 
-  // MULHU 
-  assign result_arr[17] = (src1 * src2) >> 32;
+  // MULHU
+  wire [63:0] MULHU_res;
+  assign MULHU_res = (src1 * src2);  
+  assign result_arr[17] = MULHU_res[63:32];
   assign zero_arr[17] = 0;
 
 
