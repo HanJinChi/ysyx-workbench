@@ -55,8 +55,10 @@ module exu(
   assign result_arr[12] = src1 % src2;
   assign zero_arr[12] = 0;
 
+  wire[63:0] MUL_res;
   // MUL
-  assign result_arr[13] = src1 * src2;
+  assign MUL_res = src1 * src2;
+  assign result_arr[13] = MUL_res[31:0];
   assign zero_arr[13] = 0; 
 
   // DIVU
@@ -72,9 +74,7 @@ module exu(
   assign zero_arr[16] = 0;
 
   // MULHU
-  wire [63:0] MULHU_res;
-  assign MULHU_res = (src1 * src2);  
-  assign result_arr[17] = MULHU_res[63:32];
+  assign result_arr[17] = MUL_res[63:32];
   assign zero_arr[17] = 0;
 
 
