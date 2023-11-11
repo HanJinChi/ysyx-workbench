@@ -75,31 +75,13 @@ void trace_and_difftest(){
   #endif
 
   #ifdef CONFIG_FTRACE
-    char *p = s.logbuf + 24; // inst start
-    uint32_t addr = 0; 
-    if(strncmp(p, "jal\t", 4) == 0){
-      if(strncmp("zero", p+4, 4) == 0){
-        p = p + 12;
-      }else{
-        p = p + 10;
-      }
-      sscanf(p, "%8X", &addr);
-      ftrace_check_address(0, s.pc, addr);
-    }else if(strncmp(p, "jalr\t", 5) == 0){
-      int type = 0;
-      char rega[3] = {};
-      bool success = false;
-      if(strncmp("zero", p+5, 4) == 0){
-        p = p + 13;
-        type = 1;
-      }else{
-        p = p + 11;
-      }
-      strncpy(rega, p, 2);
-      addr = isa_reg_str2val(rega, &success);
-      assert(success);
-      ftrace_check_address(type, s.pc, addr);
-    }
+  char *p = s.logbuf + 24; // inst start
+  uint32_t addr = s.dnpc; 
+  if(strncmp(p, "jal\t", 4) == 0){
+    ftrace_check_address(0, s.pc, addr);
+  }else if(strncmp(p, "jalr\t", 5) == 0){
+    ftrace_check_address(1, s.pc, addr);
+  }
   #endif
 
   #ifdef CONFIG_DIFFTEST

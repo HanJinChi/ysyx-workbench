@@ -90,6 +90,7 @@ static int parse_args(int argc, char *argv[])
       {"vlog", required_argument, NULL, 'v'},
       {"xlog", required_argument, NULL, 'x'},
       {"elf",  required_argument, NULL, 'e'},
+      {"elf_array", required_argument, NULL, 'a'},
       {"diff", required_argument, NULL, 'd'},
       {"port", required_argument, NULL, 'p'},
       {"help", no_argument, NULL, 'h'},
