@@ -47,16 +47,6 @@ module sram(
     endcase
   end
 
-  // always@(posedge clk) begin
-  //   if(!rst) begin
-  //     if(sram_next_state == S1) 
-  //       reg_read_valid <= 1;
-  //     else begin
-  //       if(ren == 1) reg_read_valid <= 0;
-  //     end
-  //   end
-  // end
-
   always @(*) begin
     if(reg_read_valid) n_pmem_read(addr, reg_data);    
     else    reg_data = 32'h0;
