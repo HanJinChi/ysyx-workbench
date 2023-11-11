@@ -32,7 +32,7 @@ module ifu(
   assign wen = 1'b0; // 写不使能
   assign wmask = 8'b0;
   assign wdata = 32'h0;
-  assign ren = ifu_receive_valid;
+  assign ren = (pc_next == 32'h80000000) ? 0 : ifu_receive_valid;
   assign ifu_send_valid = sram_valid;
   assign sram_addr = (reg_pc_next == 32'h0) ? 32'h80000000 : reg_pc_next;
 
