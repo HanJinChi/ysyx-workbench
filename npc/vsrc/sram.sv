@@ -42,7 +42,6 @@ module sram(
         reg_valid <= 1;
       else begin
         if(wen == 1) reg_valid <= 1;
-        else         reg_valid <= 0;
       end
     end
   end
