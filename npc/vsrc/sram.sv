@@ -32,9 +32,9 @@ module sram(
       end
       S1: begin
         if(ren == 1)
-          sram_next_state = S1;
-        else
           sram_next_state = S0;
+        else
+          sram_next_state = S1;
       end
     endcase
   end

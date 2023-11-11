@@ -42,7 +42,8 @@ module ifu(
       if(ifu_receive_valid) begin
         reg_pc_next <= pc_next;  
         reg_ren <= 1;
-      end
+      end else
+        reg_ren <= 0; //  只有一个周期发出ren命令即可
     end
     else begin
       reg_pc_next <= 32'h80000000;
