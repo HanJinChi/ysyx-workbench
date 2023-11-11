@@ -34,15 +34,14 @@ module sram(
         end
         else begin
           sram_next_state = S0;
-          if(sram_receive_valid)
-            reg_next_read_valid = 0;
-          else
-            reg_next_read_valid = 1;
         end
       end
       S1: begin
         sram_next_state = S0;
-        reg_next_read_valid = 0;
+        if(sram_receive_valid)
+          reg_next_read_valid = 0;
+        else
+          reg_next_read_valid = 1;
       end
     endcase
   end
