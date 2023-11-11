@@ -10,15 +10,17 @@ module sram(
     output              sram_valid
 );
   parameter S0 = 0, S1 = 1;
-  reg reg_read_valid; // reg_read_valid代表读是否可用，与写没有关系
+  reg reg_read_valid, reg_next_read_valid; // reg_read_valid代表读是否可用，与写没有关系
   reg sram_state, sram_next_state;
   reg [31:0] reg_data;
   wire read_memory;
   always@(posedge clk) begin
     if(!rst) begin
       sram_state <= sram_next_state;
+      reg_read_valid <= reg_next_read_valid;
     end else begin
       sram_state <= S0;
+      reg_read_valid <= 0;
     end
   end
 
@@ -27,19 +29,19 @@ module sram(
       S0: begin
         if(ren == 1) begin
           sram_next_state = S1;
-          reg_read_valid = 1;
+          reg_next_read_valid = 1;
         end
         else begin
           sram_next_state = S0;
-          reg_read_valid = 0;
+          reg_next_read_valid = 0;
         end
       end
       S1: begin
         sram_next_state = S0;
         if(ren == 1)
-          reg_read_valid = 0;
+          reg_next_read_valid = 0;
         else
-          reg_read_valid = 1;
+          reg_next_read_valid = 1;
       end
     endcase
   end
