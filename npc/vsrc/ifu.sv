@@ -42,8 +42,7 @@ module ifu(
       if(ifu_receive_valid) begin
         reg_pc_next <= pc_next;  
         reg_ren <= 1;
-      end else
-        reg_ren <= 0;
+      end
     end
     else begin
       reg_pc_next <= 32'h80000000;
