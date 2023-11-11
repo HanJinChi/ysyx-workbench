@@ -13,6 +13,7 @@ module sram(
   reg reg_valid;
   reg sram_state, sram_next_state;
   reg [31:0] reg_data;
+  wire read_memory;
   always@(posedge clk) begin
     if(!rst) begin
       sram_state <= sram_next_state;
@@ -31,10 +32,7 @@ module sram(
           sram_next_state = S0;
       end
       S1: begin
-        if(ren == 1)
-          sram_next_state = S0;
-        else
-          sram_next_state = S1;
+        sram_next_state = S0;
       end
     endcase
   end
@@ -45,18 +43,17 @@ module sram(
         reg_valid <= 1;
       else begin
         if(wen == 1) reg_valid <= 1;
-        else         reg_valid <= 0;
+        if(ren == 1) reg_valid <= 0;
       end
     end
   end
 
   always @(*) begin
-    if(sram_next_state == S1) n_pmem_read(addr, reg_data);    
+    if(sram_valid) n_pmem_read(addr, reg_data);    
     else    reg_data = 32'h0;
     if(wen) n_pmem_write(addr, wdata, wmask);
     else    n_pmem_write(addr, wdata, 0);
   end
-
   assign sram_valid = reg_valid;
   assign data = reg_data;
 
