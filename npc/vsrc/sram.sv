@@ -19,33 +19,40 @@ module sram(
       sram_state <= sram_next_state;
     end else begin
       sram_state <= S0;
-      reg_read_valid <= 0;
     end
   end
 
   always@(sram_state or ren or wen) begin
     case(sram_state)
       S0: begin
-        if(ren == 1) 
+        if(ren == 1) begin
           sram_next_state = S1;
-        else
+          reg_read_valid = 1;
+        end
+        else begin
           sram_next_state = S0;
+          reg_read_valid = 0;
+        end
       end
       S1: begin
         sram_next_state = S0;
+        if(ren == 1)
+          reg_read_valid = 0;
+        else
+          reg_read_valid = 1;
       end
     endcase
   end
 
-  always@(posedge clk) begin
-    if(!rst) begin
-      if(sram_next_state == S1) 
-        reg_read_valid <= 1;
-      else begin
-        if(ren == 1) reg_read_valid <= 0;
-      end
-    end
-  end
+  // always@(posedge clk) begin
+  //   if(!rst) begin
+  //     if(sram_next_state == S1) 
+  //       reg_read_valid <= 1;
+  //     else begin
+  //       if(ren == 1) reg_read_valid <= 0;
+  //     end
+  //   end
+  // end
 
   always @(*) begin
     if(reg_read_valid) n_pmem_read(addr, reg_data);    

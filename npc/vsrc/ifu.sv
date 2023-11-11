@@ -15,6 +15,7 @@ module ifu(
   wire               sram_valid;
   wire   [31:0]      sram_addr;   
   reg    [31:0]      reg_pc_next;
+  reg                reg_ren;
 
  
   sram sr(
@@ -32,17 +33,21 @@ module ifu(
   assign wen = 1'b0; // 写不使能
   assign wmask = 8'b0;
   assign wdata = 32'h0;
-  assign ren = (pc_next == 32'h80000000) ? 0 : ifu_receive_valid;
+  assign ren = reg_ren;
   assign ifu_send_valid = sram_valid;
   assign sram_addr = (reg_pc_next == 32'h0) ? 32'h80000000 : reg_pc_next;
 
   always@(posedge clk) begin
     if(!rst) begin
-      if(ifu_receive_valid)
+      if(ifu_receive_valid) begin
         reg_pc_next <= pc_next;  
+        reg_ren <= 1;
+      end else
+        reg_ren <= 0; //  只有一个周期发出ren命令即可
     end
     else begin
       reg_pc_next <= 32'h80000000;
+      reg_ren <= 0;
     end
   end
 
