@@ -166,7 +166,7 @@ void exec_once(){
     step_and_dump_wave();
     step_and_dump_wave();
     if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
-  }
+  } 
 
   cpu.pc = top->pc_next;
   copy_cpu_state();
