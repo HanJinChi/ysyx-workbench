@@ -34,6 +34,7 @@ module sram(
         end
         else begin
           sram_next_state = S0;
+          reg_next_read_valid = 0;
         end
       end
       S1: begin
