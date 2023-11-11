@@ -37,16 +37,16 @@ module sram(
     endcase
   end
 
-  always@(posedge clk) begin
-    if(!rst) begin
-      if(sram_next_state == S1) 
-        reg_valid <= 1;
-      else begin
-        if(wen == 1) reg_valid <= 1;
-        if(ren == 1) reg_valid <= 0;
-      end
-    end
-  end
+  // always@(posedge clk) begin
+  //   if(!rst) begin
+  //     if(sram_next_state == S1) 
+  //       reg_valid <= 1;
+  //     else begin
+  //       if(wen == 1) reg_valid <= 1;
+  //       if(ren == 1) reg_valid <= 0;
+  //     end
+  //   end
+  // end
 
   always @(*) begin
     if(sram_valid) n_pmem_read(addr, reg_data);    
@@ -54,7 +54,8 @@ module sram(
     if(wen) n_pmem_write(addr, wdata, wmask);
     else    n_pmem_write(addr, wdata, 0);
   end
-  assign sram_valid = reg_valid;
+  // assign sram_valid = reg_valid;
+  assign sram_valid = wen | (sram_state == S1) | !ren;
   assign data = reg_data;
 
 endmodule
