@@ -39,8 +39,11 @@ module ifu(
 
   always@(posedge clk) begin
     if(!rst) begin
-      if(ifu_receive_valid) reg_pc_next <= pc_next;  
-      reg_ren <= 1;
+      if(ifu_receive_valid) begin
+        reg_pc_next <= pc_next;  
+        reg_ren <= 1;
+      end else
+        reg_ren <= 0;
     end
     else begin
       reg_pc_next <= 32'h80000000;
