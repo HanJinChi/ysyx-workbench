@@ -38,7 +38,7 @@ module ifu(
 
   always@(posedge clk) begin
     if(!rst) begin
-      reg_pc_next <= pc_next;  
+      if(sram_valid) reg_pc_next <= pc_next;  
       reg_ren <= 1;
     end
     else begin
