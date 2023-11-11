@@ -31,7 +31,10 @@ module sram(
           sram_next_state = S0;
       end
       S1: begin
-        sram_next_state = S0;
+        if(ren == 1)
+          sram_next_state = S1;
+        else
+          sram_next_state = S0;
       end
     endcase
   end
@@ -42,6 +45,7 @@ module sram(
         reg_valid <= 1;
       else begin
         if(wen == 1) reg_valid <= 1;
+        else         reg_valid <= 0;
       end
     end
   end
