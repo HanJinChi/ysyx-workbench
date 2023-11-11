@@ -67,9 +67,9 @@ module top(
   wire   [31:0]         memory_read_wd;
   wire                  ifu_send_valid;
   wire                  lsu_send_valid;
-  wire                  pc_change_valid;
+  wire                  ifu_receive_valid;
 
-  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, pc_change_valid); // assign pc value
+  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
 
 
   // instruction fetch Unit
@@ -77,6 +77,7 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
+    .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .instruction(instruction)
   );
@@ -193,7 +194,7 @@ module top(
     2'b11, csra
   });
 
-  assign pc_change_valid = (pc == (32'h80000000-4)) ? 1 : lsu_send_valid;
+  assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : lsu_send_valid;
 
   always@(posedge clk) begin
     end_sim({32{endflag}});
