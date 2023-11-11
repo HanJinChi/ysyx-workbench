@@ -51,7 +51,7 @@ module sram(
   end
 
   always @(*) begin
-    if(sram_state == S1) n_pmem_read(addr, reg_data);    
+    if(sram_next_state == S1) n_pmem_read(addr, reg_data);    
     else    reg_data = 32'h0;
     if(wen) n_pmem_write(addr, wdata, wmask);
     else    n_pmem_write(addr, wdata, 0);
