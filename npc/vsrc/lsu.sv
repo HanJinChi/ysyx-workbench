@@ -21,6 +21,7 @@ module lsu (
     .clk(clk),
     .rst(rst),
     .ren(sram_ren),
+    .sram_receive_valid(1),
     .wen(sram_wen),
     .wmask(wmask),
     .addr(exu_result),

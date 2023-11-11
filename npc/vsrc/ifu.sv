@@ -24,6 +24,7 @@ module ifu(
     .ren(ren),
     .wen(wen),
     .wmask(wmask),
+    .sram_receive_valid(ifu_receive_valid),
     .addr(sram_addr),
     .wdata(wdata),
     .data(instruction),

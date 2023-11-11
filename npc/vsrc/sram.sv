@@ -1,6 +1,7 @@
 module sram(
     input               clk,
     input               rst,
+    input               sram_receive_valid,
     input               ren,
     input               wen,
     input    [7 :0]     wmask,
@@ -24,7 +25,7 @@ module sram(
     end
   end
 
-  always@(sram_state or ren or wen) begin
+  always@(sram_state or ren) begin
     case(sram_state)
       S0: begin
         if(ren == 1) begin
@@ -33,15 +34,15 @@ module sram(
         end
         else begin
           sram_next_state = S0;
-          reg_next_read_valid = 0;
+          if(sram_receive_valid)
+            reg_next_read_valid = 0;
+          else
+            reg_next_read_valid = 1;
         end
       end
       S1: begin
         sram_next_state = S0;
-        if(ren == 1)
-          reg_next_read_valid = 0;
-        else
-          reg_next_read_valid = 1;
+        reg_next_read_valid = 0;
       end
     endcase
   end
