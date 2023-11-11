@@ -196,7 +196,7 @@ module top(
 
   assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : lsu_send_valid;
 
-  always@(posedge clk) begin
+  always@(*) begin
     end_sim({32{endflag}});
     set_decode_inst(pc, instruction);
   end
