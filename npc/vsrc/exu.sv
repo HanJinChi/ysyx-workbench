@@ -96,7 +96,7 @@ module exu(
     `YSYX_23060059_DIVU, result_arr[14],
     `YSYX_23060059_REM,  result_arr[15],
     `YSYX_23060059_SRC,  result_arr[16],
-    `YSYX_23060059_MUL,  result_arr[17]
+    `YSYS_23060059_MULHU,  result_arr[17]
   });
 
   MuxKeyWithDefault #(18, 5, 1) exu_m1 (zero, aluOp, 0, {
