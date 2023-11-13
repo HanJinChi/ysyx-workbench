@@ -39,17 +39,19 @@ module ifu(
   assign sram_addr = (reg_pc_next == 32'h0) ? 32'h80000000 : reg_pc_next;
 
   always@(posedge clk) begin
-    if(!rst) begin
-      if(ifu_receive_valid) begin
-        reg_pc_next <= pc_next;  
-        reg_ren <= 1;
-      end else
-        reg_ren <= 0; //  只有一个周期发出ren命令即可
-    end
-    else begin
+    if(rst) begin
       reg_pc_next <= 32'h80000000;
       reg_ren <= 0;
+    end else begin
+      if(ifu_receive_valid) begin
+        reg_pc_next <= pc_next;
+        reg_ren <= 1;
+      end else begin
+        reg_ren <= 0;
+      end
     end
+
+
   end
 
 

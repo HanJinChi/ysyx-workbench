@@ -16,12 +16,12 @@ module sram(
   reg [31:0] reg_data;
   wire read_memory;
   always@(posedge clk) begin
-    if(!rst) begin
-      sram_state <= sram_next_state;
-      reg_read_valid <= reg_next_read_valid;
-    end else begin
+    if(rst) begin
       sram_state <= S0;
       reg_read_valid <= 0;
+    end else begin
+      sram_state <= sram_next_state;
+      reg_read_valid <= reg_next_read_valid;
     end
   end
 
