@@ -37,7 +37,7 @@ module lsu (
   });
 
   
-  assign lsu_send_valid = ((ren == 1) ? (sram_valid) : wen); // 只有取值命令才需要等待sram返回值
+  assign lsu_send_valid = (lsu_receive_valid == 1) ? ((ren == 1) ? (sram_valid) : 1) : sram_valid; // 只有取值命令才需要等待sram返回值
   assign sram_ren = (lsu_receive_valid == 1) ? ren : 0;
   assign sram_wen = (lsu_receive_valid == 1) ? wen : 0;
     
