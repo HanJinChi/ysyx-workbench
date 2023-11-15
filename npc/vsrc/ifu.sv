@@ -105,17 +105,22 @@ module ifu(
     end
   end
   reg [31:0] reg_data;
+  reg r_ifu_send_valid;
   always @(posedge clk) begin
     if(rst) begin
       reg_data <= 0;
+      r_ifu_send_valid <= 0;
     end else begin
       if(rvalid && rready) begin
         reg_data <= data;
+        r_ifu_send_valid <= 1;
+      end else begin
+        r_ifu_send_valid <= 0;
       end
     end
   end
   assign instruction = reg_data;
-  assign ifu_send_valid = rvalid;
+  assign ifu_send_valid = r_ifu_send_valid;
 
 
 endmodule
