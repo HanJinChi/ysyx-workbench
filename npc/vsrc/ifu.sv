@@ -4,18 +4,18 @@ module ifu(
     input      [31:0]     pc_next,
     input                 ifu_receive_valid,
     output                ifu_send_valid,
-    output  reg   [31:0]  instruction
+    output     [31:0]     instruction
 );
 
-  wire   [31:0]      data;
-  wire               ren;
-  wire               wen;
-  wire   [7: 0]      wmask;
-  wire   [31:0]      wdata;
-  wire               sram_valid;
-  wire   [31:0]      sram_addr;   
-  reg    [31:0]      reg_pc_next;
-  reg                reg_ren;
+  // wire   [31:0]      data;
+  // wire               ren;
+  // wire               wen;
+  // wire   [7: 0]      wmask;
+  // wire   [31:0]      wdata;
+  // wire               sram_valid;
+  // wire   [31:0]      sram_addr;   
+  // reg    [31:0]      reg_pc_next;
+  // reg                reg_ren;
 
  
   // sram sr(
@@ -52,17 +52,70 @@ module ifu(
   //   end
   // end
 
-  axi_sram(
+  axi_sram axi(
     .aclk(clk),
     .areset(rst),
     .araddr(pc_next),
-    .arvalid(),
-    .rready(),
-    .arready(),
-    .data(),
-    .rvalid(),
-  )
+    .arvalid(arvalid),
+    .rready(rready),
+    .arready(arready),
+    .data(data),
+    .rvalid(rvalid)
+  );
 
+  reg arvalid, rready;
+  reg wait_for_read_address;
+  reg [31:0] araddr;
+  wire arready;
+  wire rvalid;
+  wire [31:0] data;
+  always@(posedge clk) begin
+    if(rst) begin
+      arvalid <= 0;
+      araddr <= 0;
+      wait_for_read_address <=0 ;
+    end else begin
+      if(wait_for_read_address) begin
+        if(arready) begin
+          assert(arvalid == 1);
+          wait_for_read_address <= 0;
+          arvalid <= 0;
+        end
+      end else begin
+        if(ifu_receive_valid) begin
+          assert(arvalid == 0);
+          arvalid <= 1;
+          araddr <= pc_next;
+          if(!arready) begin
+            wait_for_read_address <= 1;
+          end
+        end else begin
+          if(arvalid && arready) begin
+            arvalid <= 0;
+          end
+        end
+      end
+    end
+  end
+  always@(posedge clk) begin
+    if(rst) begin 
+      rready <= 0;
+    end else begin
+      rready <= 1;
+    end
+  end
+  reg [31:0] reg_data;
+  always @(posedge clk) begin
+    if(rst) begin
+      reg_data <= 0;
+    end else begin
+      if(rvalid && rready) begin
+        reg_data <= data;
+      end
+    end
+  end
+  assign instruction = reg_data;
+  assign ifu_send_valid = rvalid;
 
 
 endmodule
