@@ -55,7 +55,7 @@ module ifu(
   axi_sram axi(
     .aclk(clk),
     .areset(rst),
-    .araddr(pc_next),
+    .araddr(araddr),
     .arvalid(arvalid),
     .rready(rready),
     .arready(arready),
