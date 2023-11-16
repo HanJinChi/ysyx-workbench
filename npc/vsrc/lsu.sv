@@ -35,15 +35,15 @@ module lsu (
           assert(arvalid == 1);
           wait_for_read_address <= 0;
           arvalid <= 0;
+        end 
+      end else begin
+        if(lsu_receive_valid && ren) begin
+          assert(arvalid == 0);
+          arvalid <= 1;
+          araddr <= exu_result;
+          if(!arready) wait_for_read_address <= 1;
         end else begin
-          if(lsu_receive_valid && ren) begin
-            assert(arvalid == 0);
-            arvalid <= 1;
-            araddr <= exu_result;
-            if(!arready) wait_for_read_address <= 1;
-          end else begin
-            if(arvalid && arready) arvalid <= 0;
-          end
+          if(arvalid && arready) arvalid <= 0;
         end
       end
     end
@@ -123,9 +123,9 @@ module lsu (
         end else begin
           if(wvalid && wready) wvalid <= 0;
         end
-        end
       end
     end
+  end
 
   wire write_data_valid;
   assign write_data_valid = wvalid && wready;
