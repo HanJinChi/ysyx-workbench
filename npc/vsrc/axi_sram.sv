@@ -9,11 +9,15 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     input    wire  [31:0]  wdata,   // 要写的数据
     input    wire  [7 :0]  wstrb,   // 写掩码 
     input    wire          wvalid,   
+    input    wire          bready,
     output   wire          arready,
-    output   reg   [31:0]  data,
+    output   reg   [31:0]  rdata,
+    output   reg   [1 :0]  rresp,
     output   reg           rvalid,
     output   wire          awready,
-    output   wire          wready
+    output   wire          wready,
+    output   wire          bvalid,
+    output   wire  [1 :0]  bresp     
 );
 
   reg  reg_arready;
@@ -75,7 +79,8 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   always @(posedge aclk) begin
     if(areset) begin
       rvalid <= 0;
-      data  <= 0;
+      rdata  <= 0;
+      rresp  <= 1;  // 1代表 exokay
       wait_for_read <= 0;
     end else begin
       if(wait_for_read) begin
@@ -83,18 +88,22 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
           assert(rvalid == 1);
           wait_for_read <= 0;
           rvalid <= 0;
+          rresp <= 1;
         end
       end else begin
         if(sram_read_state == S1) begin
           assert(rvalid == 0);
+          assert(rresp == 1);
           rvalid <= 1;
-          data <= reg_read_data;
+          rdata <= reg_read_data;
+          rresp <= 0;
           if(!rready) begin
             wait_for_read <= 1;
           end
         end else begin
           if(rvalid && rready) begin
             rvalid <= 0;
+            rresp <= 1;
           end
         end
       end
@@ -148,7 +157,8 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
         reg_wdata <= wdata;
         reg_wstrb <= wstrb;
         ready_to_write <= 1;
-      end 
+      end else
+        ready_to_write <= 0;
     end
   end
 
@@ -159,6 +169,36 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       n_pmem_write(write_addr, reg_wdata, reg_wstrb);
     end else begin
       n_pmem_write(write_addr, reg_wdata, 0);
+    end
+  end
+
+  reg wait_for_bresp;
+  always @(posedge aclk) begin
+    if(areset) begin
+      bvalid <= 0;
+      bresp  <= 1; // 1代表exokay
+      wait_for_bresp <= 0;
+    end else begin
+      if(wait_for_bresp) begin
+        if(bready) begin
+          bvalid <= 0;
+          bresp <= 1;
+          wait_for_bresp <= 0;
+        end
+      end else begin
+        if(ready_to_write) begin
+          assert(bvalid == 0);
+          assert(bresp == 1);
+          bvalid <= 1;
+          bresp <= 0;
+          if(!bready) wait_for_bresp <= 1;
+        end else begin
+          if(bvalid && bready) begin
+            bvalid <= 0;
+            bresp  <= 1;
+          end
+        end
+      end
     end
   end
 
