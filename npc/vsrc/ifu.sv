@@ -8,7 +8,8 @@ module ifu(
 );
 
   wire awready, wready;
-
+  wire bvalid;
+  wire [1:0] bresp, rresp;
   axi_sram axi(
     .aclk(clk),
     .areset(rst),
@@ -20,11 +21,15 @@ module ifu(
     .wdata(0),
     .wstrb(0),
     .wvalid(0),
+    .rresp(rresp),
+    .bready(0),
     .awready(awready),
     .wready(wready),
     .arready(arready),
-    .data(data),
-    .rvalid(rvalid)
+    .rdata(rdata),
+    .rvalid(rvalid),
+    .bvalid(bvalid),
+    .bresp(bresp)
   );
 
   reg arvalid, rready;
@@ -32,7 +37,7 @@ module ifu(
   reg [31:0] araddr;
   wire arready;
   wire rvalid;
-  wire [31:0] data;
+  wire [31:0] rdata;
   always@(posedge clk) begin
     if(rst) begin
       arvalid <= 0;
@@ -62,22 +67,23 @@ module ifu(
     else    rready <= 1;
   end
   reg [31:0] reg_data;
-  reg r_ifu_send_valid;
+  reg [1:0] reg_rresp;
   always @(posedge clk) begin
     if(rst) begin
       reg_data <= 0;
-      r_ifu_send_valid <= 0;
+      reg_rresp <= 1;
     end else begin
       if(rvalid && rready) begin
-        reg_data <= data;
-        r_ifu_send_valid <= 1;
+        reg_data <= rdata;
+        reg_rresp <= rresp;
       end else begin
-        r_ifu_send_valid <= 0;
+        reg_rresp <= 1;
       end
     end
   end
+
   assign instruction = reg_data;
-  assign ifu_send_valid = r_ifu_send_valid;
+  assign ifu_send_valid = (reg_rresp == 0);
 
 
 endmodule

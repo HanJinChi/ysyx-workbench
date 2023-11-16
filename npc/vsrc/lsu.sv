@@ -18,6 +18,8 @@ module lsu (
   reg   [31:0]    araddr;
   reg             wait_for_read_address;
   wire            arready, rvalid;
+  wire            bvalid;
+  wire  [1 :0]    rresp, bresp;
   // rready
   always @(posedge clk) begin
     if(rst) rready <= 0;
@@ -49,17 +51,17 @@ module lsu (
     end
   end
   reg [31:0] reg_read_data;
-  reg        read_data_valid;
+  reg [1: 0] reg_rresp;
   always @(posedge clk) begin
     if(rst) begin
       reg_read_data <= 0;
-      read_data_valid <= 0;
+      reg_rresp <= 2'b1;
     end else begin
       if(rvalid && rready) begin
         reg_read_data <= data;
-        read_data_valid <= 1;
+        reg_rresp     <= rresp; 
       end else begin
-        read_data_valid <= 0;
+        reg_rresp <= 2'b1;
       end
     end
   end
@@ -127,8 +129,23 @@ module lsu (
     end
   end
 
-  wire write_data_valid;
-  assign write_data_valid = wvalid && wready;
+  // bready
+  reg bready;
+  always @(posedge clk) begin
+    if(rst) bready <= 0;
+    else    bready <= 1;
+  end
+  // bresp
+  reg [1:0] reg_bresp;
+  always @(posedge clk) begin
+    if(rst) reg_bresp <= 1;
+    else begin
+      if(bready && bvalid) begin
+        reg_bresp <= bresp;
+      end else
+        reg_bresp <= 1;
+    end
+  end
 
   axi_sram axi_sa(
     .aclk(clk),
@@ -142,12 +159,16 @@ module lsu (
     .wstrb(wmask),
     .wvalid(wvalid),
     .arready(arready),
-    .data(data),
+    .bready(bready),
+    .rdata(data),
+    .rresp(rresp),
     .rvalid(rvalid),
+    .bvalid(bvalid),
     .awready(awready),
-    .wready(wready)
+    .wready(wready),
+    .bresp(bresp)
   );
   
-  assign lsu_send_valid = (lsu_receive_valid == 1) ? (((ren == 1)||(wen == 1)) ? (read_data_valid || write_data_valid) : 1) : (read_data_valid || write_data_valid); // 只有取值命令才需要等待sram返回值
+  assign lsu_send_valid = (lsu_receive_valid == 1) ? (((ren == 1)||(wen == 1)) ? ((reg_rresp == 0) || (reg_bresp == 0)) : 1) : ((reg_rresp == 0) || (reg_bresp == 0)); // 只有取值命令才需要等待sram返回值
 
 endmodule
