@@ -113,19 +113,19 @@ module lsu (
           assert(wvalid == 1);
           wait_for_write_data <= 0;
           wvalid <= 0;
+        end 
+      end else begin
+        if(lsu_receive_valid && wen) begin
+          assert(wvalid == 0);
+          wvalid <= 1;
+          wdata <= rsb;
+          if(!wready) wait_for_write_data <= 1;
         end else begin
-          if(lsu_receive_valid && wen) begin
-            assert(wvalid == 0);
-            wvalid <= 1;
-            wdata <= rsb;
-            if(!wready) wait_for_write_data <= 1;
-          end else begin
-            if(wvalid && wready) wvalid <= 0;
-          end
+          if(wvalid && wready) wvalid <= 0;
+        end
         end
       end
     end
-  end
 
   wire write_data_valid;
   assign write_data_valid = wvalid && wready;
