@@ -50,23 +50,16 @@ module ifu(
           assert(arvalid == 0);
           arvalid <= 1;
           araddr <= pc_next;
-          if(!arready) begin
-            wait_for_read_address <= 1;
-          end
+          if(!arready) wait_for_read_address <= 1;
         end else begin
-          if(arvalid && arready) begin
-            arvalid <= 0;
-          end
+          if(arvalid && arready) arvalid <= 0;
         end
       end
     end
   end
   always@(posedge clk) begin
-    if(rst) begin 
-      rready <= 0;
-    end else begin
-      rready <= 1;
-    end
+    if(rst) rready <= 0;
+    else    rready <= 1;
   end
   reg [31:0] reg_data;
   reg r_ifu_send_valid;
