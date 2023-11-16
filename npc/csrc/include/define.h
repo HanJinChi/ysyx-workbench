@@ -1,13 +1,13 @@
 #ifndef __DEFINE_H__
 #define __DEFINE_H__
 
-#define CONFIG_VCD_TRACE 1
+// #define CONFIG_VCD_TRACE 1
 
 #define CONFIG_TRACE 1
 #define CONFIG_FTRACE 1
 #define CONFIG_MTRACE 1
 // #define CONFIG_VTRACE 1
-#define CONFIG_DIFFTEST 1
+// #define CONFIG_DIFFTEST 1
 #define CONFIG_TARGET_NATIVE_ELF 1
 #define CONFIG_DEVICE 1
 
