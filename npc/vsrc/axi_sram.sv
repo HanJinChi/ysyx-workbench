@@ -4,9 +4,16 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     input    wire  [31:0]  araddr,  // 要读的地址
     input    wire          arvalid, 
     input    wire          rready,
+    input    wire  [31:0]  awaddr,  // 要写的地址
+    input    wire          awvalid,
+    input    wire  [31:0]  wdata,   // 要写的数据
+    input    wire  [7 :0]  wstrb,   // 写掩码 
+    input    wire          wvalid,   
     output   wire          arready,
     output   reg   [31:0]  data,
-    output   reg           rvalid
+    output   reg           rvalid,
+    output   wire          awready,
+    output   wire          wready
 );
 
   reg  reg_arready;
@@ -91,6 +98,67 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
           end
         end
       end
+    end
+  end
+
+  reg  reg_awready;
+  assign awready = reg_awready;
+
+  always @(posedge aclk) begin
+    if(areset) begin  
+      reg_awready <= 0;  
+    end
+    else begin
+      reg_awready <= 1;
+    end
+  end
+
+  reg [31:0] reg_awaddr;
+  always @(posedge aclk) begin
+    if(areset) begin
+      reg_awaddr <= 0;
+    end else begin
+      if(awvalid && awready) begin
+        reg_awaddr <= awaddr;
+      end
+    end 
+  end
+
+  reg  reg_wready;
+  assign wready = reg_wready;
+
+  always @(posedge aclk) begin
+    if(areset) begin  
+      reg_wready <= 0;  
+    end
+    else begin
+      reg_wready <= 1;
+    end
+  end
+
+  reg [31:0] reg_wdata;
+  reg [7 :0] reg_wstrb;
+  reg        ready_to_write;
+  always @(posedge aclk) begin
+    if(areset) begin
+      reg_wdata <= 0;
+      ready_to_write <= 0;
+    end else begin
+      if(wvalid && wready) begin
+        reg_wdata <= wdata;
+        reg_wstrb <= wstrb;
+        ready_to_write <= 1;
+      end 
+    end
+  end
+
+  wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
+  assign write_addr = (awvalid && awready) ? awaddr : reg_awaddr;
+  always @(*) begin
+    if(ready_to_write) begin
+      n_pmem_write(write_addr, reg_wdata, reg_wstrb);
+    end else begin
+      n_pmem_write(write_addr, reg_wdata, 0);
     end
   end
 
