@@ -148,7 +148,8 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
         reg_wdata <= wdata;
         reg_wstrb <= wstrb;
         ready_to_write <= 1;
-      end 
+      end else
+        ready_to_write <= 1;
     end
   end
 
