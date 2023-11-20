@@ -69,6 +69,18 @@ module top(
   wire                  ifu_send_valid;
   wire                  lsu_send_valid;
   wire                  ifu_receive_valid;
+  wire   [31:0]         araddrA;
+  // wire   [31:0]         araddrB;
+  wire                  arvalidA;
+  wire                  rreadyA;
+  wire                  arreadyA;
+  wire                  arreadyB;
+  wire   [31:0]         rdataA;
+  wire   [31:0]         rdataB;
+  wire                  rvalidA;
+  wire                  rvalidB;
+  wire   [1 :0]         rrespA;
+  wire   [1 :0]         rrespB;
 
   Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
 
@@ -80,7 +92,14 @@ module top(
     .pc_next(pc_next),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
-    .instruction(instruction)
+    .instruction(instruction),
+    .arready(arreadyA),
+    .rdata(rdataA),
+    .rvalid(rvalidA),
+    .rresp(rrespA),
+    .araddr(araddrA),
+    .arvalid(arvalidA),
+    .rready(rreadyA)
   );
 
   // instruction Decode Unit
@@ -163,6 +182,25 @@ module top(
     .exu_result(exu_result),
     .lsu_send_valid(lsu_send_valid),
     .memory_read_wd(memory_read_wd)
+  );
+
+  arbiter arb(
+    .clk(clk),
+    .rst(rst),
+    .araddrA(araddrA),
+    .araddrB(0),
+    .arvalidA(arvalidA),
+    .arvalidB(0),
+    .rreadyA(rreadyA),
+    .rreadyB(0),
+    .arreadyA(arreadyA),
+    .arreadyB(arreadyB),
+    .rdataA(rdataA),
+    .rdataB(rdataB),
+    .rvalidA(rvalidA),
+    .rvalidB(rvalidB),
+    .rrespA(rrespA),
+    .rrespB(rrespB)
   );
 
   // wd choose
