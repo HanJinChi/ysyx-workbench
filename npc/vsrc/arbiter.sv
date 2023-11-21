@@ -7,6 +7,18 @@ module arbiter(
   input    wire          arvalidB,
   input    wire          rreadyA,
   input    wire          rreadyB,
+  input    wire  [31:0]  awaddrA,
+  input    wire  [31:0]  awaddrB,
+  input    wire          awvalidA,
+  input    wire          awvalidB,
+  input    wire  [31:0]  wdataA,
+  input    wire  [31:0]  wdataB,
+  input    wire  [7 :0]  wstrbA,
+  input    wire  [7 :0]  wstrbB,
+  input    wire          wvalidA,
+  input    wire          wvalidB,
+  input    wire          breadyA,
+  input    wire          breadyB,
   output   wire          arreadyA,
   output   wire          arreadyB,
   output   wire  [31:0]  rdataA,
@@ -14,7 +26,15 @@ module arbiter(
   output   wire          rvalidA,
   output   wire          rvalidB,
   output   wire  [1 :0]  rrespA,
-  output   wire  [1 :0]  rrespB
+  output   wire  [1 :0]  rrespB,
+  output   wire          awreadyA,
+  output   wire          awreadyB,
+  output   wire          wreadyA,
+  output   wire          wreadyB,
+  output   wire          bvalidA,
+  output   wire          bvalidB,
+  output   wire  [1 :0]  brespA, 
+  output   wire  [1 :0]  brespB
 );
   reg   [1 :0]  araddrMux;
   reg           wait_for_read_addr;
@@ -97,10 +117,138 @@ module arbiter(
     end
   end
 
+  reg   [1 :0]  awaddrMux;
+  reg           wait_for_write_addr;
+  reg           awvalid;
+  wire  [31:0]  awaddr;
   wire          awready;
+  always @(posedge clk) begin
+    if(rst) begin
+      awaddrMux <= 0;  // 默认选择情况下谁都不选择
+      wait_for_write_addr <= 0;
+    end
+    else begin
+      if(wait_for_write_addr) begin
+        if(awready) begin
+          assert(awvalid == 1);
+          wait_for_write_addr <= 0;
+          awvalid <= 0; 
+          awaddrMux <= 0;  
+        end
+      end else begin
+        if(awvalidA) begin
+          awvalid <= 1;
+          awaddrMux <= 2'b01;
+          if(!awready) wait_for_write_addr <= 1;
+        end else if(awvalidB) begin
+          awvalid <= 1;
+          awaddrMux <= 2'b10;
+          if(!awready) wait_for_write_addr <= 1;
+        end else begin
+          if(awvalid && awready) begin
+            awvalid <= 1'b0;
+            awaddrMux <= 0;
+          end 
+        end
+      end
+    end
+  end
+
+  MuxKeyWithDefault #(2, 2, 32) a_m11(awaddr, awaddrMux, 32'b0, {
+    2'b01, awaddrA,
+    2'b10, awaddrB
+  });
+
+  // 使用流水线时要进行修改
+  MuxKeyWithDefault #(1, 2, 1) a_m12(awreadyA, awaddrMux, 1'b0, {
+    2'b01, awready
+  });
+  MuxKeyWithDefault #(1, 2, 1) a_m13(awreadyB, awaddrMux, 1'b0, {
+    2'b10, awready
+  });
+
+  reg   [1 :0]  wdataMux;
+  reg           wait_for_write_data;
+  reg           wvalid;
+  wire  [31:0]  wdata;
+  wire  [7 :0]  wstrb;
   wire          wready;
   wire          bvalid;
-  wire   [1:0]  bresp;
+  wire          bready;
+  wire  [1 :0]  bresp;
+  always @(posedge clk) begin
+    if(rst) begin
+      wdataMux <= 0;  // 默认选择情况下谁都不选择
+      wait_for_write_data <= 0;
+    end
+    else begin
+      if(wait_for_write_data) begin
+        if(wready) begin
+          assert(wvalid == 1);
+          wait_for_write_data <= 0;
+          wvalid <= 0; 
+          // wdataMux <= 0;  
+        end
+      end else begin
+        if(wvalidA) begin
+          wvalid <= 1;
+          wdataMux <= 2'b01;
+          if(!wready) wait_for_write_data <= 1;
+        end else if(wvalidB) begin
+          wvalid <= 1;
+          wdataMux <= 2'b10;
+          if(!wready) wait_for_write_data <= 1;
+        end else begin
+          if(wvalid && wready) begin
+            wvalid <= 1'b0;
+            // wdataMux <= 0;
+          end 
+        end
+      end
+    end
+  end
+
+  MuxKeyWithDefault #(2, 2, 32) a_m14(wdata, wdataMux, 32'b0, {
+    2'b01, wdataA,
+    2'b10, wdataB
+  });
+
+  MuxKeyWithDefault #(2, 2, 8) a_m15(wstrb, wdataMux, 8'b0, {
+    2'b01, wstrbA,
+    2'b10, wstrbB
+  });
+
+  // 使用流水线时要进行修改
+  MuxKeyWithDefault #(1, 2, 1) a_m16(wreadyA, wdataMux, 1'b0, {
+    2'b01, wready
+  });
+  MuxKeyWithDefault #(1, 2, 1) a_m17(wreadyB, wdataMux, 1'b0, {
+    2'b10, wready
+  });
+
+  MuxKeyWithDefault #(1, 2, 1) a_m18(bvalidA, wdataMux, 1'b0, {
+    2'b01, bvalid
+  });
+  MuxKeyWithDefault #(1, 2, 1) a_m19(bvalidB, wdataMux, 1'b0, {
+    2'b10, bvalid
+  });
+
+  MuxKeyWithDefault #(2, 2, 1) a_m20(bready, wdataMux, 1'b0, {
+    2'b01, breadyA,
+    2'b10, breadyB
+  });
+
+  MuxKeyWithDefault #(1, 2, 2) a_m21(brespA, wdataMux, 2'b01, {
+    2'b01, bresp
+  });
+  MuxKeyWithDefault #(1, 2, 2) a_m22(brespB, wdataMux, 2'b01, {
+    2'b10, bresp
+  });
+
+  always@(posedge clk) begin
+    if(bready && bvalid) wdataMux <= 0;
+  end
+
   axi_sram ar(
     .aclk(clk),
     .areset(rst),
@@ -111,12 +259,12 @@ module arbiter(
     .rdata(rdata),
     .rvalid(rvalid),
     .rresp(rresp),
-    .awaddr(0),
-    .awvalid(0),
-    .wdata(0),
-    .wstrb(0),
-    .wvalid(0),
-    .bready(0),
+    .awaddr(awaddr),
+    .awvalid(awvalid),
+    .wdata(wdata),
+    .wstrb(wstrb),
+    .wvalid(wvalid),
+    .bready(bready),
     .awready(awready),
     .wready(wready),
     .bvalid(bvalid),

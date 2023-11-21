@@ -70,9 +70,11 @@ module top(
   wire                  lsu_send_valid;
   wire                  ifu_receive_valid;
   wire   [31:0]         araddrA;
-  // wire   [31:0]         araddrB;
+  wire   [31:0]         araddrB;
   wire                  arvalidA;
+  wire                  arvalidB;
   wire                  rreadyA;
+  wire                  rreadyB;
   wire                  arreadyA;
   wire                  arreadyB;
   wire   [31:0]         rdataA;
@@ -81,6 +83,27 @@ module top(
   wire                  rvalidB;
   wire   [1 :0]         rrespA;
   wire   [1 :0]         rrespB;
+  wire   [31:0]         awaddrA;
+  wire   [31:0]         awaddrB;
+  wire                  awvalidA;
+  wire                  awvalidB;
+  wire   [31:0]         wdataA;
+  wire   [31:0]         wdataB;
+  wire   [7 :0]         wstrbA;
+  wire   [7 :0]         wstrbB;
+  wire                  wvalidA;
+  wire                  wvalidB;
+  wire                  breadyA;
+  wire                  breadyB;
+  wire                  awreadyA;
+  wire                  awreadyB;
+  wire                  wreadyA;
+  wire                  wreadyB;
+  wire   [1 :0]         brespA;
+  wire   [1 :0]         brespB;
+  wire                  bvalidA;
+  wire                  bvalidB;
+
 
   Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
 
@@ -188,11 +211,11 @@ module top(
     .clk(clk),
     .rst(rst),
     .araddrA(araddrA),
-    .araddrB(0),
+    .araddrB(araddrB),
     .arvalidA(arvalidA),
-    .arvalidB(0),
+    .arvalidB(arvalidB),
     .rreadyA(rreadyA),
-    .rreadyB(0),
+    .rreadyB(rreadyB),
     .arreadyA(arreadyA),
     .arreadyB(arreadyB),
     .rdataA(rdataA),
@@ -200,7 +223,27 @@ module top(
     .rvalidA(rvalidA),
     .rvalidB(rvalidB),
     .rrespA(rrespA),
-    .rrespB(rrespB)
+    .rrespB(rrespB),
+    .awaddrA(awaddrA),
+    .awaddrB(awaddrB),
+    .awvalidA(awvalidA),
+    .awvalidB(awvalidB),
+    .wdataA(wdataA),
+    .wdataB(wdataB),
+    .wstrbA(wstrbA),
+    .wstrbB(wstrbB),
+    .wvalidA(wvalidA),
+    .wvalidB(wvalidB),
+    .breadyA(breadyA),
+    .breadyB(breadyB),
+    .awreadyA(awreadyA),
+    .awreadyB(awreadyB),
+    .wreadyA(wreadyA),
+    .wreadyB(wreadyB),
+    .bvalidA(bvalidA),
+    .bvalidB(bvalidB),
+    .brespA(brespA),
+    .brespB(brespB)
   );
 
   // wd choose
