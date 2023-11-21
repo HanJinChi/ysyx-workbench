@@ -40,6 +40,7 @@ word_t paddr_read(paddr_t addr, int len) {
   #endif
     return data;
   }
+  if(addr == 0) return 0;
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
