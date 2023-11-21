@@ -126,6 +126,7 @@ module lsu (
     if(rst) begin
       wdata <= 0;
       wait_for_write_data <= 0;
+      wstrb <= 0;
     end else begin
       if(wait_for_write_data) begin
         if(wready) begin
@@ -137,7 +138,8 @@ module lsu (
         if(lsu_receive_valid && wen) begin
           assert(wvalid == 0);
           wvalid <= 1;
-          wdata <= rsb;
+          wdata  <= rsb;
+          wstrb  <= wmask;
           if(!wready) wait_for_write_data <= 1;
         end else begin
           if(wvalid && wready) wvalid <= 0;
