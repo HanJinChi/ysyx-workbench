@@ -1,43 +1,21 @@
 module ifu(
-    input                 clk,
-    input                 rst,
-    input      [31:0]     pc_next,
-    input                 ifu_receive_valid,
-    output                ifu_send_valid,
-    output     [31:0]     instruction
+    input    wire          clk,
+    input    wire          rst,
+    input    wire  [31:0]  pc_next,
+    input    wire          ifu_receive_valid,
+    input    wire          arready,
+    input    wire  [31:0]  rdata,
+    input    wire          rvalid,
+    input    wire  [1 :0]  rresp,
+    output   wire          ifu_send_valid,
+    output   wire  [31:0]  instruction,
+    output   reg   [31:0]  araddr,
+    output   reg           arvalid,
+    output   reg           rready
 );
 
-  wire awready, wready;
-  wire bvalid;
-  wire [1:0] bresp, rresp;
-  axi_sram axi(
-    .aclk(clk),
-    .areset(rst),
-    .araddr(araddr),
-    .arvalid(arvalid),
-    .rready(rready),
-    .awaddr(0),
-    .awvalid(0),
-    .wdata(0),
-    .wstrb(0),
-    .wvalid(0),
-    .rresp(rresp),
-    .bready(0),
-    .awready(awready),
-    .wready(wready),
-    .arready(arready),
-    .rdata(rdata),
-    .rvalid(rvalid),
-    .bvalid(bvalid),
-    .bresp(bresp)
-  );
 
-  reg arvalid, rready;
   reg wait_for_read_address;
-  reg [31:0] araddr;
-  wire arready;
-  wire rvalid;
-  wire [31:0] rdata;
   always@(posedge clk) begin
     if(rst) begin
       arvalid <= 0;

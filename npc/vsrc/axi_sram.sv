@@ -147,25 +147,21 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   reg [31:0] reg_wdata;
   reg [7 :0] reg_wstrb;
-  reg        ready_to_write;
   always @(posedge aclk) begin
     if(areset) begin
       reg_wdata <= 0;
-      ready_to_write <= 0;
     end else begin
       if(wvalid && wready) begin
         reg_wdata <= wdata;
         reg_wstrb <= wstrb;
-        ready_to_write <= 1;
-      end else
-        ready_to_write <= 0;
+      end
     end
   end
 
   wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
   assign write_addr = (awvalid && awready) ? awaddr : reg_awaddr;
   always @(*) begin
-    if(ready_to_write) begin
+    if(sram_write_state == WS1) begin
       n_pmem_write(write_addr, reg_wdata, reg_wstrb);
     end else begin
       n_pmem_write(write_addr, reg_wdata, 0);
@@ -186,7 +182,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
           wait_for_bresp <= 0;
         end
       end else begin
-        if(ready_to_write) begin
+        if(sram_write_state == WS1) begin
           assert(bvalid == 0);
           assert(bresp == 1);
           bvalid <= 1;
@@ -200,6 +196,31 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
         end
       end
     end
+  end
+  parameter WS0 = 0, WS1 = 1;
+  reg sram_write_state, sram_write_next_state;
+  always @(posedge aclk) begin
+    if(areset) begin
+      sram_write_state <= WS0;
+    end else begin
+      sram_write_state <= sram_write_next_state;
+    end
+  end
+
+  always@(sram_write_state or wvalid or wready) begin
+    case(sram_write_state)
+    WS0: begin
+      if(wvalid && wready) begin
+        sram_write_next_state = WS1;
+      end else begin
+        sram_write_next_state = WS0;
+      end
+    end
+    WS1: begin
+      sram_write_next_state = WS0;
+    end
+    default: begin end // do nothing
+    endcase
   end
 
 endmodule

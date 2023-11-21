@@ -69,6 +69,41 @@ module top(
   wire                  ifu_send_valid;
   wire                  lsu_send_valid;
   wire                  ifu_receive_valid;
+  wire   [31:0]         araddrA;
+  wire   [31:0]         araddrB;
+  wire                  arvalidA;
+  wire                  arvalidB;
+  wire                  rreadyA;
+  wire                  rreadyB;
+  wire                  arreadyA;
+  wire                  arreadyB;
+  wire   [31:0]         rdataA;
+  wire   [31:0]         rdataB;
+  wire                  rvalidA;
+  wire                  rvalidB;
+  wire   [1 :0]         rrespA;
+  wire   [1 :0]         rrespB;
+  wire   [31:0]         awaddrA;
+  wire   [31:0]         awaddrB;
+  wire                  awvalidA;
+  wire                  awvalidB;
+  wire   [31:0]         wdataA;
+  wire   [31:0]         wdataB;
+  wire   [7 :0]         wstrbA;
+  wire   [7 :0]         wstrbB;
+  wire                  wvalidA;
+  wire                  wvalidB;
+  wire                  breadyA;
+  wire                  breadyB;
+  wire                  awreadyA;
+  wire                  awreadyB;
+  wire                  wreadyA;
+  wire                  wreadyB;
+  wire   [1 :0]         brespA;
+  wire   [1 :0]         brespB;
+  wire                  bvalidA;
+  wire                  bvalidB;
+
 
   Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
 
@@ -80,7 +115,14 @@ module top(
     .pc_next(pc_next),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
-    .instruction(instruction)
+    .instruction(instruction),
+    .arready(arreadyA),
+    .rdata(rdataA),
+    .rvalid(rvalidA),
+    .rresp(rrespA),
+    .araddr(araddrA),
+    .arvalid(arvalidA),
+    .rready(rreadyA)
   );
 
   // instruction Decode Unit
@@ -162,7 +204,63 @@ module top(
     .rmask(rmask),
     .exu_result(exu_result),
     .lsu_send_valid(lsu_send_valid),
-    .memory_read_wd(memory_read_wd)
+    .memory_read_wd(memory_read_wd),
+    .arready(arreadyB),
+    .rdata(rdataB),
+    .rresp(rrespB),
+    .rvalid(rvalidB),
+    .awready(awreadyB),
+    .wready(wreadyB),
+    .bvalid(bvalidB),
+    .bresp(brespB),
+    .araddr(araddrB),
+    .arvalid(arvalidB),
+    .rready(rreadyB),
+    .awaddr(awaddrB),
+    .awvalid(awvalidB),
+    .wvalid(wvalidB),
+    .bready(breadyB),
+    .wdata(wdataB),
+    .wstrb(wstrbB)
+  );
+
+  arbiter arb(
+    .clk(clk),
+    .rst(rst),
+    .araddrA(araddrA),
+    .araddrB(araddrB),
+    .arvalidA(arvalidA),
+    .arvalidB(arvalidB),
+    .rreadyA(rreadyA),
+    .rreadyB(rreadyB),
+    .arreadyA(arreadyA),
+    .arreadyB(arreadyB),
+    .rdataA(rdataA),
+    .rdataB(rdataB),
+    .rvalidA(rvalidA),
+    .rvalidB(rvalidB),
+    .rrespA(rrespA),
+    .rrespB(rrespB),
+    .awaddrA(awaddrA),
+    .awaddrB(awaddrB),
+    .awvalidA(awvalidA),
+    .awvalidB(awvalidB),
+    .wdataA(wdataA),
+    .wdataB(wdataB),
+    .wstrbA(wstrbA),
+    .wstrbB(wstrbB),
+    .wvalidA(wvalidA),
+    .wvalidB(wvalidB),
+    .breadyA(breadyA),
+    .breadyB(breadyB),
+    .awreadyA(awreadyA),
+    .awreadyB(awreadyB),
+    .wreadyA(wreadyA),
+    .wreadyB(wreadyB),
+    .bvalidA(bvalidA),
+    .bvalidB(bvalidB),
+    .brespA(brespA),
+    .brespB(brespB)
   );
 
   // wd choose
