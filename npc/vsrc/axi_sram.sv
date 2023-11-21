@@ -182,7 +182,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
           wait_for_bresp <= 0;
         end
       end else begin
-        if(sram_write_state == WS0) begin
+        if(sram_write_state == WS1) begin
           assert(bvalid == 0);
           assert(bresp == 1);
           bvalid <= 1;
