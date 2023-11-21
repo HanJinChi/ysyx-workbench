@@ -204,7 +204,24 @@ module top(
     .rmask(rmask),
     .exu_result(exu_result),
     .lsu_send_valid(lsu_send_valid),
-    .memory_read_wd(memory_read_wd)
+    .memory_read_wd(memory_read_wd),
+    .arready(arreadyB),
+    .rdata(rdataB),
+    .rresp(rrespB),
+    .rvalid(rvalidB),
+    .awready(awreadyB),
+    .wready(wreadyB),
+    .bvalid(bvalidB),
+    .bresp(brespB),
+    .araddr(araddrB),
+    .arvalid(arvalidB),
+    .rready(rreadyB),
+    .awaddr(awaddrB),
+    .awvalid(awvalidB),
+    .wvalid(wvalidB),
+    .bready(breadyB),
+    .wdata(wdataB),
+    .wstrb(wstrbB)
   );
 
   arbiter arb(

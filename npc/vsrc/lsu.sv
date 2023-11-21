@@ -1,25 +1,42 @@
 module lsu (
-    input                 clk,
-    input                 rst,
-    input                 lsu_receive_valid,
-    input                 ren,
-    input                 wen,
-    input                 memory_read_signed,
-    input   [31:0]        rsb,
-    input   [7 :0]        wmask,
-    input   [31:0]        rmask,
-    input   [31:0]        exu_result,
-    output                lsu_send_valid,
-    output  [31:0]        memory_read_wd
+  input    wire          clk,
+  input    wire          rst,
+  input    wire          lsu_receive_valid,
+  input    wire          ren,
+  input    wire          wen,
+  input    wire          memory_read_signed,
+  input    wire  [31:0]  rsb,
+  input    wire  [7 :0]  wmask,
+  input    wire  [31:0]  rmask,
+  input    wire  [31:0]  exu_result,
+  input    wire          arready,
+  input    wire  [31:0]  rdata,
+  input    wire  [1 :0]  rresp,
+  input    wire          rvalid,
+  input    wire          awready,
+  input    wire          wready,
+  input    wire          bvalid,
+  input    wire  [1 :0]  bresp,
+  output   wire          lsu_send_valid,
+  output   wire  [31:0]  memory_read_wd,
+  output   reg   [31:0]  araddr,
+  output   reg           arvalid,
+  output   reg           rready,
+  output   reg   [31:0]  awaddr,
+  output   reg           awvalid,
+  output   reg           wvalid,
+  output   reg           bready,
+  output   reg   [31:0]  wdata,
+  output   reg   [7 :0]  wstrb
 );
 
-  wire  [31:0]    data;
-  reg             arvalid, rready;
-  reg   [31:0]    araddr;
+  // wire  [31:0]    data;
+  // reg             arvalid, rready;
+  // reg   [31:0]    araddr;
   reg             wait_for_read_address;
-  wire            arready, rvalid;
-  wire            bvalid;
-  wire  [1 :0]    rresp, bresp;
+  // wire            arready, rvalid;
+  // wire            bvalid;
+  // wire  [1 :0]    rresp, bresp;
   // rready
   always @(posedge clk) begin
     if(rst) rready <= 0;
@@ -58,7 +75,7 @@ module lsu (
       reg_rresp <= 2'b1;
     end else begin
       if(rvalid && rready) begin
-        reg_read_data <= data;
+        reg_read_data <= rdata;
         reg_rresp     <= rresp; 
       end else begin
         reg_rresp <= 2'b1;
@@ -72,13 +89,13 @@ module lsu (
     32'hffffffff, reg_read_data
   });
 
-  reg [31:0] awaddr;
-  reg [31:0] wdata;
-  reg [7:0]  wstrb;
-  reg        awvalid, wvalid;
+  // reg [31:0] awaddr;
+  // reg [31:0] wdata;
+  // reg [7:0]  wstrb;
+  // reg        awvalid, wvalid;
   reg        wait_for_write_address;
   reg        wait_for_write_data;
-  wire       awready, wready;
+  // wire       awready, wready;
 
   // 传输地址
   always @(posedge clk) begin
@@ -129,8 +146,8 @@ module lsu (
     end
   end
 
-  // bready
-  reg bready;
+  // // bready
+  // reg bready;
   always @(posedge clk) begin
     if(rst) bready <= 0;
     else    bready <= 1;
@@ -147,27 +164,27 @@ module lsu (
     end
   end
 
-  axi_sram axi_sa(
-    .aclk(clk),
-    .areset(rst),
-    .araddr(araddr),
-    .arvalid(arvalid),
-    .rready(rready),
-    .awaddr(exu_result),
-    .awvalid(awvalid),
-    .wdata(rsb),
-    .wstrb(wmask),
-    .wvalid(wvalid),
-    .arready(arready),
-    .bready(bready),
-    .rdata(data),
-    .rresp(rresp),
-    .rvalid(rvalid),
-    .bvalid(bvalid),
-    .awready(awready),
-    .wready(wready),
-    .bresp(bresp)
-  );
+  // axi_sram axi_sa(
+  //   .aclk(clk),
+  //   .areset(rst),
+  //   .araddr(araddr),
+  //   .arvalid(arvalid),
+  //   .rready(rready),
+  //   .awaddr(exu_result),
+  //   .awvalid(awvalid),
+  //   .wdata(rsb),
+  //   .wstrb(wmask),
+  //   .wvalid(wvalid),
+  //   .arready(arready),
+  //   .bready(bready),
+  //   .rdata(data),
+  //   .rresp(rresp),
+  //   .rvalid(rvalid),
+  //   .bvalid(bvalid),
+  //   .awready(awready),
+  //   .wready(wready),
+  //   .bresp(bresp)
+  // );
   
   assign lsu_send_valid = (lsu_receive_valid == 1) ? (((ren == 1)||(wen == 1)) ? ((reg_rresp == 0) || (reg_bresp == 0)) : 1) : ((reg_rresp == 0) || (reg_bresp == 0)); // 只有取值命令才需要等待sram返回值
 
