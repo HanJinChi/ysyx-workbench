@@ -192,11 +192,10 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
           bvalid <= 1;
           bresp <= 0;
           if(!bready) wait_for_bresp <= 1;
-        end else begin
-          if(bvalid && bready) begin
-            bvalid <= 0;
-            bresp  <= 1;
-          end
+        end 
+        if(bvalid && bready) begin
+          bvalid <= 0;
+          bresp  <= 1;
         end
       end
     end
