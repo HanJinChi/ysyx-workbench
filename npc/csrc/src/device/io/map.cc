@@ -1,3 +1,4 @@
+#include "debug.h"
 #include <isa.h>
 #include <device/map.h>
 #include <memory/vaddr.h>
@@ -19,7 +20,8 @@ uint8_t* new_space(int size){
 
 void check_bound(IOMap *map, paddr_t addr) {
   if (map == NULL) {
-    Assert(map != NULL, "address (" FMT_WORD ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
+    // Assert(map != NULL, "address (" FMT_WORD ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
+    Log("address (" FMT_WORD ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
   } else {
     Assert(addr <= map->high && addr >= map->low,
         "address (" FMT_WORD ") is out of bound {%s} [" FMT_WORD ", " FMT_WORD "] at pc = " FMT_WORD,
