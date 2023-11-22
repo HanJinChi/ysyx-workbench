@@ -63,7 +63,7 @@ module wbu(
     end
   endgenerate
 
-  assign w_csrarray_subsequent[0] = (ecall == 1) ? (w_regarray_previous[17]) : ((csreg_write_en == 1) ? ((csr_rd == 0) ? csr_wd : w_csrarray_previous[0]) : w_csrarray_previous[0]);
+  assign w_csrarray_subsequent[0] = (ecall == 1) ? (w_regarray_previous[15]) : ((csreg_write_en == 1) ? ((csr_rd == 0) ? csr_wd : w_csrarray_previous[0]) : w_csrarray_previous[0]);
 
   assign w_regarray_subsequent[0] = 32'b0;
 

@@ -166,28 +166,6 @@ module lsu (
     end
   end
 
-  // axi_sram axi_sa(
-  //   .aclk(clk),
-  //   .areset(rst),
-  //   .araddr(araddr),
-  //   .arvalid(arvalid),
-  //   .rready(rready),
-  //   .awaddr(exu_result),
-  //   .awvalid(awvalid),
-  //   .wdata(rsb),
-  //   .wstrb(wmask),
-  //   .wvalid(wvalid),
-  //   .arready(arready),
-  //   .bready(bready),
-  //   .rdata(data),
-  //   .rresp(rresp),
-  //   .rvalid(rvalid),
-  //   .bvalid(bvalid),
-  //   .awready(awready),
-  //   .wready(wready),
-  //   .bresp(bresp)
-  // );
-  
   assign lsu_send_valid = (lsu_receive_valid == 1) ? (((ren == 1)||(wen == 1)) ? ((reg_rresp == 0) || (reg_bresp == 0)) : 1) : ((reg_rresp == 0) || (reg_bresp == 0)); // 只有取值命令才需要等待sram返回值
 
 endmodule
