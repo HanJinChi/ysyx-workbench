@@ -34,8 +34,8 @@ module exu(
   assign zero_arr[7] = 0;
 
   // DIV
-  // assign result_arr[8] = $signed(src1) / $signed(src2);
-  // assign zero_arr[8] = 0;
+  assign result_arr[8] = $signed(src1) / $signed(src2);
+  assign zero_arr[8] = 0;
 
   // SSR 
   assign result_arr[9] = $signed(src1) >>> (src2 & 32'h1F);
@@ -52,30 +52,30 @@ module exu(
   assign zero_arr[11] = 0;
 
   // REMU 
-  // assign result_arr[12] = src1 % src2;
-  // assign zero_arr[12] = 0;
+  assign result_arr[12] = src1 % src2;
+  assign zero_arr[12] = 0;
 
-  // wire[63:0] MUL_res;
+  wire[63:0] MUL_res;
   // MUL
-  // assign MUL_res = src1 * src2;
-  // assign result_arr[13] = MUL_res[31:0];
-  // assign zero_arr[13] = 0; 
+  assign MUL_res = src1 * src2;
+  assign result_arr[13] = MUL_res[31:0];
+  assign zero_arr[13] = 0; 
 
   // DIVU
-  // assign result_arr[14] = src1 / src2;
-  // assign zero_arr[14] = 0;
+  assign result_arr[14] = src1 / src2;
+  assign zero_arr[14] = 0;
 
   // REM
-  // assign result_arr[15] = $signed(src1) % $signed(src2);
-  // assign zero_arr[15] = 0;
+  assign result_arr[15] = $signed(src1) % $signed(src2);
+  assign zero_arr[15] = 0;
 
   // SRC
   assign result_arr[16] = src1;
   assign zero_arr[16] = 0;
 
   // MULHU
-  // assign result_arr[17] = MUL_res[63:32];
-  // assign zero_arr[17] = 0;
+  assign result_arr[17] = MUL_res[63:32];
+  assign zero_arr[17] = 0;
 
 
   MuxKeyWithDefault #(18, 5, 32) exu_m0 (alu_result, aluOp, 32'b0, {
