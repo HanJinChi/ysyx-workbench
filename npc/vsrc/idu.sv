@@ -10,37 +10,96 @@
 
 
 module idu(
-  input    [31:0]   instruction,
-  input             idu_receive_valid,
-  output   [4 :0]   rs1,
-  output   [4 :0]   rs2,
-  output   [1 :0]   csr_rs, 
-  output   [4 :0]   rd,
-  output   [1 :0]   csr_rd,
-  output   [31:0]   imm,
-  output   [1 :0]   pcOp,
-  output   [4 :0]   aluOp,
-  output            src1Op,
-  output   [1 :0]   src2Op,
-  output   [1 :0]   wdOp,
-  output            csrwdOp,
-  output   [2 :0]   BOp,
-  output            ren,
-  output            wen,
-  output   [7 :0]   wmask,
-  output   [31:0]   rmask,
-  output            memory_read_signed,
-  output            reg_write_en,
-  output            csreg_write_en,
-  output            ecall, 
-  output            ebreak
+  input    wire          clk,
+  input    wire          rst,
+  input    wire  [31:0]  instruction_input,
+  input    wire  [31:0]  pc_input,
+  input    wire  [31:0]  rsa,
+  input    wire  [31:0]  rsb,
+  input    wire  [31:0]  csra,
+  input    wire          idu_receive_valid,
+  input    wire          idu_receive_ready,
+  output   wire  [4 :0]  rs1,
+  output   wire  [4 :0]  rs2,
+  output   wire  [1 :0]  csr_rs, 
+  output   wire  [4 :0]  rd,
+  output   wire  [1 :0]  csr_rd,
+  output   wire  [31:0]  imm,
+  output   wire  [1 :0]  pcOp,
+  output   wire  [4 :0]  aluOp,
+  output   wire  [31:0]  src1,
+  output   wire  [31:0]  src2,
+  output   wire  [1 :0]  wdOp,
+  output   wire          csrwdOp,
+  output   wire  [2 :0]  BOp,
+  output   wire          ren,
+  output   wire          wen,
+  output   wire  [7 :0]  wmask,
+  output   wire  [31:0]  rmask,
+  output   wire          memory_read_signed,
+  output   wire          reg_write_en,
+  output   wire          csreg_write_en,
+  output   wire          ecall, 
+  output   wire          ebreak,
+  output   reg   [31:0]  pc,
+  output   reg           idu_send_valid,
+  output   reg           idu_send_ready
 );
+
+  reg         state;
+  reg  [31:0] instruction;
+  reg         wait_for_decode_info;
+  always @(posedge clk) begin
+    if(rst) begin
+      state <= 0;
+      idu_send_ready <= 0;
+      instruction    <= 0;
+      pc             <= 0;
+    end
+    else begin
+      if(state == 0) begin
+        if(idu_receive_valid) begin
+          state          <= 1;
+          idu_send_ready <= 1;
+          instruction    <= instruction_input;
+          pc             <= pc_input;
+        end else  
+          idu_send_ready <= 0;
+      end else begin // state == 1
+        if(idu_send_valid && idu_receive_ready) 
+          state <= 0;
+        else 
+          idu_send_ready <= 0;
+      end
+    end
+  end
+
+  always @(posedge clk) begin
+    if(rst) begin
+      wait_for_decode_info <= 0;
+      idu_send_valid       <= 0;
+    end else begin
+      if(wait_for_decode_info) begin
+        if(idu_receive_ready) begin
+          assert(idu_send_valid == 1);
+          idu_send_valid <= 0;
+          wait_for_decode_info <= 0;
+        end
+      end else begin
+        if((state == 0) && idu_receive_valid) begin
+          idu_send_valid <= 1;
+          if(!idu_receive_ready) wait_for_decode_info <= 1;
+        end else begin
+          if(idu_send_valid && idu_receive_ready) idu_send_valid <= 0;
+        end
+      end
+    end
+  end
 
 
   wire [2: 0] instruction_type;
   wire [31:0] immI, immU, immS, immJ, immB, immV;
   wire [31:0] immJa, immJb;
-
 
   MuxKeyWithDefault #(10, 7, 3) idu_i0 (instruction_type, instruction[6:0], 3'b0, {
     7'b0010111, `YSYX_23060059_TYPE_U,
@@ -277,6 +336,20 @@ module idu(
   assign wen = (instruction_type == `YSYX_23060059_TYPE_S);
 
   assign ebreak = (instruction == 32'h100073); // if the instruction is ebreak, end the simluation
+
+  wire            src1Op;
+  wire   [1 :0]   src2Op;
+
+  MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
+    1'b0, rsa,
+    1'b1, pc
+  });
+
+  MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
+    2'b00, rsb,
+    2'b01, imm,
+    2'b10, csra
+  });
 
 
 endmodule
