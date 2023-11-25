@@ -267,7 +267,7 @@ module top(
   lsu ls(
     .clk(clk),
     .rst(rst),
-    .lsu_receive_valid(ifu_send_valid),
+    .lsu_receive_valid(exu_send_valid),
     .ren_input(ren_exu),
     .wen_input(wen_exu),
     .memory_read_signed_input(memory_read_signed_exu),
