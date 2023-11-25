@@ -366,7 +366,7 @@ module top(
  
   always@(*) begin
     end_sim({32{endflag}});
-    set_decode_inst(pc, instruction);
+    set_decode_inst(pc_idu, instruction);
   end
 
 endmodule
