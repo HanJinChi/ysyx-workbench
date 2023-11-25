@@ -25,7 +25,7 @@ module lsu (
   input    wire          wready,
   input    wire          bvalid,
   input    wire  [1 :0]  bresp,
-  output   wire          lsu_send_valid,
+  output   reg           lsu_send_valid,
   output   reg           lsu_send_ready,
   output   wire  [31:0]  wd,
   output   wire  [31:0]  csr_wd,
@@ -106,27 +106,6 @@ module lsu (
   reg  [1 :0]  wdOp;
   reg          csrwdOp;
   wire [31:0]  memory_read_wd;
-
-  always @(posedge clk) begin
-    if(rst) begin
-      ren                <= 0;
-      wen                <= 0;
-      memory_read_signed <= 0;
-      wmask              <= 0;
-      rmask              <= 0;
-      exu_result         <= 0;
-      pc                 <= 0;
-      src2               <= 0;
-      wdOp               <= 0;
-      csrwdOp            <= 0;
-      rd                 <= 0;
-      csr_rd             <= 0;
-      reg_write_en       <= 0;
-      csreg_write_en     <= 0;
-      ecall              <= 0;
-      lsu_send_ready     <= 0;
-    end
-  end
 
 
   reg             wait_for_read_address;
@@ -223,11 +202,11 @@ module lsu (
           wvalid <= 0;
         end 
       end else begin
-        if(lsu_receive_valid && wen) begin
+        if(lsu_receive_valid && wen_input && (state == 0)) begin
           assert(wvalid == 0);
           wvalid <= 1;
-          wdata  <= src2;
-          wstrb  <= wmask;
+          wdata  <= src2_input;
+          wstrb  <= wmask_input;
           if(!wready) wait_for_write_data <= 1;
         end else begin
           if(wvalid && wready) wvalid <= 0;
@@ -254,8 +233,6 @@ module lsu (
     end
   end
 
-  assign lsu_send_valid = (lsu_receive_valid == 1) ? (((ren == 1)||(wen == 1)) ? ((reg_rresp == 0) || (reg_bresp == 0)) : 1) : ((reg_rresp == 0) || (reg_bresp == 0)); // 只有取值命令才需要等待sram返回值
-
   // wd choose
   MuxKeyWithDefault #(4, 2, 32) wdc (wd, wdOp, exu_result, {
     2'b00, exu_result,
@@ -268,5 +245,23 @@ module lsu (
     1'b0, exu_result,
     1'b1, pc
   });
+
+  always @(posedge clk) begin
+    if(rst) begin
+      lsu_send_valid <= 0;
+    end else begin
+      if(state == 1) begin
+        if(!ren && !wen) 
+          lsu_send_valid <= 1;
+        else
+          if((reg_rresp == 0) || (reg_bresp == 0))
+            lsu_send_valid <= 1;
+          else
+            lsu_send_valid <= 0;
+      end else
+        lsu_send_valid <= 0;
+    end
+
+  end
 
 endmodule
