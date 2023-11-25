@@ -137,7 +137,7 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000) regd(clk, rst, pc_next_idu, pc,  pc_write_enable); // assign pc value
+  Reg #(32, 32'h80000000) regd(clk, rst, pc_next, pc,  pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
@@ -360,8 +360,9 @@ module top(
   );
 
 
-  // assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : ifu_send_valid;
   assign ifu_receive_valid = 1;
+
+  assign pc_next = pc_next_idu;
 
   always@(*) begin
     end_sim({32{endflag}});
