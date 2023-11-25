@@ -43,7 +43,7 @@ module arbiter(
       arstate <= 0;
     end else begin
       if(arstate == 0) begin
-        arstate  <= 1;
+        if(arvalidA || arvalidB) arstate  <= 1;
       end else begin
         if(rready && rvalid) arstate <= 0;
       end
