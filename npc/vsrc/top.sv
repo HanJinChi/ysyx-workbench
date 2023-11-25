@@ -137,14 +137,14 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000) regd(clk, rst, pc_next, pc,  pc_write_enable); // assign pc value
+  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc,  pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
   ifu ifufetch(
     .clk(clk),
     .rst(rst),
-    .pc(pc),
+    .pc_next(pc_next),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
@@ -362,7 +362,7 @@ module top(
 
   assign ifu_receive_valid = 1;
 
-  assign pc_next = pc_next_idu;
+  assign pc_next = (pc == (32'h8000000 - 4)) ? 32'h80000000 : pc_next_idu ;
 
   always@(*) begin
     end_sim({32{endflag}});

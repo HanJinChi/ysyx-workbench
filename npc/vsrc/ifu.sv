@@ -1,7 +1,7 @@
 module ifu(
     input    wire          clk,
     input    wire          rst,
-    input    wire  [31:0]  pc,
+    input    wire  [31:0]  pc_next,
     input    wire          ifu_receive_valid,
     input    wire          ifu_receive_ready,
     input    wire          arready,
@@ -58,7 +58,7 @@ module ifu(
         if(enable_read_inst) begin
           assert(arvalid == 0);
           arvalid <= 1;
-          araddr  <= pc;  // 这里直接使用了pc是因为直接就能接收到pc而不用等待
+          araddr  <= pc_next;  // 这里直接使用了pc_next是因为直接就能接收到pc_next而不用等待
           if(!arready) wait_for_read_address <= 1;
         end else begin
           if(arvalid && arready) arvalid <= 0;
