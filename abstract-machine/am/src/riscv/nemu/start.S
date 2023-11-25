@@ -7,7 +7,6 @@ _start:
   la sp, _stack_pointer
   jal _x
   nop
-  nop
 _x:
   nop
   jal _trm_init
