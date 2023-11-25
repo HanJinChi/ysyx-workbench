@@ -98,14 +98,16 @@ module ifu(
           assert(ifu_send_valid == 1);
           ifu_send_valid <= 0;
           wait_for_read_instruction <= 0;
-        end else begin
+        end 
+      end else begin
           if(rvalid && rready && (rresp == 0)) begin
             ifu_send_valid <= 1;
             instruction    <= rdata;
             if(!ifu_receive_ready) wait_for_read_instruction <= 1;
-          end else if(ifu_send_valid && ifu_receive_ready) ifu_send_valid <= 0;
-        end
-      end 
+          end else 
+            if(ifu_send_valid && ifu_receive_ready) 
+              ifu_send_valid <= 0;
+      end
     end
   end 
 
