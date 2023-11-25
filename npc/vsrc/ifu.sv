@@ -25,7 +25,7 @@ module ifu(
     else begin
       if(state == 0) begin
         if(ifu_receive_valid) begin
-          state <= 1; // working state 
+          state          <= 1; // working state 
           ifu_send_ready <= 1;
         end else 
           ifu_send_ready <= 0;

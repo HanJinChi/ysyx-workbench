@@ -47,20 +47,50 @@ module lsu (
   reg         state;
   always @(posedge clk) begin
     if(rst) begin
-      state <= 0;
-      lsu_send_ready <= 1;
+      state              <= 0;
+      lsu_send_ready     <= 0;
+      ren                <= 0;
+      wen                <= 0;
+      memory_read_signed <= 0;
+      wmask              <= 0;
+      rmask              <= 0;
+      exu_result         <= 0;
+      pc                 <= 0;
+      src2               <= 0;
+      wdOp               <= 0;
+      csrwdOp            <= 0;
+      rd                 <= 0;
+      csr_rd             <= 0;
+      reg_write_en       <= 0;
+      csreg_write_en     <= 0;
+      ecall              <= 0;
     end else begin
       if(state == 0) begin
-        if(lsu_receive_valid && (ren_input || wen_input)) begin
-          state <= 1;
+        if(lsu_receive_valid) begin
+          state              <= 1;
+          lsu_send_ready     <= 1;
+          ren                <= ren_input;
+          wen                <= wen_input;
+          memory_read_signed <= memory_read_signed_input;
+          wmask              <= wmask_input;
+          rmask              <= rmask_input;
+          exu_result         <= exu_result_input;
+          pc                 <= pc_input;
+          src2               <= src2_input;
+          wdOp               <= wdOp_input;
+          csrwdOp            <= csrwdOp_input;
+          rd                 <= rd_input;
+          csr_rd             <= csr_rd_input;
+          reg_write_en       <= reg_write_en_input;
+          csreg_write_en     <= csreg_write_en_input;
+          ecall              <= ecall_input;
+        end else
           lsu_send_ready <= 0;
-        end
       end else begin  // state = 1
-        if(lsu_send_valid) begin
-          assert(lsu_send_ready == 0);
+        if(lsu_send_valid && lsu_send_ready)
           state <= 0;
-          lsu_send_ready <= 1;
-        end
+        else
+          lsu_send_ready <= 0;
       end
     end 
   end
@@ -119,10 +149,10 @@ module lsu (
           arvalid <= 0;
         end 
       end else begin
-        if(lsu_receive_valid && ren) begin
+        if(lsu_receive_valid && ren_input && (state == 0)) begin
           assert(arvalid == 0);
           arvalid <= 1;
-          araddr  <= exu_result;
+          araddr  <= exu_result_input;
           if(!arready) wait_for_read_address <= 1;
         end else begin
           if(arvalid && arready) arvalid <= 0;
@@ -168,10 +198,10 @@ module lsu (
           awvalid <= 0;
         end
       end else begin
-        if(lsu_receive_valid && wen) begin
+        if(lsu_receive_valid && wen_input && (state == 0)) begin
           assert(awvalid == 0);
           awvalid <= 1;
-          awaddr <= exu_result;
+          awaddr  <= exu_result_input;
           if(!awready) wait_for_write_address <= 1;
         end else begin
           if(awvalid && awready) awvalid <= 0;

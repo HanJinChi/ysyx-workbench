@@ -51,6 +51,7 @@ module exu(
   reg         wait_for_exu_result;
   always @(posedge clk) begin
     if(rst) begin
+      state   <= 0;
       src1    <= 0;
       src2    <= 0;
       aluOp   <= 0;
@@ -71,6 +72,7 @@ module exu(
       csreg_write_en     <= 0;
       ecall              <= 0;
       exu_send_valid     <= 0;
+      exu_send_ready     <= 0;
     end else if(state == 0) begin
         if(exu_receive_valid) begin
           state              <= 1;
