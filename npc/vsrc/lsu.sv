@@ -91,7 +91,7 @@ module lsu (
         end else
           lsu_send_ready <= 0;
       end else begin  // state = 1
-        if(lsu_send_valid && lsu_send_ready)
+        if(lsu_send_valid)
           state <= 0;
         else
           lsu_send_ready <= 0;

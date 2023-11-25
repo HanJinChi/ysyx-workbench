@@ -104,7 +104,7 @@ module exu(
         end else
           exu_send_ready <= 0;
     end else begin
-      if(exu_send_valid && exu_send_ready)
+      if(exu_send_valid && exu_receive_ready)
         state <= 0;
       else
         exu_send_ready <= 0;
