@@ -88,6 +88,7 @@ module top(
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
+  wire                  pc_write_enable;
   wire                  ifu_send_valid;
   wire                  ifu_send_ready;
   wire                  idu_send_valid;
@@ -133,7 +134,7 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_send_valid); // assign pc value
+  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, (pc == (32'h80000000-4)) ? 1 : pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
@@ -141,6 +142,7 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
+    .pc_write_enable(pc_write_enable),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),

@@ -8,6 +8,7 @@ module ifu(
     input    wire  [31:0]  rdata,
     input    wire          rvalid,
     input    wire  [1 :0]  rresp,
+    output   wire          pc_write_enable,
     output   reg           ifu_send_valid,
     output   reg           ifu_send_ready,
     output   reg   [31:0]  instruction,
@@ -111,5 +112,6 @@ module ifu(
     end
   end 
 
+  assign pc_write_enable = (state == 1) && ifu_send_valid && ifu_receive_ready;
 
 endmodule
