@@ -4,6 +4,6 @@
 
 _start:
   mv s0, zero
-  sb  zero,18(t0)
+  lhu  sp,18(t0)
   la sp, _stack_pointer
   jal _trm_init
