@@ -144,7 +144,7 @@ module top(
   ifu ifufetch(
     .clk(clk),
     .rst(rst),
-    .pc_next(pc_next),
+    .pc(pc),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
