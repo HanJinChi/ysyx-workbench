@@ -36,6 +36,21 @@ module arbiter(
   output   wire  [1 :0]  brespA, 
   output   wire  [1 :0]  brespB
 );
+
+  reg   arstate;
+  always @(posedge clk) begin
+    if(rst) begin
+      arstate <= 0;
+    end else begin
+      if(arstate == 0) begin
+        arstate  <= 1;
+      end else begin
+        if(rready && rvalid) arstate <= 0;
+      end
+    end
+  end
+
+
   reg   [1 :0]  araddrMux;
   reg           wait_for_read_addr;
   reg           arvalid;
@@ -48,6 +63,7 @@ module arbiter(
     end
     else begin
       if(wait_for_read_addr) begin
+        assert(arstate == 1);
         if(arready) begin
           assert(arvalid == 1);
           wait_for_read_addr <= 0;
@@ -55,16 +71,18 @@ module arbiter(
           // araddrMux <= 0;  // 后续的读取数据选择还要使用araddrMux,因此在这里不能置0
         end
       end else begin
-        if(arvalidA) begin
-          arvalid <= 1;
-          araddrMux <= 2'b01;
-          if(!arready) wait_for_read_addr <= 1;
-        end else if(arvalidB) begin
-          arvalid <= 1;
-          araddrMux <= 2'b10;
-          if(!arready) wait_for_read_addr <= 1;
+        if(arstate == 0) begin
+          if(arvalidA) begin
+            arvalid   <= 1;
+            araddrMux <= 2'b01;
+            if(!arready) wait_for_read_addr <= 1;
+          end else if(arvalidB) begin
+            arvalid   <= 1;
+            araddrMux <= 2'b10;
+            if(!arready) wait_for_read_addr <= 1;
+          end 
         end else begin
-          if(arvalid && arready) arvalid <= 1'b0; 
+          if(arvalid && arready) arvalid <= 1'b0;
         end
       end
     end
