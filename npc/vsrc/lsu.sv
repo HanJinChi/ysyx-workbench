@@ -251,7 +251,11 @@ module lsu (
       lsu_send_valid <= 0;
     end else begin
       if(state == 0) begin
-        if(lsu_receive_valid) lsu_send_valid <= 1;
+        if(lsu_receive_valid)
+          if(!ren_input && !wen_input)
+            lsu_send_valid <= 1;
+          else 
+            lsu_send_valid <= 0;
         else                  lsu_send_valid <= 0;
       end else begin
         if((reg_rresp == 0) || (reg_bresp == 0)) 
