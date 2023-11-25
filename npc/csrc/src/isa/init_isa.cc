@@ -7,7 +7,7 @@ static const uint32_t img [] = {
   // 0x0102c503,   // lbu a0,16(t0)
   0x00050793,  // mv	a5,a0
   0x00058693,  // mv	a3,a1
-  0x0202d103,  // lhu  sp,32(t0)
+  0x01c2d103 ,  // lhu  sp,28(t0)
   0x00060713,  // mv	a2,a4
   0x00100073,  // ebreak (used as nemu_trap)
   0xdeadbeef,  // some data
