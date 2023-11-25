@@ -150,7 +150,7 @@ void exec_once(){
     if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
   } 
 
-  cpu.pc = top->pc_next;
+  cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
