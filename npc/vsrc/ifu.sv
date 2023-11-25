@@ -112,6 +112,6 @@ module ifu(
     end
   end 
 
-  assign pc_write_enable = (state == 1) && ifu_send_valid && ifu_receive_ready;
+  assign pc_write_enable = (state == 0);
 
 endmodule
