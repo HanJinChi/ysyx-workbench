@@ -82,7 +82,10 @@ module top(
   wire   [31:0]         rsa;
   wire   [31:0]         rsb;
   wire   [31:0]         pc_idu;
+  wire   [31:0]         pc_next_idu;
   wire   [31:0]         pc_exu;
+  wire   [31:0]         pc_next_exu;
+  wire   [31:0]         pc_next_lsu;
   wire   [31:0]         exu_result;
   wire   [31:0]         wd;
   wire   [31:0]         csr_wd;
@@ -142,7 +145,6 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
-    .pc_write_enable(pc_write_enable),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
@@ -190,6 +192,8 @@ module top(
     .ecall(ecall),
     .ebreak(endflag),
     .pc(pc_idu),
+    .pc_next(pc_next_idu),
+    .pc_write_enable(pc_write_enable),
     .idu_send_valid(idu_send_valid),
     .idu_send_ready(idu_send_ready),
     .idu_receive_ready(exu_send_ready)
@@ -207,6 +211,7 @@ module top(
     .csr_rd(csr_rd_lsu),
     .wd(wd)  ,
     .csr_wd(csr_wd),
+    .pc_next_input(pc_next_lsu),
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
@@ -238,6 +243,7 @@ module top(
     .csreg_write_en_input(csreg_write_en),
     .ecall_input(ecall),
     .pc_input(pc_idu),
+    .pc_next_input(pc_next_idu),
     .rd_input(rd),
     .csr_rd_input(csr_rd),
     .zero(zero),
@@ -259,6 +265,7 @@ module top(
     .ecall(ecall_exu),
     .pc(pc_exu),
     .rd(rd_exu),
+    .pc_next(pc_next_exu),
     .csr_rd(csr_rd_exu),
     .exu_send_valid(exu_send_valid),
     .exu_send_ready(exu_send_ready)
@@ -275,6 +282,7 @@ module top(
     .rmask_input(rmask_exu),
     .exu_result_input(exu_result),
     .pc_input(pc_exu),
+    .pc_next_input(pc_next_exu),
     .src2_input(src2_exu),
     .wdOp_input(wdOp_exu),
     .csrwdOp_input(csrwdOp_exu),
@@ -291,6 +299,7 @@ module top(
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
+    .pc_next(pc_next_lsu),
     .lsu_send_ready(lsu_send_ready),
     .arready(arreadyB),
     .rdata(rdataB),

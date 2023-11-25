@@ -41,6 +41,8 @@ module idu(
   output   wire          csreg_write_en,
   output   wire          ecall, 
   output   wire          ebreak,
+  output   wire  [31:0]  pc_next,
+  output   wire          pc_write_enable,
   output   reg   [31:0]  pc,
   output   reg           idu_send_valid,
   output   reg           idu_send_ready
@@ -351,5 +353,47 @@ module idu(
     2'b10, csra
   });
 
+
+  wire [31:0]  Bresult;
+  wire [31:0]  result_arr[3:0];
+  wire         zero_arr[2:0];
+  // ULES
+  wire [32:0] ules_temp;
+  assign ules_temp     = {1'b0, src1} - {1'b0, src2};
+  assign result_arr[0] = {31'h0, ules_temp[32]};
+  assign zero_arr[0]   = 0;
+
+  // SUB
+  assign result_arr[1] = src1 -src2;
+  assign zero_arr[1] = result_arr[1] == 0;
+
+  // SLES
+  assign result_arr[2] = {31'h0, $signed(src1) < $signed(src2) };
+  assign zero_arr[2] = 0;
+
+  // ADD
+  assign result_arr[3] = src1 + imm;
+
+  wire       Bjump;
+  wire [1:0] pcOpI;
+
+  assign Bjump = (BOp == 3'b111) & (result_arr[0] == 32'h0)   |  // ULES
+                 (BOp == 3'b000) & (zero_arr  [1] == 1)       |  // SUB
+                 (BOp == 3'b101) & (result_arr[2] == 32'h0)   |  // SLES
+                 (BOp == 3'b100) & (result_arr[2] == 32'h1)   |  // SLES
+                 (BOp == 3'b110) & (result_arr[0] == 32'h1)   |  // ULES
+                 (BOp == 3'b001) & (zero_arr  [1] == 0)  ;       // SUB
+  // BOp = 3'b010 代表着不是一条B指令
+  assign pcOpI = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
+
+  // pc choose
+  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc+4, {
+    2'b00, pc+4,
+    2'b01, pc+imm,
+    2'b10, result_arr[3]&(~1),
+    2'b11, csra
+  });
+
+  assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
 endmodule

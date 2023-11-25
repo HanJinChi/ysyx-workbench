@@ -9,6 +9,7 @@ module lsu (
   input    wire  [31:0]  rmask_input,
   input    wire  [31:0]  exu_result_input,
   input    wire  [31:0]  pc_input,
+  input    wire  [31:0]  pc_next_input,
   input    wire  [31:0]  src2_input,
   input    wire  [1 :0]  wdOp_input,
   input    wire          csrwdOp_input,
@@ -30,6 +31,7 @@ module lsu (
   output   wire  [31:0]  wd,
   output   wire  [31:0]  csr_wd,
   output   reg   [4 :0]  rd,
+  output   reg   [31:0]  pc_next,
   output   reg   [1 :0]  csr_rd,
   output   reg           reg_write_en,
   output   reg           csreg_write_en,
@@ -64,6 +66,7 @@ module lsu (
       reg_write_en       <= 0;
       csreg_write_en     <= 0;
       ecall              <= 0;
+      pc_next            <= 0;
     end else begin
       if(state == 0) begin
         if(lsu_receive_valid) begin
@@ -84,6 +87,7 @@ module lsu (
           reg_write_en       <= reg_write_en_input;
           csreg_write_en     <= csreg_write_en_input;
           ecall              <= ecall_input;
+          pc_next            <= pc_next_input;
         end else
           lsu_send_ready <= 0;
       end else begin  // state = 1

@@ -20,6 +20,7 @@ module exu(
   input   wire           csreg_write_en_input,
   input   wire           ecall_input,
   input   wire   [31:0]  pc_input,
+  input   wire   [31:0]  pc_next_input,
   input   wire   [4 :0]  rd_input,
   input   wire   [1 :0]  csr_rd_input,
   output  wire   [31:0]  alu_result,
@@ -40,6 +41,7 @@ module exu(
   output  reg            csreg_write_en,
   output  reg            ecall,
   output  reg    [31:0]  pc,
+  output  reg    [31:0]  pc_next,
   output  reg    [4 :0]  rd,
   output  reg    [1 :0]  csr_rd, 
   output  reg            exu_send_valid,
@@ -65,6 +67,7 @@ module exu(
       wmask   <= 0;
       rmask   <= 0;
       pc      <= 0;
+      pc_next <= 0;
       rd      <= 0;
       csr_rd  <= 0;
       memory_read_signed <= 0;
@@ -95,6 +98,7 @@ module exu(
           ecall              <= ecall_input;
           exu_send_valid     <= 1;
           pc                 <= pc_input;
+          pc_next            <= pc_next_input;
           rd                 <= rd_input;
           csr_rd             <= csr_rd_input;
         end else
