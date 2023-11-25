@@ -106,7 +106,7 @@ module arbiter(
   MuxKeyWithDefault #(1, 2, 1) a_m9 (rvalidA, araddrMux, 1'b0, {
     2'b01, rvalid
   });
-  MuxKeyWithDefault #(1, 2, 1) a_m10 (rvalidB, araddrMux, 1'b1, {
+  MuxKeyWithDefault #(1, 2, 1) a_m10 (rvalidB, araddrMux, 1'b0, {
     2'b10, rvalid
   });
 
