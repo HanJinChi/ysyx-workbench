@@ -137,7 +137,7 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, (pc == (32'h80000000-4)) ? 1 : pc_write_enable); // assign pc value
+  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next_idu, pc, (pc == (32'h80000000-4)) ? 1 : pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
@@ -359,23 +359,6 @@ module top(
     .brespB(brespB)
   );
 
-
-  assign Bjump = (BOp == 3'b111) & (exu_result == 32'h0) | 
-                 (BOp == 3'b000) & (zero == 1)    | 
-                 (BOp == 3'b101) & (exu_result == 32'h0) |
-                 (BOp == 3'b100) & (exu_result == 32'h1)  |
-                 (BOp == 3'b110) & (exu_result == 32'h1)  |
-                 (BOp == 3'b001) & (zero == 0)   ;
-  // BOp = 3'b010 代表着不是一条B指令
-  assign pcOpI = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
-
-  // pc choose
-  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc+4, {
-    2'b00, pc+4,
-    2'b01, pc+imm,
-    2'b10, exu_result&(~1),
-    2'b11, csra
-  });
 
   // assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : ifu_send_valid;
   assign ifu_receive_valid = 1;
