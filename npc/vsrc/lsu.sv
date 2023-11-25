@@ -250,17 +250,17 @@ module lsu (
     if(rst) begin
       lsu_send_valid <= 0;
     end else begin
-      if(state == 1) begin
-        if(!ren && !wen) 
+      if(state == 0) begin
+        if(lsu_receive_valid) lsu_send_valid <= 1;
+        else                  lsu_send_valid <= 0;
+      end else begin
+        if((reg_rresp == 0) || (reg_bresp == 0)) 
           lsu_send_valid <= 1;
         else
-          if((reg_rresp == 0) || (reg_bresp == 0))
-            lsu_send_valid <= 1;
-          else
-            lsu_send_valid <= 0;
-      end else
-        lsu_send_valid <= 0;
+          lsu_send_valid <= 0;
+      end
     end
+
 
   end
 
