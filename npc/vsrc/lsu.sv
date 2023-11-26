@@ -281,6 +281,6 @@ module lsu (
     end
   end
 
-  assign  lsu_state = ((state == 0) && lsu_receive_valid) || ((state == 1) && lsu_send_valid);
+  assign  lsu_state = ((state == 0) && lsu_receive_valid) || ((state == 1) && !lsu_send_valid);
 
 endmodule
