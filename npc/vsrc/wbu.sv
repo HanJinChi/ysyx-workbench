@@ -12,10 +12,20 @@ module wbu(
     input           reg_write_en,
     input           csreg_write_en,
     input           ecall,
+    input   [31:0]  pc_next_input,
     output  [31:0]  rsa,
     output  [31:0]  rsb,
     output  [31:0]  csra
 );
+  reg  [31:0] pc_next;
+  wire [31:0] pc_next_subsequent;
+  wire [31:0] pc_next_previous;
+
+  Reg #(32, 32'b0) regp(clk, rst, pc_next_subsequent, pc_next, wbu_receive_valid);
+
+  assign pc_next_previous = pc_next;
+  assign pc_next_subsequent = pc_next_input;
+
   
   reg  [31:0] regarray [31:0];
   wire [31:0] w_regarray_subsequent[31:0]; // directly modify

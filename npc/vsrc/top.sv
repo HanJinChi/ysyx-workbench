@@ -37,37 +37,72 @@ module top(
   wire   [4 :0]         rs2;
   wire   [1 :0]         csr_rs;
   wire   [4 :0]         rd;
+  wire   [4 :0]         rd_exu;
+  wire   [4 :0]         rd_lsu;
   wire   [1 :0]         csr_rd;
+  wire   [1 :0]         csr_rd_exu;
+  wire   [1 :0]         csr_rd_lsu;
   wire   [31:0]         imm;
+  wire   [31:0]         imm_exu;
   wire   [1 :0]         pcOp;
+  wire   [1 :0]         pcOp_exu;
   wire   [1 :0]         pcOpI;
-  wire                  src1Op;
-  wire   [1 :0]         src2Op;
   wire                  zero;
   wire   [1 :0]         wdOp;
+  wire   [1 :0]         wdOp_exu;
   wire   [31:0]         src1;
+  wire   [31:0]         src1_exu;
   wire   [31:0]         src2;
+  wire   [31:0]         src2_exu;
   wire   [4 :0]         aluOp;
   wire   [2 :0]         BOp;
+  wire   [2 :0]         BOp_exu;
+  wire                  exu_state;
+  wire                  lsu_state;
   wire                  Bjump;
   wire                  ren;
+  wire                  ren_exu;
   wire                  wen;
+  wire                  wen_exu;
   wire   [7:0]          wmask;
+  wire   [7:0]          wmask_exu;
   wire   [31:0]         rmask;
+  wire   [31:0]         rmask_exu;
   wire                  memory_read_signed;
+  wire                  memory_read_signed_exu;
   wire                  reg_write_en;
+  wire                  reg_write_en_exu;
+  wire                  reg_write_en_lsu;
   wire                  csreg_write_en;
+  wire                  csreg_write_en_exu;
+  wire                  csreg_write_en_lsu;
   wire                  ecall;
+  wire                  ecall_exu;
+  wire                  ecall_lsu;
   wire                  csrwdOp;
+  wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
   wire   [31:0]         rsb;
+  wire   [31:0]         rsb_exu;
+  wire   [31:0]         pc_idu;
+  wire   [31:0]         pc_next_idu;
+  wire   [31:0]         pc_exu;
+  wire   [31:0]         pc_next_exu;
+  wire   [31:0]         pc_next_lsu;
   wire   [31:0]         exu_result;
   wire   [31:0]         wd;
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
+  wire                  pc_write_enable;
   wire                  ifu_send_valid;
+  wire                  ifu_send_ready;
+  wire                  idu_send_valid;
+  wire                  idu_send_ready;
   wire                  lsu_send_valid;
+  wire                  lsu_send_ready;
+  wire                  exu_send_valid;
+  wire                  exu_send_ready;
   wire                  ifu_receive_valid;
   wire   [31:0]         araddrA;
   wire   [31:0]         araddrB;
@@ -105,7 +140,7 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000-4) regd(clk, rst, pc_next, pc, ifu_receive_valid); // assign pc value
+  Reg #(32, 32'h80000000) regd(clk, rst, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
@@ -115,6 +150,8 @@ module top(
     .pc_next(pc_next),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
+    .ifu_send_ready(ifu_send_ready),
+    .ifu_receive_ready(idu_send_ready),
     .instruction(instruction),
     .arready(arreadyA),
     .rdata(rdataA),
@@ -127,7 +164,20 @@ module top(
 
   // instruction Decode Unit
   idu id(
-    .instruction(instruction),
+    .clk(clk),
+    .rst(rst),
+    .instruction_input(instruction),
+    .pc_input(pc),
+    .rsa(rsa),
+    .rsb(rsb),
+    .csra(csra),
+    .exu_state(exu_state),
+    .rd_lsu(rd_exu), // rd_exu是rd_lsu的输入
+    .csr_rd_lsu(csr_rd_exu),
+    .lsu_state(lsu_state),
+    .rd_wbu(rd_lsu),
+    .csr_rd_wbu(csr_rd_lsu),
+    .wbu_state(lsu_send_valid),
     .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),
     .rs2(rs2),
@@ -137,8 +187,8 @@ module top(
     .imm(imm),
     .pcOp(pcOp),
     .aluOp(aluOp),
-    .src1Op(src1Op),
-    .src2Op(src2Op),
+    .src1(src1),
+    .src2(src2),
     .BOp(BOp),
     .wdOp(wdOp),
     .csrwdOp(csrwdOp),
@@ -150,7 +200,13 @@ module top(
     .reg_write_en(reg_write_en),
     .csreg_write_en(csreg_write_en),
     .ecall(ecall),
-    .ebreak(endflag)
+    .ebreak(endflag),
+    .pc(pc_idu),
+    .pc_next(pc_next_idu),
+    .pc_write_enable(pc_write_enable),
+    .idu_send_valid(idu_send_valid),
+    .idu_send_ready(idu_send_ready),
+    .idu_receive_ready(exu_send_ready)
   );
 
   // Reg Array Unit
@@ -161,50 +217,105 @@ module top(
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
-    .rd(rd)  ,
-    .csr_rd(csr_rd),
+    .rd(rd_lsu)  ,
+    .csr_rd(csr_rd_lsu),
     .wd(wd)  ,
     .csr_wd(csr_wd),
-    .reg_write_en(reg_write_en),
-    .csreg_write_en(csreg_write_en),
-    .ecall(ecall),
+    .pc_next_input(pc_next_lsu),
+    .reg_write_en(reg_write_en_lsu),
+    .csreg_write_en(csreg_write_en_lsu),
+    .ecall(ecall_lsu),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra)
   );
 
-  // Exection Unit
-  MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
-    1'b0, rsa,
-    1'b1, pc
-  });
-
-  MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
-    2'b00, rsb,
-    2'b01, imm,
-    2'b10, csra
-  });  
+  // Exection Unit  
   exu ex(
-    .src1(src1),
-    .src2(src2),
-    .aluOp(aluOp),
+    .clk(clk),
+    .rst(rst),
+    .exu_receive_valid(idu_send_valid),
+    .exu_receive_ready(lsu_send_ready),
+    .src1_input(src1),
+    .src2_input(src2),
+    .rsb_input(rsb),
+    .aluOp_input(aluOp),
+    .imm_input(imm),
+    .pcOp_input(pcOp),
+    .wdOp_input(wdOp),
+    .csrwdOp_input(csrwdOp),
+    .BOp_input(BOp),
+    .ren_input(ren),
+    .wen_input(wen),
+    .wmask_input(wmask),
+    .rmask_input(rmask),
+    .memory_read_signed_input(memory_read_signed),
+    .reg_write_en_input(reg_write_en),
+    .csreg_write_en_input(csreg_write_en),
+    .ecall_input(ecall),
+    .pc_input(pc_idu),
+    .pc_next_input(pc_next_idu),
+    .rd_input(rd),
+    .csr_rd_input(csr_rd),
     .zero(zero),
-    .alu_result(exu_result)
+    .alu_result(exu_result),
+    .src1(src1_exu),
+    .src2(src2_exu),
+    .imm(imm_exu),
+    .pcOp(pcOp_exu),
+    .wdOp(wdOp_exu),
+    .csrwdOp(csrwdOp_exu),
+    .BOp(BOp_exu),
+    .ren(ren_exu),
+    .wen(wen_exu),
+    .wmask(wmask_exu),
+    .rmask(rmask_exu),
+    .memory_read_signed(memory_read_signed_exu),
+    .reg_write_en(reg_write_en_exu),
+    .csreg_write_en(csreg_write_en_exu),
+    .ecall(ecall_exu),
+    .pc(pc_exu),
+    .rsb(rsb_exu),
+    .rd(rd_exu),
+    .pc_next(pc_next_exu),
+    .csr_rd(csr_rd_exu),
+    .exu_send_valid(exu_send_valid),
+    .exu_send_ready(exu_send_ready),
+    .exu_state(exu_state)
   );
 
   lsu ls(
     .clk(clk),
     .rst(rst),
-    .lsu_receive_valid(ifu_send_valid),
-    .ren(ren),
-    .wen(wen),
-    .memory_read_signed(memory_read_signed),
-    .rsb(rsb),
-    .wmask(wmask),
-    .rmask(rmask),
-    .exu_result(exu_result),
+    .lsu_receive_valid(exu_send_valid),
+    .ren_input(ren_exu),
+    .wen_input(wen_exu),
+    .memory_read_signed_input(memory_read_signed_exu),
+    .wmask_input(wmask_exu),
+    .rmask_input(rmask_exu),
+    .exu_result_input(exu_result),
+    .pc_input(pc_exu),
+    .pc_next_input(pc_next_exu),
+    .src2_input(src2_exu),
+    .rsb_input(rsb_exu),
+    .wdOp_input(wdOp_exu),
+    .csrwdOp_input(csrwdOp_exu),
+    .rd_input(rd_exu),
+    .csr_rd_input(csr_rd_exu),
+    .reg_write_en_input(reg_write_en_exu),
+    .csreg_write_en_input(csreg_write_en_exu),
+    .ecall_input(ecall_exu),
     .lsu_send_valid(lsu_send_valid),
-    .memory_read_wd(memory_read_wd),
+    .wd(wd),
+    .csr_wd(csr_wd),
+    .rd(rd_lsu),
+    .csr_rd(csr_rd_lsu),
+    .reg_write_en(reg_write_en_lsu),
+    .csreg_write_en(csreg_write_en_lsu),
+    .ecall(ecall_lsu),
+    .pc_next(pc_next_lsu),
+    .lsu_send_ready(lsu_send_ready),
+    .lsu_state(lsu_state),
     .arready(arreadyB),
     .rdata(rdataB),
     .rresp(rrespB),
@@ -263,41 +374,14 @@ module top(
     .brespB(brespB)
   );
 
-  // wd choose
-  MuxKeyWithDefault #(4, 2, 32) wdc (wd, wdOp, exu_result, {
-    2'b00, exu_result,
-    2'b01, memory_read_wd,
-    2'b10, pc+4,
-    2'b11, src2
-  });
 
-  MuxKeyWithDefault #(2, 1, 32) csrwdc (csr_wd, csrwdOp, exu_result, {
-    1'b0, exu_result,
-    1'b1, pc
-  });
+  assign ifu_receive_valid = 1;
 
-  assign Bjump = (BOp == 3'b111) & (exu_result == 32'h0) | 
-                 (BOp == 3'b000) & (zero == 1)    | 
-                 (BOp == 3'b101) & (exu_result == 32'h0) |
-                 (BOp == 3'b100) & (exu_result == 32'h1)  |
-                 (BOp == 3'b110) & (exu_result == 32'h1)  |
-                 (BOp == 3'b001) & (zero == 0)   ;
-  // Bop = 3'b010 代表着不是一条B指令
-  assign pcOpI = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
-
-  // pc choose
-  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc+4, {
-    2'b00, pc+4,
-    2'b01, pc+imm,
-    2'b10, exu_result&(~1),
-    2'b11, csra
-  });
-
-  assign ifu_receive_valid = (pc == (32'h80000000-4)) ? 1 : lsu_send_valid;
-
+  assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
+ 
   always@(*) begin
     end_sim({32{endflag}});
-    set_decode_inst(pc, instruction);
+    set_decode_inst(pc_idu, instruction);
   end
 
 endmodule
