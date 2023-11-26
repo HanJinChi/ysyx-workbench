@@ -17,6 +17,13 @@ module idu(
   input    wire  [31:0]  rsa,
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
+  input    wire          exu_state,
+  input    wire  [4 :0]  rd_lsu,
+  input    wire  [1 :0]  csr_rd_lsu,
+  input    wire          lsu_state,
+  input    wire  [4 :0]  rd_wbu,
+  input    wire  [1 :0]  csr_rd_wbu,
+  input    wire          wbu_state,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
   output   wire  [4 :0]  rs1,
@@ -88,9 +95,12 @@ module idu(
           wait_for_decode_info <= 0;
         end
       end else begin
-        if((state == 0) && idu_receive_valid) begin
-          idu_send_valid <= 1;
-          if(!idu_receive_ready) wait_for_decode_info <= 1;
+        if(((state == 0) && idu_receive_valid) || (state == 1)) begin
+          if(!conflict) begin
+            idu_send_valid <= 1;
+            if(!idu_receive_ready) wait_for_decode_info <= 1;
+          end else 
+            idu_send_valid <= 0;
         end else begin
           if(idu_send_valid && idu_receive_ready) idu_send_valid <= 0;
         end
@@ -395,5 +405,43 @@ module idu(
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
+
+
+  // ecall 
+  wire   ecall_input;
+  assign ecall_input = (instruction_input == 32'h73);
+  // mret
+  wire   mret_input;
+  assign mret_input = (instruction_input == 32'h30200073);
+
+  wire [1:0] csr_rsA_input;
+  wire [31:0] immV_input;
+  MuxKeyWithDefault #(4, 32, 2) idu_i26(csr_rsA_input, immV_input, 2'b11, {
+    32'h342, 2'b00,
+    32'h341, 2'b01,
+    32'h300, 2'b10,
+    32'h305, 2'b11    
+  });
+
+  wire   [1:0]  csr_rs_input;
+  assign csr_rs_input = (ecall_input == 1'b1) ? (2'b11) : ((mret_input == 1'b1) ? (2'b01) : csr_rsA_input);
+
+  wire   [4:0]  rs1_input;
+  wire   [4:0]  rs2_input;
+  wire   [4:0]  rd_input;
+  assign rs1_input  = instruction_input[19:15];
+  assign rs2_input  = instruction_input[24:20];
+  assign rd_input   = instruction_input[11:7];
+
+  wire   exu_conflict;
+  wire   lsu_conflict;
+  wire   wbu_conflict;
+  wire   conflict;
+
+
+  assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
+  assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
+  assign wbu_conflict = (wbu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
+  assign conflict = exu_conflict || lsu_conflict || wbu_conflict;
 
 endmodule
