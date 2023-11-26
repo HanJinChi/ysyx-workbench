@@ -44,7 +44,8 @@ module lsu (
   output   reg           wvalid,
   output   reg           bready,
   output   reg   [31:0]  wdata,
-  output   reg   [7 :0]  wstrb
+  output   reg   [7 :0]  wstrb,
+  output   wire          lsu_state
 );
   reg         state;
   always @(posedge clk) begin
@@ -268,8 +269,8 @@ module lsu (
           lsu_send_valid <= 0;
       end
     end
-
-
   end
+
+  assign  lsu_state = ((state == 0) && lsu_receive_valid) || ((state == 1) && lsu_send_valid);
 
 endmodule

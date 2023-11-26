@@ -45,7 +45,8 @@ module exu(
   output  reg    [4 :0]  rd,
   output  reg    [1 :0]  csr_rd, 
   output  reg            exu_send_valid,
-  output  reg            exu_send_ready
+  output  reg            exu_send_ready,
+  output  wire           exu_state
 );
 
   reg  [4:0]  aluOp;
@@ -131,9 +132,9 @@ module exu(
         end
       end
     end
-
   end
 
+  assign exu_state = ((state == 0) && exu_receive_valid) || ((state == 1) && exu_send_valid && exu_receive_ready);
 
 
   wire [31:0] result_arr [17:0];

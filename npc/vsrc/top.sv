@@ -57,6 +57,8 @@ module top(
   wire   [4 :0]         aluOp;
   wire   [2 :0]         BOp;
   wire   [2 :0]         BOp_exu;
+  wire                  exu_state;
+  wire                  lsu_state;
   wire                  Bjump;
   wire                  ren;
   wire                  ren_exu;
@@ -168,6 +170,13 @@ module top(
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra),
+    .exu_state(exu_state),
+    .rd_lsu(rd_exu), // rd_exu是rd_lsu的输入
+    .csr_rd_lsu(csr_rd_exu),
+    .lsu_state(lsu_state),
+    .rd_wbu(rd_lsu),
+    .csr_rd_wbu(csr_rd_lsu),
+    .wbu_state(lsu_send_valid),
     .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),
     .rs2(rs2),
@@ -268,7 +277,8 @@ module top(
     .pc_next(pc_next_exu),
     .csr_rd(csr_rd_exu),
     .exu_send_valid(exu_send_valid),
-    .exu_send_ready(exu_send_ready)
+    .exu_send_ready(exu_send_ready),
+    .exu_state(exu_state)
   );
 
   lsu ls(
@@ -301,6 +311,7 @@ module top(
     .ecall(ecall_lsu),
     .pc_next(pc_next_lsu),
     .lsu_send_ready(lsu_send_ready),
+    .lsu_state(lsu_state),
     .arready(arreadyB),
     .rdata(rdataB),
     .rresp(rrespB),
