@@ -101,13 +101,13 @@ module idu(
           if(!conflict) begin
             idu_send_valid <= 1;
             if(!idu_receive_ready) wait_for_decode_info <= 1;
+            $display("hhh");
             idu_send_to_ifu_valid <= 1;
           end else 
             idu_send_valid <= 0;
             idu_send_to_ifu_valid <= 0;
         end else begin
           if(idu_send_valid && idu_receive_ready) idu_send_valid <= 0;
-          idu_send_to_ifu_valid <= 0;
         end
       end
     end
