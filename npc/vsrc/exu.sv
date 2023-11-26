@@ -22,6 +22,7 @@ module exu(
   input   wire           ecall_input,
   input   wire   [31:0]  pc_input,
   input   wire   [31:0]  pc_next_input,
+  input   wire   [31:0]  instruction_input,
   input   wire   [4 :0]  rd_input,
   input   wire   [1 :0]  csr_rd_input,
   output  wire   [31:0]  alu_result,
@@ -43,6 +44,7 @@ module exu(
   output  reg            ecall,
   output  reg    [31:0]  pc,
   output  reg    [31:0]  pc_next,
+  output  reg    [31:0]  instruction,
   output  reg    [31:0]  rsb,
   output  reg    [4 :0]  rd,
   output  reg    [1 :0]  csr_rd, 
@@ -80,6 +82,7 @@ module exu(
       ecall              <= 0;
       exu_send_valid     <= 0;
       exu_send_ready     <= 0;
+      instruction        <= 0;
     end else if(state == 0) begin
         if(exu_receive_valid) begin
           state              <= 1;
@@ -106,6 +109,7 @@ module exu(
           rd                 <= rd_input;
           csr_rd             <= csr_rd_input;
           rsb                <= rsb_input;
+          instruction        <= instruction_input;
         end else
           exu_send_ready <= 0;
     end else begin
