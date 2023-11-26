@@ -100,7 +100,6 @@ module idu(
         if(((state == 0) && idu_receive_valid) || (state == 1)) begin
           if(!conflict) begin
             idu_send_valid <= 1;
-            $display("hhh");
             idu_send_to_ifu_valid <= 1;
             if(!idu_receive_ready) wait_for_decode_info <= 1;
           end else begin 
