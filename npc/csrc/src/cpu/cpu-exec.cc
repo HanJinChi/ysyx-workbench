@@ -154,6 +154,9 @@ void exec_once(){
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
+    s.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;
+    s.inst = top->__PVT__top->__PVT__wb->__PVT__instruction_subsequent;
+
     char *p = s.logbuf;
     p += snprintf(p, sizeof(s.logbuf), FMT_WORD ":", s.pc);
     uint8_t *inst = (uint8_t *)&s.inst;
