@@ -73,12 +73,8 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   reg [31:0] reg_read_data;
   always@(sram_read_state) begin
-    if(sram_read_state == MEM_READ) begin
-      $display("reg_araddr is %x", reg_araddr);
-      n_pmem_read(reg_araddr, reg_read_data);
-    end
-    else                      
-      reg_read_data = 0;
+    if(sram_read_state == MEM_READ)  n_pmem_read(reg_araddr, reg_read_data);
+    else                             reg_read_data = 0;
   end
 
   reg wait_for_read;
@@ -193,7 +189,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
   assign write_addr = (awvalid && awready) ? awaddr : reg_awaddr;
-  always @(*) begin
+  always @(sram_write_state) begin
     if(sram_write_state == MEM_WRITE) begin
       n_pmem_write(write_addr, reg_wdata, reg_wstrb);
     end else begin
