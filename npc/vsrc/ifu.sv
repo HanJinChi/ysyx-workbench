@@ -59,27 +59,6 @@ module ifu(
   end
 
 
-  // always @(posedge clk) begin
-  //   if(rst) begin
-  //     state <= 0;
-  //     ifu_send_ready <= 0;
-  //   end
-  //   else begin
-  //     if(state == 0) begin
-  //       if(ifu_receive_valid) begin
-  //         state          <= 1; // working state 
-  //         ifu_send_ready <= 1;
-  //       end else 
-  //         ifu_send_ready <= 0;
-  //     end else begin
-  //       if(ifu_send_valid && ifu_receive_ready) 
-  //         state <= 0;
-  //       else
-  //         ifu_send_ready <= 0;
-  //     end
-  //   end
-  // end
-
   always@(posedge clk) begin
     if(rst) rready <= 0;
     else    rready <= 1;
@@ -118,68 +97,5 @@ module ifu(
     end
   end
 
-
-  // always@(posedge clk) begin
-  //   if(rst) begin
-  //     arvalid <= 0;
-  //     araddr <= 0;
-  //     wait_for_read_address <=0 ;
-  //   end else begin
-  //     if(wait_for_read_address) begin
-  //       if(arready) begin
-  //         assert(arvalid == 1);
-  //         wait_for_read_address <= 0;
-  //         arvalid <= 0;
-  //       end
-  //     end else begin
-  //       if(enable_read_inst) begin
-  //         assert(arvalid == 0);
-  //         arvalid <= 1;
-  //         araddr  <= pc_next;  // 这里直接使用了pc_next是因为直接就能接收到pc_next而不用等待
-  //         if(!arready) wait_for_read_address <= 1;
-  //       end else begin
-  //         if(arvalid && arready) arvalid <= 0;
-  //       end
-  //     end
-  //   end
-  // end
-  // always @(posedge clk) begin
-  //   if(rst) begin
-  //     reg_data <= 0;
-  //     reg_rresp <= 1;
-  //   end else begin
-  //     if(rvalid && rready) begin
-  //       reg_data <= rdata;
-  //       reg_rresp <= rresp;
-  //     end else begin
-  //       reg_rresp <= 1;
-  //     end
-  //   end
-  // end
-
-  // reg wait_for_read_instruction;
-  // always @(posedge clk) begin
-  //   if(rst) begin
-  //     instruction    <= 0;
-  //     ifu_send_valid <= 0;
-  //     wait_for_read_instruction <= 0;
-  //   end else begin
-  //     if(wait_for_read_instruction) begin
-  //       if(ifu_receive_ready) begin
-  //         assert(ifu_send_valid == 1);
-  //         ifu_send_valid <= 0;
-  //         wait_for_read_instruction <= 0;
-  //       end 
-  //     end else begin
-  //         if(rvalid && rready && (rresp == 0)) begin
-  //           ifu_send_valid <= 1;
-  //           instruction    <= rdata;
-  //           if(!ifu_receive_ready) wait_for_read_instruction <= 1;
-  //         end else 
-  //           if(ifu_send_valid && ifu_receive_ready) 
-  //             ifu_send_valid <= 0;
-  //     end
-  //   end
-  // end 
 
 endmodule
