@@ -198,35 +198,6 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
 
   reg wait_for_bresp;
-  // always @(posedge aclk) begin
-  //   if(areset) begin
-  //     bvalid <= 0;
-  //     bresp  <= 1; // 1代表exokay
-  //     wait_for_bresp <= 0;
-  //   end else begin
-  //     if(wait_for_bresp) begin
-  //       if(bready) begin
-  //         bvalid <= 0;
-  //         bresp <= 1;
-  //         wait_for_bresp <= 0;
-  //       end
-  //     end else begin
-  //       if(sram_write_state == WS1) begin
-  //         assert(bvalid == 0);
-  //         assert(bresp == 1);
-  //         bvalid <= 1;
-  //         bresp <= 0;
-  //         if(!bready) wait_for_bresp <= 1;
-  //       end else begin
-  //         if(bvalid && bready) begin
-  //           bvalid <= 0;
-  //           bresp  <= 1;
-  //         end
-  //       end
-  //     end
-  //   end
-  // end
-
   always @(posedge aclk) begin
     if(areset) begin
       bvalid         <= 0;
