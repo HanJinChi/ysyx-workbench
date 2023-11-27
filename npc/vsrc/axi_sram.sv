@@ -31,17 +31,6 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
   assign arready = arready_r;
 
-  reg [31:0] araddr_r;
-  always @(posedge aclk) begin
-    if(areset) begin
-      araddr_r <= 0;
-    end else begin
-      if(arvalid && arready) begin
-        araddr_r <= araddr;
-      end
-    end 
-  end
-
   parameter IDLE_R = 0, MEM_READ = 1;
   reg sram_read_state, sram_read_next_state;
   always @(posedge aclk) begin
@@ -116,16 +105,15 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
   assign awready = awready_r;
 
-  reg [31:0] awaddr_r;
-  always @(posedge aclk) begin
-    if(areset) begin
-      awaddr_r <= 0;
-    end else begin
-      if(awvalid && awready) begin
-        awaddr_r <= awaddr;
-      end
-    end 
-  end
+  // always @(posedge aclk) begin
+  //   if(areset) begin
+  //     awaddr_r <= 0;
+  //   end else begin
+  //     if(awvalid && awready) begin
+  //       awaddr_r <= awaddr;
+  //     end
+  //   end 
+  // end
 
   reg  wready_r;
   always @(posedge aclk) begin
@@ -179,48 +167,40 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     endcase
   end
 
-  wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
+  wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取awaddr_r 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
   assign write_addr = (awvalid && awready) ? awaddr : awaddr_r;
   always @(sram_write_next_state) begin
     if(sram_write_next_state == MEM_WRITE) begin
-      n_pmem_write(write_addr, wdata_r, wstrb_r);
+      n_pmem_write(write_addr, wdata, wstrb);
     end else begin
       n_pmem_write(write_addr, wdata_r, 0);
     end
   end
 
-  reg       wait_bresp;
-  reg       bvalid_r;
-  reg [1:0] bresp_r;
+  reg        wait_bresp;
+  reg        bvalid_r;
+  reg [1 :0] bresp_r;
+  reg [31:0] awaddr_r;
+
   always @(posedge aclk) begin
     if(areset) begin
       bvalid_r   <= 0;
       bresp_r    <= 1;
       wait_bresp <= 0;
+      awaddr_r   <= 0;
     end else begin
-      // if(sram_write_state == MEM_WRITE) begin
-      //   if(wait_bresp) begin
-      //     if(bready) begin
-      //       bvalid_r      <= 0;
-      //       bresp_r       <= 1;
-      //       wait_bresp    <= 0;
-      //     end
-      //   end else begin
-      //     if(bvalid_r && bready) begin
-      //       bvalid_r  <= 0;
-      //       bresp_r   <= 1;
-      //     end else begin
-      //       assert(bvalid_r == 0);
-      //       assert(bresp_r  == 1);
-      //       bvalid_r  <= 1;
-      //       bresp_r   <= 0;
-      //       if(!bready) wait_bresp <= 1;
-      //     end 
-      //   end
-      // end
       if(sram_write_next_state == MEM_WRITE) begin
-        
-      end 
+        if(bvalid_r == 0) begin
+          awaddr_r  <= awaddr;
+          bvalid_r  <= 1;
+          bresp_r   <= 0;
+        end
+      end else begin  // next_state == IDLE
+        if(bvalid_r == 1) begin
+          bvalid_r  <= 0;
+          bresp_r   <= 0;
+        end
+      end
     end
   end
   assign bvalid = bvalid_r;
