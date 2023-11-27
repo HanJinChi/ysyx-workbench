@@ -20,25 +20,24 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     output   wire  [1 :0]  bresp     
 );
 
-  reg  reg_arready;
-  assign arready = reg_arready;
-
+  reg  arready_r;
   always @(posedge aclk) begin
     if(areset) begin  //  高电平复位有效
-      reg_arready <= 0;  // 默认将arready设为1
+      arready_r <= 0;  
     end
     else begin
-      reg_arready <= 1;
+      arready_r <= 1;
     end
   end
+  assign arready = arready_r;
 
-  reg [31:0] reg_araddr;
+  reg [31:0] araddr_r;
   always @(posedge aclk) begin
     if(areset) begin
-      reg_araddr <= 0;
+      araddr_r <= 0;
     end else begin
       if(arvalid && arready) begin
-        reg_araddr <= araddr;
+        araddr_r <= araddr;
       end
     end 
   end
@@ -73,7 +72,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   reg [31:0] reg_read_data;
   always@(sram_read_state) begin
-    if(sram_read_state == MEM_READ)  n_pmem_read(reg_araddr, reg_read_data);
+    if(sram_read_state == MEM_READ)  n_pmem_read(araddr_r, reg_read_data);
     else                             reg_read_data = 0;
   end
 
@@ -110,50 +109,48 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end
   end
 
-  reg  reg_awready;
-  assign awready = reg_awready;
-
+  reg  awready_r;
   always @(posedge aclk) begin
     if(areset) begin  
-      reg_awready <= 0;  
+      awready_r <= 0;  
     end
     else begin
-      reg_awready <= 1;
+      awready_r<= 1;
     end
   end
+  assign awready = awready_r;
 
-  reg [31:0] reg_awaddr;
+  reg [31:0] awaddr_r;
   always @(posedge aclk) begin
     if(areset) begin
-      reg_awaddr <= 0;
+      awaddr_r <= 0;
     end else begin
       if(awvalid && awready) begin
-        reg_awaddr <= awaddr;
+        awaddr_r <= awaddr;
       end
     end 
   end
 
-  reg  reg_wready;
-  assign wready = reg_wready;
-
+  reg  wready_r;
   always @(posedge aclk) begin
     if(areset) begin  
-      reg_wready <= 0;  
+      wready_r <= 0;  
     end
     else begin
-      reg_wready <= 1;
+      wready_r <= 1;
     end
   end
+  assign wready = wready_r;
 
-  reg [31:0] reg_wdata;
-  reg [7 :0] reg_wstrb;
+  reg [31:0] wdata_r;
+  reg [7 :0] wstrb_r;
   always @(posedge aclk) begin
     if(areset) begin
-      reg_wdata <= 0;
+      wdata_r <= 0;
     end else begin
       if(wvalid && wready) begin
-        reg_wdata <= wdata;
-        reg_wstrb <= wstrb;
+        wdata_r <= wdata;
+        wstrb_r <= wstrb;
       end
     end
   end
@@ -187,12 +184,12 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
 
   wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
-  assign write_addr = (awvalid && awready) ? awaddr : reg_awaddr;
+  assign write_addr = (awvalid && awready) ? awaddr : awaddr_r;
   always @(sram_write_state) begin
     if(sram_write_state == MEM_WRITE) begin
-      n_pmem_write(write_addr, reg_wdata, reg_wstrb);
+      n_pmem_write(write_addr, wdata_r, wstrb_r);
     end else begin
-      n_pmem_write(write_addr, reg_wdata, 0);
+      n_pmem_write(write_addr, wdata_r, 0);
     end
   end
 
