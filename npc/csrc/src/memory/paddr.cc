@@ -28,8 +28,10 @@ void init_mem() {
 }
 
 void out_of_bound(paddr_t addr) {
-  panic("address = " FMT_WORD " is out of bound of pmem [" FMT_WORD ", " FMT_WORD "] at pc = " FMT_WORD,
-      addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc); 
+  // panic("address = " FMT_WORD " is out of bound of pmem [" FMT_WORD ", " FMT_WORD "] at pc = " FMT_WORD,
+  //     addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+  Log("address = " FMT_WORD " is out of bound of pmem [" FMT_WORD ", " FMT_WORD "] at pc = " FMT_WORD,
+      addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);  
 }
 
 
