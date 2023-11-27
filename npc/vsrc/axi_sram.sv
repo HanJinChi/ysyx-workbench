@@ -86,7 +86,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       rvalid_r        <= 0;
       rdata_r         <= 0;
       rresp_r         <= 1;
-      wait_read     <= 0;
+      wait_read       <= 0;
     end else begin
       if(sram_read_state == MEM_READ) begin
         if(wait_read) begin
