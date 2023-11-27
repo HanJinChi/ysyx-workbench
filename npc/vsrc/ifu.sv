@@ -54,6 +54,7 @@ module ifu(
         else
           next_state = READ_C;
       end
+      default: begin end
     endcase
   end
 
