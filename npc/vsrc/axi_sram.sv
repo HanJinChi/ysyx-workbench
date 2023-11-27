@@ -71,12 +71,11 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
 
   reg [31:0] read_data_r;
-  always@(sram_read_state) begin
-    if(sram_read_state == MEM_READ)  n_pmem_read(araddr_r, read_data_r);
+  always@(sram_read_next_state) begin
+    if(sram_read_next_state == MEM_READ)  n_pmem_read(araddr, read_data_r);
     else                             read_data_r = 0;
   end
 
-  reg         wait_read;
   reg         rvalid_r;
   reg  [1 :0] rresp_r;
   reg  [31:0] rdata_r;
@@ -86,28 +85,17 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       rvalid_r        <= 0;
       rdata_r         <= 0;
       rresp_r         <= 1;
-      wait_read       <= 0;
     end else begin
-      if(sram_read_state == MEM_READ) begin
-        if(wait_read) begin
-          if(rready) begin
-            assert(rvalid_r == 1);
-            wait_read       <= 0;
-            rvalid_r        <= 0;
-            rresp_r         <= 1;
-          end
-        end else begin
-          if(rvalid_r && rready) begin
-            rvalid_r   <= 0;
-            rresp_r    <= 1;
-          end else begin
-            assert(rvalid_r == 0);
-            assert(rresp  == 1);
-            rvalid_r <= 1;
-            rdata_r  <= read_data_r;
-            rresp_r  <= 0;
-            if(!rready) wait_read <= 1;
-          end
+      if(sram_read_next_state == MEM_READ) begin
+        if(rvalid_r == 0) begin
+          rvalid_r  <= 1;
+          rdata_r   <= read_data_r;
+          rresp_r   <= 0;
+        end
+      end else begin  // IDLE
+        if(rvalid_r == 1) begin
+          rvalid_r <= 0;
+          rresp_r  <= 1;
         end
       end
     end
