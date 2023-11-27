@@ -97,9 +97,6 @@ module idu(
         if(!conflict) begin
           idu_send_valid        <= 1;
           idu_send_to_ifu_valid <= 1;
-        end else begin
-          idu_send_valid        <= 0;
-          idu_send_to_ifu_valid <= 0;
         end
       end else begin  // next_state == IDLE
         if(idu_send_valid) begin
