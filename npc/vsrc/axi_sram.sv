@@ -123,7 +123,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       awready_r <= 0;  
     end
     else begin
-      awready_r<= 1;
+      awready_r <= 1;
     end
   end
   assign awready = awready_r;
