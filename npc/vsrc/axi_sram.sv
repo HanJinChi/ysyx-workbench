@@ -181,8 +181,8 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   wire [31:0]  write_addr; // 真实要写入的地址,这时候分两种情况: 1.地址在数据传输之前已经获得,因此要取reg_addr 2.数据传输和地址传输同时到达(大部分情况),因此直接取awaddr
   assign write_addr = (awvalid && awready) ? awaddr : awaddr_r;
-  always @(sram_write_state) begin
-    if(sram_write_state == MEM_WRITE) begin
+  always @(sram_write_next_state) begin
+    if(sram_write_next_state == MEM_WRITE) begin
       n_pmem_write(write_addr, wdata_r, wstrb_r);
     end else begin
       n_pmem_write(write_addr, wdata_r, 0);
@@ -198,26 +198,29 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       bresp_r    <= 1;
       wait_bresp <= 0;
     end else begin
-      if(sram_write_state == MEM_WRITE) begin
-        if(wait_bresp) begin
-          if(bready) begin
-            bvalid_r      <= 0;
-            bresp_r       <= 1;
-            wait_bresp    <= 0;
-          end
-        end else begin
-          if(bvalid_r && bready) begin
-            bvalid_r  <= 0;
-            bresp_r   <= 1;
-          end else begin
-            assert(bvalid_r == 0);
-            assert(bresp_r  == 1);
-            bvalid_r  <= 1;
-            bresp_r   <= 0;
-            if(!bready) wait_bresp <= 1;
-          end 
-        end
-      end
+      // if(sram_write_state == MEM_WRITE) begin
+      //   if(wait_bresp) begin
+      //     if(bready) begin
+      //       bvalid_r      <= 0;
+      //       bresp_r       <= 1;
+      //       wait_bresp    <= 0;
+      //     end
+      //   end else begin
+      //     if(bvalid_r && bready) begin
+      //       bvalid_r  <= 0;
+      //       bresp_r   <= 1;
+      //     end else begin
+      //       assert(bvalid_r == 0);
+      //       assert(bresp_r  == 1);
+      //       bvalid_r  <= 1;
+      //       bresp_r   <= 0;
+      //       if(!bready) wait_bresp <= 1;
+      //     end 
+      //   end
+      // end
+      if(sram_write_next_state == MEM_WRITE) begin
+        
+      end 
     end
   end
   assign bvalid = bvalid_r;
