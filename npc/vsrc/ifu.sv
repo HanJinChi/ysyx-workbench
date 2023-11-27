@@ -17,6 +17,13 @@ module ifu(
 );
   parameter IDLE = 0, READ = 1;
   reg state, next_state;
+
+  always @(posedge clk) begin
+    if(rst) 
+      state <= IDLE;
+  end
+
+
   always @(posedge clk) begin
     if(rst) begin
       state <= 0;
