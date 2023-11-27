@@ -12,11 +12,33 @@ module wbu(
     input           reg_write_en,
     input           csreg_write_en,
     input           ecall,
+    input   [31:0]  pc_input,
     input   [31:0]  pc_next_input,
+    input   [31:0]  instruction_input,
     output  [31:0]  rsa,
     output  [31:0]  rsb,
     output  [31:0]  csra
 );
+
+  reg  [31:0] instruction;
+  wire [31:0] instruction_subsequent;
+  wire [31:0] instruction_previous;
+
+  Reg #(32, 32'b0) regp0(clk, rst, instruction_subsequent, instruction, wbu_receive_valid);
+
+  assign instruction_previous = instruction;
+  assign instruction_subsequent = instruction_input;
+
+  reg  [31:0] pc;
+  wire [31:0] pc_subsequent;
+  wire [31:0] pc_previous;
+
+  Reg #(32, 32'b0) regp1(clk, rst, pc_subsequent, pc, wbu_receive_valid);
+
+  assign pc_previous = pc;
+  assign pc_subsequent = pc_input;
+
+
   reg  [31:0] pc_next;
   wire [31:0] pc_next_subsequent;
   wire [31:0] pc_next_previous;

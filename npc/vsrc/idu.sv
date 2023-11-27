@@ -51,12 +51,13 @@ module idu(
   output   wire  [31:0]  pc_next,
   output   wire          pc_write_enable,
   output   reg   [31:0]  pc,
+  output   reg   [31:0]  instruction,
+  output   reg           idu_send_to_ifu_valid,
   output   reg           idu_send_valid,
   output   reg           idu_send_ready
 );
 
   reg         state;
-  reg  [31:0] instruction;
   reg         wait_for_decode_info;
   always @(posedge clk) begin
     if(rst) begin
@@ -85,8 +86,9 @@ module idu(
 
   always @(posedge clk) begin
     if(rst) begin
-      wait_for_decode_info <= 0;
-      idu_send_valid       <= 0;
+      wait_for_decode_info   <= 0;
+      idu_send_valid         <= 0;
+      idu_send_to_ifu_valid  <= 1;
     end else begin
       if(wait_for_decode_info) begin
         if(idu_receive_ready) begin
@@ -98,9 +100,12 @@ module idu(
         if(((state == 0) && idu_receive_valid) || (state == 1)) begin
           if(!conflict) begin
             idu_send_valid <= 1;
+            idu_send_to_ifu_valid <= 1;
             if(!idu_receive_ready) wait_for_decode_info <= 1;
-          end else 
+          end else begin 
             idu_send_valid <= 0;
+            idu_send_to_ifu_valid <= 0;
+          end
         end else begin
           if(idu_send_valid && idu_receive_ready) idu_send_valid <= 0;
         end

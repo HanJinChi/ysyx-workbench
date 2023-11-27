@@ -5,6 +5,7 @@ module exu(
   input   wire           exu_receive_ready,
   input   wire   [31:0]  src1_input,
   input   wire   [31:0]  src2_input,
+  input   wire   [31:0]  rsb_input,
   input   wire   [4 :0]  aluOp_input,
   input   wire   [31:0]  imm_input,
   input   wire   [1 :0]  pcOp_input,
@@ -21,6 +22,7 @@ module exu(
   input   wire           ecall_input,
   input   wire   [31:0]  pc_input,
   input   wire   [31:0]  pc_next_input,
+  input   wire   [31:0]  instruction_input,
   input   wire   [4 :0]  rd_input,
   input   wire   [1 :0]  csr_rd_input,
   output  wire   [31:0]  alu_result,
@@ -42,6 +44,8 @@ module exu(
   output  reg            ecall,
   output  reg    [31:0]  pc,
   output  reg    [31:0]  pc_next,
+  output  reg    [31:0]  instruction,
+  output  reg    [31:0]  rsb,
   output  reg    [4 :0]  rd,
   output  reg    [1 :0]  csr_rd, 
   output  reg            exu_send_valid,
@@ -71,12 +75,14 @@ module exu(
       pc_next <= 0;
       rd      <= 0;
       csr_rd  <= 0;
+      rsb     <= 0;
       memory_read_signed <= 0;
       reg_write_en       <= 0;
       csreg_write_en     <= 0;
       ecall              <= 0;
       exu_send_valid     <= 0;
       exu_send_ready     <= 0;
+      instruction        <= 0;
     end else if(state == 0) begin
         if(exu_receive_valid) begin
           state              <= 1;
@@ -102,6 +108,8 @@ module exu(
           pc_next            <= pc_next_input;
           rd                 <= rd_input;
           csr_rd             <= csr_rd_input;
+          rsb                <= rsb_input;
+          instruction        <= instruction_input;
         end else
           exu_send_ready <= 0;
     end else begin
@@ -165,8 +173,8 @@ module exu(
   assign zero_arr[7] = 0;
 
   // // DIV
-  // assign result_arr[8] = $signed(src1) / $signed(src2);
-  // assign zero_arr[8] = 0;
+  assign result_arr[8] = 0;
+  assign zero_arr[8] = 0;
 
   // SSR 
   assign result_arr[9] = $signed(src1) >>> (src2 & 32'h1F);
@@ -182,31 +190,30 @@ module exu(
   assign result_arr[11] = {31'h0, ules_temp[32]};
   assign zero_arr[11] = 0;
 
-  // // REMU 
-  // assign result_arr[12] = src1 % src2;
-  // assign zero_arr[12] = 0;
+  // REMU 
+  assign result_arr[12] = 0;
+  assign zero_arr[12] = 0;
 
-  // wire[63:0] MUL_res;
-  // // MUL
-  // assign MUL_res = src1 * src2;
-  // assign result_arr[13] = MUL_res[31:0];
-  // assign zero_arr[13] = 0; 
+  wire[63:0] MUL_res;
+  // MUL
+  assign result_arr[13] = 0;
+  assign zero_arr[13] = 0; 
 
-  // // DIVU
-  // assign result_arr[14] = src1 / src2;
-  // assign zero_arr[14] = 0;
+  // DIVU
+  assign result_arr[14] = 0;
+  assign zero_arr[14] = 0;
 
-  // // REM
-  // assign result_arr[15] = $signed(src1) % $signed(src2);
-  // assign zero_arr[15] = 0;
+  // REM
+  assign result_arr[15] = 0;
+  assign zero_arr[15] = 0;
 
   // SRC
   assign result_arr[16] = src1;
   assign zero_arr[16] = 0;
 
-  // // MULHU
-  // assign result_arr[17] = MUL_res[63:32];
-  // assign zero_arr[17] = 0;
+  // MULHU
+  assign result_arr[17] = 0;
+  assign zero_arr[17] = 0;
 
 
   MuxKeyWithDefault #(18, 5, 32) exu_m0 (alu_result, aluOp, 32'b0, {

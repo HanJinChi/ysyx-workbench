@@ -150,10 +150,13 @@ void exec_once(){
     if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
   } 
 
-  cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;
+  cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
+    s.pc = top->__PVT__top->__PVT__wb->__PVT__pc_subsequent;
+    s.inst = top->__PVT__top->__PVT__wb->__PVT__instruction_subsequent;
+
     char *p = s.logbuf;
     p += snprintf(p, sizeof(s.logbuf), FMT_WORD ":", s.pc);
     uint8_t *inst = (uint8_t *)&s.inst;

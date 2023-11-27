@@ -10,7 +10,9 @@ module lsu (
   input    wire  [31:0]  exu_result_input,
   input    wire  [31:0]  pc_input,
   input    wire  [31:0]  pc_next_input,
+  input    wire  [31:0]  instruction_input,
   input    wire  [31:0]  src2_input,
+  input    wire  [31:0]  rsb_input,
   input    wire  [1 :0]  wdOp_input,
   input    wire          csrwdOp_input,
   input    wire  [4 :0]  rd_input,
@@ -31,6 +33,8 @@ module lsu (
   output   wire  [31:0]  wd,
   output   wire  [31:0]  csr_wd,
   output   reg   [4 :0]  rd,
+  output   reg   [31:0]  pc,
+  output   reg   [31:0]  instruction,
   output   reg   [31:0]  pc_next,
   output   reg   [1 :0]  csr_rd,
   output   reg           reg_write_en,
@@ -67,7 +71,10 @@ module lsu (
       reg_write_en       <= 0;
       csreg_write_en     <= 0;
       ecall              <= 0;
+      pc                 <= 0;
+      instruction        <= 0;
       pc_next            <= 0;
+      rsb                <= rsb_input;
     end else begin
       if(state == 0) begin
         if(lsu_receive_valid) begin
@@ -81,6 +88,7 @@ module lsu (
           exu_result         <= exu_result_input;
           pc                 <= pc_input;
           src2               <= src2_input;
+          rsb                <= rsb_input;
           wdOp               <= wdOp_input;
           csrwdOp            <= csrwdOp_input;
           rd                 <= rd_input;
@@ -88,7 +96,9 @@ module lsu (
           reg_write_en       <= reg_write_en_input;
           csreg_write_en     <= csreg_write_en_input;
           ecall              <= ecall_input;
+          pc                 <= pc_input;
           pc_next            <= pc_next_input;
+          instruction        <= instruction_input;
         end else
           lsu_send_ready <= 0;
       end else begin  // state = 1
@@ -107,7 +117,7 @@ module lsu (
   reg  [31:0]  rmask;
   reg  [31:0]  exu_result;
   reg  [31:0]  src2;
-  reg  [31:0]  pc;
+  reg  [31:0]  rsb;
   reg  [1 :0]  wdOp;
   reg          csrwdOp;
   wire [31:0]  memory_read_wd;
@@ -210,7 +220,7 @@ module lsu (
         if(lsu_receive_valid && wen_input && (state == 0)) begin
           assert(wvalid == 0);
           wvalid <= 1;
-          wdata  <= src2_input;
+          wdata  <= rsb_input;
           wstrb  <= wmask_input;
           if(!wready) wait_for_write_data <= 1;
         end else begin
@@ -271,6 +281,6 @@ module lsu (
     end
   end
 
-  assign  lsu_state = ((state == 0) && lsu_receive_valid) || ((state == 1) && lsu_send_valid);
+  assign  lsu_state = ((state == 0) && lsu_receive_valid) || ((state == 1) && !lsu_send_valid);
 
 endmodule

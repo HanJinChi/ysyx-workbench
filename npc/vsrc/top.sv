@@ -33,6 +33,9 @@ module top(
 
   wire                  endflag; 
   wire   [31:0]         instruction;
+  wire   [31:0]         instruction_idu;
+  wire   [31:0]         instruction_exu;
+  wire   [31:0]         instruction_lsu;
   wire   [4 :0]         rs1;
   wire   [4 :0]         rs2;
   wire   [1 :0]         csr_rs;
@@ -83,10 +86,12 @@ module top(
   wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
   wire   [31:0]         rsb;
+  wire   [31:0]         rsb_exu;
   wire   [31:0]         pc_idu;
   wire   [31:0]         pc_next_idu;
   wire   [31:0]         pc_exu;
   wire   [31:0]         pc_next_exu;
+  wire   [31:0]         pc_lsu;
   wire   [31:0]         pc_next_lsu;
   wire   [31:0]         exu_result;
   wire   [31:0]         wd;
@@ -202,10 +207,12 @@ module top(
     .ebreak(endflag),
     .pc(pc_idu),
     .pc_next(pc_next_idu),
+    .instruction(instruction_idu),
     .pc_write_enable(pc_write_enable),
     .idu_send_valid(idu_send_valid),
     .idu_send_ready(idu_send_ready),
-    .idu_receive_ready(exu_send_ready)
+    .idu_receive_ready(exu_send_ready),
+    .idu_send_to_ifu_valid(ifu_receive_valid)
   );
 
   // Reg Array Unit
@@ -221,6 +228,8 @@ module top(
     .wd(wd)  ,
     .csr_wd(csr_wd),
     .pc_next_input(pc_next_lsu),
+    .pc_input(pc_lsu),
+    .instruction_input(instruction_lsu),
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
@@ -237,6 +246,7 @@ module top(
     .exu_receive_ready(lsu_send_ready),
     .src1_input(src1),
     .src2_input(src2),
+    .rsb_input(rsb),
     .aluOp_input(aluOp),
     .imm_input(imm),
     .pcOp_input(pcOp),
@@ -253,6 +263,7 @@ module top(
     .ecall_input(ecall),
     .pc_input(pc_idu),
     .pc_next_input(pc_next_idu),
+    .instruction_input(instruction_idu),
     .rd_input(rd),
     .csr_rd_input(csr_rd),
     .zero(zero),
@@ -273,8 +284,10 @@ module top(
     .csreg_write_en(csreg_write_en_exu),
     .ecall(ecall_exu),
     .pc(pc_exu),
+    .rsb(rsb_exu),
     .rd(rd_exu),
     .pc_next(pc_next_exu),
+    .instruction(instruction_exu),
     .csr_rd(csr_rd_exu),
     .exu_send_valid(exu_send_valid),
     .exu_send_ready(exu_send_ready),
@@ -293,7 +306,9 @@ module top(
     .exu_result_input(exu_result),
     .pc_input(pc_exu),
     .pc_next_input(pc_next_exu),
+    .instruction_input(instruction_exu),
     .src2_input(src2_exu),
+    .rsb_input(rsb_exu),
     .wdOp_input(wdOp_exu),
     .csrwdOp_input(csrwdOp_exu),
     .rd_input(rd_exu),
@@ -310,6 +325,8 @@ module top(
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
     .pc_next(pc_next_lsu),
+    .pc(pc_lsu),
+    .instruction(instruction_lsu),
     .lsu_send_ready(lsu_send_ready),
     .lsu_state(lsu_state),
     .arready(arreadyB),
@@ -370,8 +387,6 @@ module top(
     .brespB(brespB)
   );
 
-
-  assign ifu_receive_valid = 1;
 
   assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
  
