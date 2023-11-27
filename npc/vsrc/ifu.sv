@@ -32,9 +32,9 @@ module ifu(
     case(state)
       IDLE: begin
         if(ifu_receive_valid)
-          next_state = IDLE;
-        else 
           next_state = READ_A;
+        else 
+          next_state = IDLE;
       end
       READ_A: begin
         if(arvalid && arready) 
