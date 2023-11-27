@@ -8,12 +8,12 @@ module ifu(
     input    wire  [31:0]  rdata,
     input    wire          rvalid,
     input    wire  [1 :0]  rresp,
-    output   reg           ifu_send_valid,
-    output   reg           ifu_send_ready,
-    output   reg   [31:0]  instruction,
-    output   reg   [31:0]  araddr,
-    output   reg           arvalid,
-    output   reg           rready
+    output   wire          ifu_send_valid,
+    output   wire          ifu_send_ready,
+    output   wire  [31:0]  instruction,
+    output   wire  [31:0]  araddr,
+    output   wire          arvalid,
+    output   wire          rready
 );
   // A阶段:  发送需要读的地址到内存
   // B阶段:  接受读的数据
@@ -59,43 +59,57 @@ module ifu(
   end
 
 
+  reg [31:0] data_r;
+  reg [1 :0] rresp_r;
+  reg        ifu_send_valid_r;
+  reg        ifu_send_ready_r;
+  reg [31:0] instruction_r;
+  reg [31:0] araddr_r;
+  reg        arvalid_r;
+  reg        rready_r;
+
   always@(posedge clk) begin
-    if(rst) rready <= 0;
-    else    rready <= 1;
+    if(rst) rready_r <= 0;
+    else    rready_r <= 1;
   end
-  reg [31:0] reg_data;
-  reg [1 :0] reg_rresp;
 
   always @(posedge clk) begin
     if(rst) begin
-      arvalid            <= 0;
-      araddr             <= 0;
-      ifu_send_ready     <= 0;
-      reg_rresp          <= 1;
-      reg_data           <= 0;
-      instruction        <= 0;
-      ifu_send_valid     <= 0;
+      arvalid_r            <= 0;
+      araddr_r             <= 0;
+      ifu_send_ready_r     <= 0;
+      rresp_r              <= 1;
+      data_r               <= 0;
+      instruction_r        <= 0;
+      ifu_send_valid_r     <= 0;
     end else begin
       if(next_state == READ_A) begin
-        if(arvalid == 0) begin
-          arvalid <= 1;
-          araddr  <= pc_next;
+        if(arvalid_r == 0) begin
+          arvalid_r <= 1;
+          araddr_r  <= pc_next;
         end
-        reg_rresp <= 1;
+        rresp_r <= 1;
       end else if(next_state == READ_B) begin
-        arvalid <= 0;
+        arvalid_r <= 0;
       end else if(next_state == READ_C) begin
-        if(ifu_send_valid == 0) begin
-          reg_data       <= rdata;
-          reg_rresp      <= rresp;
-          ifu_send_valid <= 1;
-          instruction    <= rdata;
+        if(ifu_send_valid_r == 0) begin
+          data_r           <= rdata;
+          rresp_r          <= rresp;
+          ifu_send_valid_r <= 1;
+          instruction_r    <= rdata;
         end
       end else begin // next_state == IDLE
-        if(ifu_send_valid) ifu_send_valid <= 0;
+        if(ifu_send_valid_r) ifu_send_valid_r <= 0;
       end
     end
   end
+
+  assign ifu_send_ready = ifu_send_ready_r;
+  assign ifu_send_valid = ifu_send_valid_r;
+  assign instruction    = instruction_r;
+  assign araddr         = araddr_r;
+  assign arvalid        = arvalid_r;
+  assign rready         = rready_r;
 
 
 endmodule
