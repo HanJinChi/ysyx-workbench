@@ -72,7 +72,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
 
   reg [31:0] reg_read_data;
-  always@(*) begin
+  always@(sram_read_state) begin
     if(sram_read_state == MEM_READ) begin
       $display("reg_araddr is %x", reg_araddr);
       n_pmem_read(reg_araddr, reg_read_data);
