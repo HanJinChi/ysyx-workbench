@@ -15,8 +15,8 @@ module ifu(
     output   reg           arvalid,
     output   reg           rready
 );
-
-  reg state;
+  parameter IDLE = 0, READ = 1;
+  reg state, next_state;
   always @(posedge clk) begin
     if(rst) begin
       state <= 0;
