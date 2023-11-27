@@ -60,7 +60,7 @@ module idu(
   parameter   IDLE = 0, DECODE = 1;
   reg         state, next_state;
   always @(posedge clk) begin
-    if(clk) state <= IDLE;
+    if(rst) state <= IDLE;
     else    state <= next_state;
   end
 
