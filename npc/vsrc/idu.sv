@@ -86,7 +86,7 @@ module idu(
       instruction            <= 0;
       pc                     <= 0;
       idu_send_valid         <= 0;
-      idu_send_to_ifu_valid  <= 0;
+      idu_send_to_ifu_valid  <= 1;
     end else begin
       if(next_state == DECODE) begin
         if(idu_send_ready == 0) begin
