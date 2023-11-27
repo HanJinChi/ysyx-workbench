@@ -105,16 +105,6 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   end
   assign awready = awready_r;
 
-  // always @(posedge aclk) begin
-  //   if(areset) begin
-  //     awaddr_r <= 0;
-  //   end else begin
-  //     if(awvalid && awready) begin
-  //       awaddr_r <= awaddr;
-  //     end
-  //   end 
-  // end
-
   reg  wready_r;
   always @(posedge aclk) begin
     if(areset) begin  
@@ -125,19 +115,6 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end
   end
   assign wready = wready_r;
-
-  reg [31:0] wdata_r;
-  reg [7 :0] wstrb_r;
-  always @(posedge aclk) begin
-    if(areset) begin
-      wdata_r <= 0;
-    end else begin
-      if(wvalid && wready) begin
-        wdata_r <= wdata;
-        wstrb_r <= wstrb;
-      end
-    end
-  end
 
   parameter IDLE_W = 0, MEM_WRITE = 1;
   reg sram_write_state, sram_write_next_state;
@@ -173,7 +150,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     if(sram_write_next_state == MEM_WRITE) begin
       n_pmem_write(write_addr, wdata, wstrb);
     end else begin
-      n_pmem_write(write_addr, wdata_r, 0);
+      n_pmem_write(write_addr, wdata, 0);
     end
   end
 
