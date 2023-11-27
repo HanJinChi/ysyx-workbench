@@ -13,7 +13,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     output   wire          arready,
     output   reg   [31:0]  rdata,
     output   reg   [1 :0]  rresp,
-    output   reg           rvalid,
+    output   wire          rvalid,
     output   wire          awready,
     output   wire          wready,
     output   wire          bvalid,
@@ -70,25 +70,25 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     endcase
   end
 
-  reg [31:0] reg_read_data;
+  reg [31:0] read_data_r;
   always@(sram_read_state) begin
-    if(sram_read_state == MEM_READ)  n_pmem_read(araddr_r, reg_read_data);
-    else                             reg_read_data = 0;
+    if(sram_read_state == MEM_READ)  n_pmem_read(araddr_r, read_data_r);
+    else                             read_data_r = 0;
   end
 
-  reg wait_for_read;
+  reg wait_read;
   always @(posedge aclk) begin
     if(areset) begin
       rvalid        <= 0;
       rdata         <= 0;
       rresp         <= 1;
-      wait_for_read <= 0;
+      wait_read     <= 0;
     end else begin
       if(sram_read_state == MEM_READ) begin
-        if(wait_for_read) begin
+        if(wait_read) begin
           if(rready) begin
             assert(rvalid == 1);
-            wait_for_read <= 0;
+            wait_read     <= 0;
             rvalid        <= 0;
             rresp         <= 1;
           end
@@ -100,9 +100,9 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
             assert(rvalid == 0);
             assert(rresp  == 1);
             rvalid <= 1;
-            rdata  <= reg_read_data;
+            rdata  <= read_data_r;
             rresp  <= 0;
-            if(!rready) wait_for_read <= 1;
+            if(!rready) wait_read <= 1;
           end
         end
       end
@@ -177,7 +177,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
       if(bvalid && bready)
         sram_write_next_state = IDLE_W;
       else 
-        sram_read_next_state = MEM_WRITE;
+        sram_read_next_state  = MEM_WRITE;
     end
     default: begin end // do nothing
     endcase
@@ -193,19 +193,19 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end
   end
 
-  reg wait_for_bresp;
+  reg wait_bresp;
   always @(posedge aclk) begin
     if(areset) begin
       bvalid         <= 0;
       bresp          <= 1;
-      wait_for_bresp <= 0;
+      wait_bresp <= 0;
     end else begin
       if(sram_write_state == MEM_WRITE) begin
-        if(wait_for_bresp) begin
+        if(wait_bresp) begin
           if(bready) begin
-            bvalid          <= 0;
-            bresp           <= 1;
-            wait_for_bresp  <= 0;
+            bvalid        <= 0;
+            bresp         <= 1;
+            wait_bresp    <= 0;
           end
         end else begin
           if(bvalid && bready) begin
@@ -216,7 +216,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
             assert(bresp  == 1);
             bvalid  <= 1;
             bresp   <= 0;
-            if(!bready) wait_for_bresp <= 1;
+            if(!bready) wait_bresp <= 1;
           end 
         end
       end
