@@ -57,9 +57,9 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     case(sram_read_state)
     IDLE: begin
       if(arvalid && arready) 
-        sram_read_next_state = IDLE;
-      else 
         sram_read_next_state = MEM_READ;
+      else 
+        sram_read_next_state = IDLE;
     end
     MEM_READ: begin
       if(rvalid && rready) 
