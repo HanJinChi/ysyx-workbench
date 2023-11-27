@@ -110,7 +110,6 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end
   end
 
-
   reg  reg_awready;
   assign awready = reg_awready;
 
