@@ -43,11 +43,11 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end 
   end
 
-  parameter S0 = 0, S1 = 1;
+  parameter IDLE = 0, MEM_READ = 1;
   reg sram_read_state, sram_read_next_state;
   always @(posedge aclk) begin
     if(areset) begin
-      sram_read_state <= S0;
+      sram_read_state <= IDLE;
     end else begin
       sram_read_state <= sram_read_next_state;
     end
@@ -55,15 +55,17 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   always@(sram_read_state or arvalid or arready) begin
     case(sram_read_state)
-    S0: begin
-      if(arvalid && arready) begin
-        sram_read_next_state = S1;
-      end else begin
-        sram_read_next_state = S0;
-      end
+    IDLE: begin
+      if(arvalid && arready) 
+        sram_read_next_state = IDLE;
+      else 
+        sram_read_next_state = MEM_READ;
     end
-    S1: begin
-      sram_read_next_state = S0;
+    MEM_READ: begin
+      if(rvalid && rready) 
+        sram_read_next_state = IDLE;
+      else
+        sram_read_next_state = MEM_READ;
     end
     default: begin end // do nothing
     endcase
@@ -71,44 +73,78 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   reg [31:0] reg_read_data;
   always@(*) begin
-    if(sram_read_state == S1) n_pmem_read(reg_araddr, reg_read_data);
+    if(sram_read_state == MEM_READ) n_pmem_read(reg_araddr, reg_read_data);
     else                      reg_read_data = 0;
   end
 
   reg wait_for_read;
+  // always @(posedge aclk) begin
+  //   if(areset) begin
+  //     rvalid <= 0;
+  //     rdata  <= 0;
+  //     rresp  <= 1;  // 1 代表 exokay
+  //     wait_for_read <= 0;
+  //   end else begin
+  //     if(wait_for_read) begin
+  //       if(rready) begin
+  //         assert(rvalid == 1);
+  //         wait_for_read <= 0;
+  //         rvalid <= 0;
+  //         rresp <= 1;
+  //       end
+  //     end else begin
+  //       if(sram_read_state == S1) begin
+  //         assert(rvalid == 0);
+  //         assert(rresp == 1);
+  //         rvalid <= 1;
+  //         rdata <= reg_read_data;
+  //         rresp <= 0;
+  //         if(!rready) begin
+  //           wait_for_read <= 1;
+  //         end
+  //       end else begin
+  //         if(rvalid && rready) begin
+  //           rvalid <= 0;
+  //           rresp  <= 1;
+  //         end
+  //       end
+  //     end
+  //   end
+  // end
+
   always @(posedge aclk) begin
     if(areset) begin
-      rvalid <= 0;
-      rdata  <= 0;
-      rresp  <= 1;  // 1代表 exokay
+      rvalid        <= 0;
+      rdata         <= 0;
+      rresp         <= 1;
       wait_for_read <= 0;
     end else begin
-      if(wait_for_read) begin
-        if(rready) begin
-          assert(rvalid == 1);
-          wait_for_read <= 0;
-          rvalid <= 0;
-          rresp <= 1;
-        end
-      end else begin
-        if(sram_read_state == S1) begin
-          assert(rvalid == 0);
-          assert(rresp == 1);
-          rvalid <= 1;
-          rdata <= reg_read_data;
-          rresp <= 0;
-          if(!rready) begin
-            wait_for_read <= 1;
+      if(sram_read_state == MEM_READ) begin
+        if(wait_for_read) begin
+          if(rready) begin
+            assert(rvalid == 1);
+            wait_for_read <= 0;
+            rvalid        <= 0;
+            rresp         <= 1;
           end
         end else begin
           if(rvalid && rready) begin
-            rvalid <= 0;
-            rresp <= 1;
+            rvalid   <= 0;
+            rresp    <= 1;
+          end else begin
+            assert(rvalid == 0);
+            assert(rresp  == 1);
+            rvalid <= 1;
+            rdata  <= reg_read_data;
+            rresp  <= 0;
+            if(!rready) wait_for_read <= 1;
           end
         end
       end
     end
+
   end
+
 
   reg  reg_awready;
   assign awready = reg_awready;
