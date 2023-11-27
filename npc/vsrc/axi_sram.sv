@@ -53,7 +53,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
     end
   end
 
-  always@(sram_read_state or arvalid or arready) begin
+  always@(*) begin
     case(sram_read_state)
     IDLE: begin
       if(arvalid && arready) 
