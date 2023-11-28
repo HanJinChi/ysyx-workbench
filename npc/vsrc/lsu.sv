@@ -178,9 +178,15 @@ module lsu (
               pc                 <= pc_input;
               pc_next            <= pc_next_input;
               instruction        <= instruction_input;
-              ecall           <= ecall_input;
-              reg_write_en    <= reg_write_en_input;
-              csreg_write_en  <= csreg_write_en_input;
+              ecall              <= ecall_input;
+              reg_write_en       <= reg_write_en_input;
+              csreg_write_en     <= csreg_write_en_input;
+              src2               <= src2_input;
+              rsb                <= rsb_input;
+              wdOp               <= wdOp_input;
+              csrwdOp            <= csrwdOp_input;
+              rd                 <= rd_input;
+              csr_rd             <= csr_rd_input;
             end
           end
         end
