@@ -61,11 +61,11 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 }
 
 void copy_cpu_state(){
-  for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__wb->__PVT__w_regarray_subsequent[i];
-  cpu.csr.mcause = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[0];
-  cpu.csr.mepc   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[1];
-  cpu.csr.mstatus   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[2];
-  cpu.csr.mtvec   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[3];
+  // for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__wb->__PVT__w_regarray_subsequent[i];
+  // cpu.csr.mcause = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[0];
+  // cpu.csr.mepc   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[1];
+  // cpu.csr.mstatus   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[2];
+  // cpu.csr.mtvec   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[3];
 
 }
 
@@ -147,10 +147,11 @@ void exec_once(){
   while(true){
     step_and_dump_wave();
     step_and_dump_wave();
-    if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
+    break;
+    // if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
   } 
 
-  cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
+  // cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
