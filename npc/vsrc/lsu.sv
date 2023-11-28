@@ -164,6 +164,7 @@ module lsu (
             awaddr          <= exu_result_input; 
             wvalid          <= 1;
             wstrb           <= wmask_input;
+            wdata           <= rsb_input;
             pc              <= pc_input;
             pc_next         <= pc_next_input;
             instruction     <= instruction_input;
