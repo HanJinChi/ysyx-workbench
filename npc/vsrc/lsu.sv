@@ -130,10 +130,14 @@ module lsu (
       rsb                <= 0;
     end else begin
       if(next_state == IDLE) begin
-        if(lsu_send_valid) lsu_send_valid <= 0;
+        if(lsu_send_valid) begin
+          lsu_send_valid <= 0;
+          lsu_send_ready <= 0;
+        end
       end else begin
         if(next_state == MEM_READ_A) begin
           if(arvalid == 0) begin
+            lsu_send_ready     <= 1;
             arvalid            <= 1;
             araddr             <= exu_result_input;
             pc                 <= pc_input;
@@ -155,6 +159,7 @@ module lsu (
           arvalid <= 0;
         end else if(next_state == MEM_WRITE_A) begin
           if(awvalid == 0) begin
+            lsu_send_ready  <= 1;
             awvalid         <= 1;
             awaddr          <= exu_result_input; 
             wvalid          <= 1;
@@ -175,6 +180,7 @@ module lsu (
             if(rvalid) begin
               reg_read_data <= rdata;
             end else if(!bvalid) begin
+              lsu_send_ready     <= 0;
               pc                 <= pc_input;
               pc_next            <= pc_next_input;
               instruction        <= instruction_input;
