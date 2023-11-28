@@ -6,8 +6,6 @@
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
 
-#define GPR_COPY(i) cpu.gpr[i] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__i__KET____DOT__regx____pinNumber4;
-
 VerilatedContext* contextp = NULL;
 VerilatedVcdC* tfp = NULL;
 Vtop* top;
