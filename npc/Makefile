@@ -2,7 +2,7 @@ TOPNAME = top
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert --trace 
+				-O0 --x-assign fast --x-initial fast --noassert --trace 
 				
 WORK_DIR  = $(shell pwd)
 
