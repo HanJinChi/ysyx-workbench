@@ -28,27 +28,27 @@ module lsu (
   input    wire          wready,
   input    wire          bvalid,
   input    wire  [1 :0]  bresp,
-  output   reg           lsu_send_valid,
-  output   reg           lsu_send_ready,
+  output   wire          lsu_send_valid,
+  output   wire          lsu_send_ready,
   output   wire  [31:0]  wd,
   output   wire  [31:0]  csr_wd,
-  output   reg   [4 :0]  rd,
-  output   reg   [31:0]  pc,
-  output   reg   [31:0]  instruction,
-  output   reg   [31:0]  pc_next,
-  output   reg   [1 :0]  csr_rd,
-  output   reg           reg_write_en,
-  output   reg           csreg_write_en,
-  output   reg           ecall,
-  output   reg   [31:0]  araddr,
-  output   reg           arvalid,
-  output   reg           rready,
-  output   reg   [31:0]  awaddr,
-  output   reg           awvalid,
-  output   reg           wvalid,
-  output   reg           bready,
-  output   reg   [31:0]  wdata,
-  output   reg   [7 :0]  wstrb,
+  output   wire  [4 :0]  rd,
+  output   wire  [31:0]  pc,
+  output   wire  [31:0]  instruction,
+  output   wire  [31:0]  pc_next,
+  output   wire  [1 :0]  csr_rd,
+  output   wire          reg_write_en,
+  output   wire          csreg_write_en,
+  output   wire          ecall,
+  output   wire  [31:0]  araddr,
+  output   wire          arvalid,
+  output   wire          rready,
+  output   wire  [31:0]  awaddr,
+  output   wire          awvalid,
+  output   wire          wvalid,
+  output   wire          bready,
+  output   wire  [31:0]  wdata,
+  output   wire  [7 :0]  wstrb,
   output   wire          lsu_state
 );
   reg [2:0]  state, next_state;
@@ -108,93 +108,120 @@ module lsu (
   wire [31:0]  memory_read_wd;
   reg  [31:0]  reg_read_data;
 
+  reg          lsu_send_valid_r;
+  reg          lsu_send_ready_r;
+  reg  [4 :0]  rd_r;
+  reg  [31:0]  pc_r;
+  reg  [31:0]  instruction_r;
+  reg  [31:0]  pc_next_r;
+  reg  [1 :0]  csr_rd_r;
+  reg          reg_write_en_r;
+  reg          csreg_write_en_r;
+  reg          ecall_r;
+  reg  [31:0]  araddr_r;
+  reg          arvalid_r;
+  reg          rready_r;
+  reg  [31:0]  awaddr_r;
+  reg          awvalid_r;
+  reg          wvalid_r;
+  reg          bready_r;
+  reg  [31:0]  wdata_r;
+  reg  [7 :0]  wstrb_r;    
+
   always @(posedge clk) begin
     if(rst) begin
       state              <= 0;
-      lsu_send_ready     <= 0;
+      lsu_send_ready_r   <= 0;
+      lsu_send_valid_r   <= 0;
       memory_read_signed <= 0;
       exu_result         <= 0;
       rmask              <= 0;
-      pc                 <= 0;
+      pc_r               <= 0;
       src2               <= 0;
       wdOp               <= 0;
       csrwdOp            <= 0;
-      rd                 <= 0;
-      csr_rd             <= 0;
-      reg_write_en       <= 0;
-      csreg_write_en     <= 0;
-      ecall              <= 0;
-      pc                 <= 0;
-      instruction        <= 0;
-      pc_next            <= 0;
+      rd_r               <= 0;
+      csr_rd_r           <= 0;
+      reg_write_en_r     <= 0;
+      csreg_write_en_r   <= 0;
+      ecall_r            <= 0;
+      instruction_r      <= 0;
+      pc_next_r          <= 0;
       rsb                <= 0;
+      araddr_r           <= 0;
+      arvalid_r          <= 0;
+      wdata_r            <= 0;
+      wstrb_r            <= 0;
+      awaddr_r           <= 0;
+      awvalid_r          <= 0;
+      wvalid_r           <= 0;
     end else begin
       if(next_state == IDLE) begin
-        if(lsu_send_valid) begin
-          lsu_send_valid <= 0;
-          lsu_send_ready <= 0;
+        if(lsu_send_valid_r) begin
+          lsu_send_valid_r <= 0;
+          lsu_send_ready_r <= 0;
         end
       end else begin
         if(next_state == MEM_READ_A) begin
-          if(arvalid == 0) begin
-            lsu_send_ready     <= 1;
-            arvalid            <= 1;
-            araddr             <= exu_result_input;
-            pc                 <= pc_input;
-            pc_next            <= pc_next_input;
-            instruction        <= instruction_input;
-            memory_read_signed <= memory_read_signed_input;
-            rmask              <= rmask_input;
-            ecall              <= ecall_input;
-            src2               <= src2_input;
-            rsb                <= rsb_input;
-            wdOp               <= wdOp_input;
-            csrwdOp            <= csrwdOp_input;
-            rd                 <= rd_input;
-            csr_rd             <= csr_rd_input;
-            reg_write_en       <= reg_write_en_input;
-            csreg_write_en     <= csreg_write_en_input;
+          if(arvalid_r == 0) begin
+            lsu_send_ready_r     <= 1;
+            arvalid_r            <= 1;
+            araddr_r             <= exu_result_input;
+            pc_r                 <= pc_input;
+            pc_next_r            <= pc_next_input;
+            instruction_r        <= instruction_input;
+            memory_read_signed   <= memory_read_signed_input;
+            rmask                <= rmask_input;
+            ecall_r              <= ecall_input;
+            src2                 <= src2_input;
+            rsb                  <= rsb_input;
+            wdOp                 <= wdOp_input;
+            csrwdOp              <= csrwdOp_input;
+            rd_r                 <= rd_input;
+            csr_rd_r             <= csr_rd_input;
+            reg_write_en_r       <= reg_write_en_input;
+            csreg_write_en_r     <= csreg_write_en_input;
           end
         end else if(next_state == MEM_READ_B) begin
-          arvalid <= 0;
+          arvalid_r <= 0;
         end else if(next_state == MEM_WRITE_A) begin
-          if(awvalid == 0) begin
-            lsu_send_ready  <= 1;
-            awvalid         <= 1;
-            awaddr          <= exu_result_input; 
-            wvalid          <= 1;
-            wstrb           <= wmask_input;
-            wdata           <= rsb_input;
-            pc              <= pc_input;
-            pc_next         <= pc_next_input;
-            instruction     <= instruction_input;
-            ecall           <= ecall_input;
-            reg_write_en    <= reg_write_en_input;
-            csreg_write_en  <= csreg_write_en_input;
+          if(awvalid_r == 0) begin
+            lsu_send_ready_r    <= 1;
+            awvalid_r           <= 1;
+            awaddr_r            <= exu_result_input; 
+            wvalid_r            <= 1;
+            wstrb_r             <= wmask_input;
+            wdata_r             <= rsb_input;
+            pc_r                <= pc_input;
+            pc_next_r           <= pc_next_input;
+            instruction_r       <= instruction_input;
+            ecall_r             <= ecall_input;
+            reg_write_en_r      <= reg_write_en_input;
+            csreg_write_en_r    <= csreg_write_en_input;
           end
         end else if(next_state == MEM_WRITE_B) begin
-          awvalid <= 0;
-          wvalid  <= 0; 
+          awvalid_r <= 0;
+          wvalid_r  <= 0; 
         end else begin  // MEM_NULL 
-          if(lsu_send_valid == 0) begin
-            lsu_send_valid <= 1;
+          if(lsu_send_valid_r == 0) begin
+            lsu_send_valid_r <= 1;
             if(rvalid) begin
               reg_read_data <= rdata;  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
-              lsu_send_ready     <= 1;
-              pc                 <= pc_input;
-              pc_next            <= pc_next_input;
-              instruction        <= instruction_input;
-              ecall              <= ecall_input;
-              reg_write_en       <= reg_write_en_input;
-              csreg_write_en     <= csreg_write_en_input;
-              src2               <= src2_input;
-              rsb                <= rsb_input;
-              wdOp               <= wdOp_input;
-              csrwdOp            <= csrwdOp_input;
-              rd                 <= rd_input;
-              csr_rd             <= csr_rd_input;
-              exu_result         <= exu_result_input;
+              lsu_send_ready_r     <= 1;
+              pc_r                 <= pc_input;
+              pc_next_r            <= pc_next_input;
+              instruction_r        <= instruction_input;
+              ecall_r              <= ecall_input;
+              reg_write_en_r       <= reg_write_en_input;
+              csreg_write_en_r     <= csreg_write_en_input;
+              src2                 <= src2_input;
+              rsb                  <= rsb_input;
+              wdOp                 <= wdOp_input;
+              csrwdOp              <= csrwdOp_input;
+              rd_r                 <= rd_input;
+              csr_rd_r             <= csr_rd_input;
+              exu_result           <= exu_result_input;
             end
           end
         end
@@ -202,14 +229,34 @@ module lsu (
     end
   end
 
+  assign lsu_send_valid = lsu_send_valid_r;
+  assign lsu_send_ready = lsu_send_ready_r;
+  assign rd             = rd_r;
+  assign pc             = pc_r;
+  assign instruction    = instruction_r;
+  assign pc_next        = pc_next_r;
+  assign csr_rd         = csr_rd_r;
+  assign reg_write_en   = reg_write_en_r;
+  assign csreg_write_en = csreg_write_en_r;
+  assign ecall          = ecall_r;
+  assign araddr         = araddr_r;
+  assign arvalid        = arvalid_r;
+  assign rready         = rready_r;
+  assign awaddr         = awaddr_r;
+  assign awvalid        = awvalid_r;
+  assign wvalid         = wvalid_r;
+  assign bready         = bready_r;
+  assign wdata          = wdata_r;
+  assign wstrb          = wstrb_r;
+
   always @(posedge clk) begin
-    if(rst) rready <= 0;
-    else    rready <= 1;
+    if(rst) rready_r <= 0;
+    else    rready_r <= 1;
   end
 
   always @(posedge clk) begin
-    if(rst) bready <= 0;
-    else    bready <= 1;
+    if(rst) bready_r <= 0;
+    else    bready_r <= 1;
   end 
  
   MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {

@@ -62,7 +62,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   reg [31:0] read_data_r;
   always@(sram_read_next_state) begin
     if(sram_read_next_state == MEM_READ)  n_pmem_read(araddr, read_data_r);
-    else                             read_data_r = 0;
+    else                                  read_data_r = 0;
   end
 
   reg         rvalid_r;

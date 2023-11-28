@@ -2,7 +2,7 @@ TOPNAME = top
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O0 --x-assign fast --x-initial fast --noassert --trace 
+				-O3 --x-assign fast --x-initial fast --noassert --trace 
 				
 WORK_DIR  = $(shell pwd)
 
@@ -32,7 +32,7 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O2
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O2
 LDFLAGS += -lncurses -lreadline -ldl -lSDL2
 default: $(BIN)
 
