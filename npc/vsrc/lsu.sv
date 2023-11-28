@@ -174,7 +174,14 @@ module lsu (
             lsu_send_valid <= 1;
             if(rvalid) begin
               reg_read_data <= rdata;
-            end 
+            end else if(!bvalid) begin
+              pc                 <= pc_input;
+              pc_next            <= pc_next_input;
+              instruction        <= instruction_input;
+              ecall           <= ecall_input;
+              reg_write_en    <= reg_write_en_input;
+              csreg_write_en  <= csreg_write_en_input;
+            end
           end
         end
       end
