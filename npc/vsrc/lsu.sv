@@ -179,8 +179,8 @@ module lsu (
             lsu_send_valid <= 1;
             if(rvalid) begin
               reg_read_data <= rdata;
-            end else if(!bvalid) begin
-              lsu_send_ready     <= 0;
+            end else if(!bvalid) begin  // IDLE -> MEM_NULL
+              lsu_send_ready     <= 1;
               pc                 <= pc_input;
               pc_next            <= pc_next_input;
               instruction        <= instruction_input;
