@@ -32,7 +32,7 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -g -O2
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O2
 LDFLAGS += -lncurses -lreadline -ldl -lSDL2
 default: $(BIN)
 
