@@ -178,7 +178,7 @@ module lsu (
           if(lsu_send_valid == 0) begin
             lsu_send_valid <= 1;
             if(rvalid) begin
-              reg_read_data <= rdata;
+              reg_read_data <= rdata;  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
               lsu_send_ready     <= 1;
               pc                 <= pc_input;
@@ -204,6 +204,11 @@ module lsu (
   always @(posedge clk) begin
     if(rst) rready <= 0;
     else    rready <= 1;
+  end
+
+  always @(posedge clk) begin
+    if(rst) bready <= 0;
+    else    bready <= 1;
   end 
  
   MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
