@@ -14,8 +14,9 @@ static Decode s;
 
 uint32_t ins = 0;
 bool end = 0;
-int write_count = 0;
-int read_count = 0;
+
+uint32_t  clock_count = 0;
+uint32_t  ins_count = 0;
 
 void ftrace_check_address(int, uint32_t, uint32_t);
 void step_and_dump_wave();
@@ -180,13 +181,15 @@ void exec_once(){
   while(true){
     step_and_dump_wave();
     step_and_dump_wave();
+    clock_count++;
     if(top->rootp->top__DOT__ls__DOT__lsu_send_valid_r == 1) {
       step_and_dump_wave();
       step_and_dump_wave();
+      clock_count++;
       break;
     }
   } 
-
+  ins_count++;
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
@@ -243,6 +246,7 @@ void cpu_exec(uint64_t n){
            (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           npc_state.halt_pc);
+      Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
       // fall through
     // case NPC_QUIT: statistic();
     default: break;
