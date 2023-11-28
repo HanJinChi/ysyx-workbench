@@ -10,7 +10,6 @@ void __am_input_keybrd(AM_INPUT_KEYBRD_T *);
 void __am_gpu_config(AM_GPU_CONFIG_T *);
 void __am_gpu_status(AM_GPU_STATUS_T *);
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *);
-void __am_gpu_init();
 
 static void __am_timer_config(AM_TIMER_CONFIG_T *cfg) { cfg->present = true; cfg->has_rtc = true; }
 static void __am_input_config(AM_INPUT_CONFIG_T *cfg) { cfg->present = true;  }
@@ -36,7 +35,7 @@ bool ioe_init() {
     if (!lut[i]) {
       lut[i] = fail;
     }
-  __am_gpu_init();
+  // __am_gpu_init();
   __am_timer_init();
   return true;
 }
