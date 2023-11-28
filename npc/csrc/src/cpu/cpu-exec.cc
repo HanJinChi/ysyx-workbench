@@ -147,8 +147,8 @@ void exec_once(){
   while(true){
     step_and_dump_wave();
     step_and_dump_wave();
-    break;
     // if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
+    if(top->rootp->top__DOT__ls__DOT__lsu_send_valid_r == 1) break;
   } 
 
   // cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
