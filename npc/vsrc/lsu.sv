@@ -55,8 +55,8 @@ module lsu (
   parameter  IDLE = 0, MEM_READ_A = 1, MEM_READ_B = 2, MEM_WRITE_A = 3, MEM_WRITE_B = 4, MEM_NULL = 5;
 
   always @(posedge clk) begin
-    if(rst) state <= 0;
-    else    state <= IDLE;
+    if(rst) state <= IDLE;
+    else    state <= next_state;
   end
 
   always @(*) begin
