@@ -187,6 +187,7 @@ module lsu (
               csrwdOp            <= csrwdOp_input;
               rd                 <= rd_input;
               csr_rd             <= csr_rd_input;
+              exu_result         <= exu_result_input;
             end
           end
         end
