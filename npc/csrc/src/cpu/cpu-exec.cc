@@ -6,6 +6,8 @@
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
 
+#define GPR_COPY(i) cpu.gpr[i] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__i__KET____DOT__regx____pinNumber4;
+
 VerilatedContext* contextp = NULL;
 VerilatedVcdC* tfp = NULL;
 Vtop* top;
@@ -61,12 +63,45 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 }
 
 void copy_cpu_state(){
-  // for(int i = 0; i < 32; i++) cpu.gpr[i] = top->__PVT__top->__PVT__wb->__PVT__w_regarray_subsequent[i];
-  // cpu.csr.mcause = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[0];
-  // cpu.csr.mepc   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[1];
-  // cpu.csr.mstatus   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[2];
-  // cpu.csr.mtvec   = top->__PVT__top->__PVT__wb->__PVT__w_csrarray_subsequent[3];
-
+  // for(int i = 0; i < 32; i++) {
+  //   GPR_COPY(i);
+  // }
+  cpu.csr.mcause =  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4;
+  cpu.csr.mepc   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4;
+  cpu.csr.mstatus   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4;
+  cpu.csr.mtvec   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regx____pinNumber4;
+  cpu.gpr[0] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4;
+  cpu.gpr[1] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4;
+  cpu.gpr[2] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4;
+  cpu.gpr[3] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__3__KET____DOT__regx____pinNumber4;
+  cpu.gpr[4] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__4__KET____DOT__regx____pinNumber4;
+  cpu.gpr[5] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__5__KET____DOT__regx____pinNumber4;
+  cpu.gpr[6] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__6__KET____DOT__regx____pinNumber4;
+  cpu.gpr[7] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__7__KET____DOT__regx____pinNumber4;
+  cpu.gpr[8] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__8__KET____DOT__regx____pinNumber4;
+  cpu.gpr[9] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__9__KET____DOT__regx____pinNumber4;
+  cpu.gpr[10] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__10__KET____DOT__regx____pinNumber4;
+  cpu.gpr[11] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__11__KET____DOT__regx____pinNumber4;
+  cpu.gpr[12] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__12__KET____DOT__regx____pinNumber4;
+  cpu.gpr[13] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__13__KET____DOT__regx____pinNumber4;
+  cpu.gpr[14] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__14__KET____DOT__regx____pinNumber4;
+  cpu.gpr[15] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__15__KET____DOT__regx____pinNumber4;
+  cpu.gpr[16] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__16__KET____DOT__regx____pinNumber4;
+  cpu.gpr[17] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__17__KET____DOT__regx____pinNumber4;
+  cpu.gpr[18] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__18__KET____DOT__regx____pinNumber4;
+  cpu.gpr[19] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__19__KET____DOT__regx____pinNumber4;
+  cpu.gpr[20] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__20__KET____DOT__regx____pinNumber4;
+  cpu.gpr[21] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__21__KET____DOT__regx____pinNumber4;
+  cpu.gpr[22] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__22__KET____DOT__regx____pinNumber4;
+  cpu.gpr[23] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__23__KET____DOT__regx____pinNumber4;
+  cpu.gpr[24] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__24__KET____DOT__regx____pinNumber4;
+  cpu.gpr[25] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__25__KET____DOT__regx____pinNumber4;
+  cpu.gpr[26] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__26__KET____DOT__regx____pinNumber4;
+  cpu.gpr[27] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__27__KET____DOT__regx____pinNumber4;
+  cpu.gpr[28] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__28__KET____DOT__regx____pinNumber4;
+  cpu.gpr[29] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4;
+  cpu.gpr[30] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4;
+  cpu.gpr[31] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4;
 }
 
 void trace_and_difftest(){
@@ -147,7 +182,6 @@ void exec_once(){
   while(true){
     step_and_dump_wave();
     step_and_dump_wave();
-    // if(top->__PVT__top->__PVT__lsu_send_valid == 1) break;
     if(top->rootp->top__DOT__ls__DOT__lsu_send_valid_r == 1) {
       step_and_dump_wave();
       step_and_dump_wave();
@@ -155,13 +189,12 @@ void exec_once(){
     }
   } 
 
-  // cpu.pc = top->__PVT__top->__PVT__wb->__PVT__pc_next_subsequent;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
-  // cpu.pc = top->rootp->
+  cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
-    s.pc = top->__PVT__top->__PVT__wb->__PVT__pc_subsequent;
-    s.inst = top->__PVT__top->__PVT__wb->__PVT__instruction_subsequent;
+    s.pc = top->rootp->top__DOT__wb__DOT__pc;
+    s.inst = top->rootp->top__DOT__wb__DOT__instruction;
 
     char *p = s.logbuf;
     p += snprintf(p, sizeof(s.logbuf), FMT_WORD ":", s.pc);

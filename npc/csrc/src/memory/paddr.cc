@@ -37,7 +37,7 @@ word_t paddr_read(paddr_t addr, int len) {
   if (in_pmem(addr)) {
     word_t data = pmem_read(addr, len);
   #ifdef CONFIG_MTRACE
-    if(top->__PVT__top->__PVT__arb->__PVT__araddrMux == 1){ // 取值
+    if(top->rootp->top__DOT__arb__DOT__araddrMux == 1){ // 取值
      memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n",top->__PVT__top->__PVT__arb->__PVT__araddr, addr, len, data);
     }else{
       memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", cpu.pc, addr, len, data);
