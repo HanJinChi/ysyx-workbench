@@ -1,5 +1,5 @@
 
-// define instructionRUCTION TYPE
+// define instruction TYPE
 `define YSYX_23060059_TYPE_I 3'b000
 `define YSYX_23060059_TYPE_U 3'b001
 `define YSYX_23060059_TYPE_S 3'b010
@@ -50,68 +50,74 @@ module idu(
   output   wire          ebreak,
   output   wire  [31:0]  pc_next,
   output   wire          pc_write_enable,
-  output   reg   [31:0]  pc,
-  output   reg   [31:0]  instruction,
-  output   reg           idu_send_to_ifu_valid,
-  output   reg           idu_send_valid,
-  output   reg           idu_send_ready
+  output   wire  [31:0]  pc,
+  output   wire  [31:0]  instruction,
+  output   wire          idu_send_to_ifu_valid,
+  output   wire          idu_send_valid,
+  output   wire          idu_send_ready
 );
 
-  reg         state;
-  reg         wait_for_decode_info;
+  parameter   IDLE = 0, DECODE = 1;
+  reg         state, next_state;
+  reg  [31:0] instruction_r;
+  reg  [31:0] pc_r;
+  reg         idu_send_to_ifu_valid_r;
+  reg         idu_send_valid_r;
+  reg         idu_send_ready_r;
+
   always @(posedge clk) begin
-    if(rst) begin
-      state <= 0;
-      idu_send_ready <= 0;
-      instruction    <= 0;
-      pc             <= 0;
-    end
-    else begin
-      if(state == 0) begin
-        if(idu_receive_valid) begin
-          state          <= 1;
-          idu_send_ready <= 1;
-          instruction    <= instruction_input;
-          pc             <= pc_input;
-        end else  
-          idu_send_ready <= 0;
-      end else begin // state == 1
-        if(idu_send_valid && idu_receive_ready) 
-          state <= 0;
-        else 
-          idu_send_ready <= 0;
-      end
-    end
+    if(rst) state <= IDLE;
+    else    state <= next_state;
+  end
+
+  always@(*) begin
+    case(state)
+      IDLE:
+        if(idu_receive_valid)
+          next_state = DECODE;
+        else
+          next_state = IDLE;
+      DECODE:
+        if(idu_send_valid && idu_receive_ready)
+          next_state = IDLE;
+        else
+          next_state = DECODE;
+    endcase
   end
 
   always @(posedge clk) begin
     if(rst) begin
-      wait_for_decode_info   <= 0;
-      idu_send_valid         <= 0;
-      idu_send_to_ifu_valid  <= 1;
+      state                    <= 0;
+      idu_send_ready_r         <= 0;
+      instruction_r            <= 0;
+      pc_r                     <= 0;
+      idu_send_valid_r         <= 0;
+      idu_send_to_ifu_valid_r  <= 1;
     end else begin
-      if(wait_for_decode_info) begin
-        if(idu_receive_ready) begin
-          assert(idu_send_valid == 1);
-          idu_send_valid <= 0;
-          wait_for_decode_info <= 0;
+      if(next_state == DECODE) begin
+        if(idu_send_ready_r == 0) begin
+          idu_send_ready_r <= 1;
+          instruction_r    <= instruction_input;
+          pc_r             <= pc_input;
         end
-      end else begin
-        if(((state == 0) && idu_receive_valid) || (state == 1)) begin
-          if(!conflict) begin
-            idu_send_valid <= 1;
-            idu_send_to_ifu_valid <= 1;
-            if(!idu_receive_ready) wait_for_decode_info <= 1;
-          end else begin 
-            idu_send_valid <= 0;
-            idu_send_to_ifu_valid <= 0;
-          end
-        end else begin
-          if(idu_send_valid && idu_receive_ready) idu_send_valid <= 0;
+        if(!conflict) begin
+          idu_send_valid_r        <= 1;
+          idu_send_to_ifu_valid_r <= 1;
+        end
+      end else begin  // next_state == IDLE
+        if(idu_send_valid_r) begin
+          idu_send_valid_r        <= 0;
+          idu_send_to_ifu_valid_r <= 0;
+          idu_send_ready_r        <= 0;
         end
       end
     end
   end
+  assign idu_send_ready         = idu_send_ready_r;
+  assign instruction            = instruction_r;
+  assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
+  assign idu_send_valid         = idu_send_valid_r;
+  assign pc                     = pc_r;
 
 
   wire [2: 0] instruction_type;
@@ -410,7 +416,6 @@ module idu(
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
-
 
   // ecall 
   wire   ecall_input;
