@@ -31,13 +31,15 @@
 #elif defined(__ISA_MIPS32__)
 # define ARGS_ARRAY ("syscall", "v0", "a0", "a1", "a2", "v0")
 #elif defined(__ISA_RISCV32__) || defined(__ISA_RISCV64__)
-# define ARGS_ARRAY ("ecall", "a7", "a0", "a1", "a2", "a0")
+#define ARGS_ARRAY ("ecall", "a7", "a0", "a1", "a2", "a0")
 #elif defined(__ISA_AM_NATIVE__)
 # define ARGS_ARRAY ("call *0x100000", "rdi", "rsi", "rdx", "rcx", "rax")
 #elif defined(__ISA_X86_64__)
 # define ARGS_ARRAY ("int $0x80", "rdi", "rsi", "rdx", "rcx", "rax")
 #elif defined(__ISA_LOONGARCH32R__)
 # define ARGS_ARRAY ("syscall 0", "a7", "a0", "a1", "a2", "a0")
+#elif defined(__ISA_RISCV32E__)
+#define ARGS_ARRAY ("ecall", "a5", "a0", "a1", "a2", "a0")
 #else
 #error _syscall_ is not implemented
 #endif
