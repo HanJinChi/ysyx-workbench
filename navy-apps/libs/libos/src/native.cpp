@@ -61,6 +61,10 @@ static inline void get_fsimg_path(char *newpath, const char *path) {
   if (scancode == SDL_SCANCODE_##k) name = #k;
 
 static void update_screen() {
+  // printf("disp_w is %d, disp_h is %d\n", disp_w, disp_h);
+  for(int i = 0 ; i < disp_w * disp_h; i++){
+    fb[i] = i;
+  }
   SDL_UpdateTexture(texture, NULL, fb, disp_w * sizeof(Uint32));
   SDL_RenderClear(renderer);
   SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -107,7 +111,8 @@ static void audio_fill(void *userdata, uint8_t *stream, int len) {
 }
 
 static void open_display() {
-  SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+  // SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+  SDL_Init(SDL_INIT_VIDEO);
 #ifdef MODE_800x600
   SDL_CreateWindowAndRenderer(disp_w, disp_h, 0, &window, &renderer);
 #else
