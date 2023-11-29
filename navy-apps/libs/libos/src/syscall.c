@@ -5,7 +5,6 @@
 #include <time.h>
 #include "syscall.h"
 
-
 // helper macros
 #define _concat(x, y) x ## y
 #define concat(x, y) _concat(x, y)
@@ -30,16 +29,18 @@
 # define ARGS_ARRAY ("int $0x80", "eax", "ebx", "ecx", "edx", "eax")
 #elif defined(__ISA_MIPS32__)
 # define ARGS_ARRAY ("syscall", "v0", "a0", "a1", "a2", "v0")
-#elif defined(__ISA_RISCV32__) || defined(__ISA_RISCV64__)
-#define ARGS_ARRAY ("ecall", "a7", "a0", "a1", "a2", "a0")
+#elif defined(__riscv)
+#ifdef __riscv_e
+# define ARGS_ARRAY ("ecall", "a5", "a0", "a1", "a2", "a0")
+#else
+# define ARGS_ARRAY ("ecall", "a7", "a0", "a1", "a2", "a0")
+#endif
 #elif defined(__ISA_AM_NATIVE__)
 # define ARGS_ARRAY ("call *0x100000", "rdi", "rsi", "rdx", "rcx", "rax")
 #elif defined(__ISA_X86_64__)
 # define ARGS_ARRAY ("int $0x80", "rdi", "rsi", "rdx", "rcx", "rax")
 #elif defined(__ISA_LOONGARCH32R__)
 # define ARGS_ARRAY ("syscall 0", "a7", "a0", "a1", "a2", "a0")
-#elif defined(__ISA_RISCV32E__)
-#define ARGS_ARRAY ("ecall", "a5", "a0", "a1", "a2", "a0")
 #else
 #error _syscall_ is not implemented
 #endif
@@ -60,47 +61,41 @@ void _exit(int status) {
 }
 
 int _open(const char *path, int flags, mode_t mode) {
-  return _syscall_(SYS_open, path, flags, mode);  
+  _exit(SYS_open);
+  return 0;
 }
 
 int _write(int fd, void *buf, size_t count) {
-  return _syscall_(SYS_write, fd, buf, count); 
+  _exit(SYS_write);
+  return 0;
 }
 
-extern char end;
-void * program_break = NULL;
-
 void *_sbrk(intptr_t increment) {
-  if (program_break == NULL){
-    program_break = &end;
-  }
-  void *old_program_break = program_break;
-  int ret = _syscall_(SYS_brk, (intptr_t)(program_break + increment), 0, 0);
-  if (ret == 0)
-    program_break = program_break + increment;
-  else 
-    return (void*)-1;
-  return old_program_break;
+  return (void *)-1;
 }
 
 int _read(int fd, void *buf, size_t count) {
-  return _syscall_(SYS_read, fd, buf, count);
+  _exit(SYS_read);
+  return 0;
 }
 
 int _close(int fd) {
-  return _syscall_(SYS_close, fd, 0, 0);
+  _exit(SYS_close);
+  return 0;
 }
 
 off_t _lseek(int fd, off_t offset, int whence) {
-  return _syscall_(SYS_lseek, fd, offset, whence);
+  _exit(SYS_lseek);
+  return 0;
 }
 
 int _gettimeofday(struct timeval *tv, struct timezone *tz) {
-  return _syscall_(SYS_gettimeofday, tv, tz, 0);
+  _exit(SYS_gettimeofday);
+  return 0;
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _syscall_(SYS_execve, fname, argv, envp);
+  _exit(SYS_execve);
   return 0;
 }
 

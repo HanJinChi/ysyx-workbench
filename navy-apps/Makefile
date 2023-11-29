@@ -54,8 +54,8 @@ WL = -Wl,
 endif
 
 ### 32-bit ISA may need compiler-rt to support 64-bit mul/div
-ifneq ($(findstring $(ISA), x86|mips32|riscv32|loongarch32r|riscv32e),)
-LIBS += compiler-rt libndl
+ifneq ($(findstring $(ISA), x86|mips32|riscv32|riscv32e|loongarch32r),)
+LIBS += compiler-rt
 endif
 
 ### All libraries to add to the include path
@@ -82,7 +82,7 @@ LD        = $(CROSS_COMPILE)ld
 INC_PATH += $(WORK_DIR)/include $(foreach l,$(LIBS_INC),$(NAVY_HOME)/libs/$(l)/include/)
 INCFLAGS += $(addprefix -I, $(INC_PATH))
 
-CFLAGS   += -O0 -g -MMD $(INCFLAGS) -static -D__NAVY__ \
+CFLAGS   += -O2 -MMD $(INCFLAGS) -static -D__NAVY__ \
             -D__ISA__=\"$(ISA)\" -D__ISA_$(shell echo $(ISA) | tr a-z A-Z)__ \
             -fno-asynchronous-unwind-tables -fno-builtin -fno-stack-protector
 CXXFLAGS +=  $(CFLAGS) -ffreestanding -fno-rtti -fno-exceptions
@@ -166,13 +166,12 @@ $(CLEAN_ALL):
 .PHONY: clean-all $(CLEAN_ALL)
 
 ### Build fsimg and ramdisk for Nanos-lite
-APPS = nslider menu nterm bird
-TESTS = dummy hello file-test timer-test event-test bmp-test 
+APPS =
+TESTS = dummy hello
 
 fsimg: $(addprefix apps/, $(APPS)) $(addprefix tests/, $(TESTS))
 	-for t in $^; do $(MAKE) -s -C $(NAVY_HOME)/$$t install; done
 
-# eval函数会查找fsimg目录下所有普通文件，并将文件名列表输出并赋值给变量FSIMG_FILES
 RAMDISK = build/ramdisk.img
 RAMDISK_H = build/ramdisk.h
 $(RAMDISK): fsimg

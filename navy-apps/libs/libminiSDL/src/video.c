@@ -3,90 +3,16 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
-  uint32_t s_start_pos = 0;
-  uint32_t s_sf_row_num = src->h, s_sf_col_num = src->w,
-           s_rec_row_num = src->h, s_rec_col_num = src->w;
-  if (srcrect != NULL){
-    s_start_pos = srcrect->x + srcrect->y * src->w;
-    s_rec_row_num = srcrect->h;
-    s_rec_col_num = srcrect->w;
-  }
-  uint32_t d_start_pos = 0;
-  uint32_t d_sf_row_num = dst->h, d_sf_col_num = dst->w;
-  if (dstrect != NULL){
-    d_start_pos = dstrect->x + dstrect->y * dst->w;
-  }
-  if (dst->format->BitsPerPixel == 32){
-    for (int row = 0; row < s_rec_row_num; ++row)
-      memcpy((uint32_t *)dst->pixels + d_start_pos + row * d_sf_col_num, (uint32_t *)src->pixels + s_start_pos + row * s_sf_col_num, s_rec_col_num * sizeof(uint32_t));
-  }
-  else if (dst->format->BitsPerPixel == 8){
-    for (int row = 0; row < s_rec_row_num; ++row)
-      memcpy((uint8_t *)dst->pixels + d_start_pos + row * d_sf_col_num, (uint8_t *)src->pixels + s_start_pos + row * s_sf_col_num, s_rec_col_num * sizeof(uint8_t));
-  }
-  else
-    assert(0);
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
-  int32_t start_pos = 0;
-  uint32_t sf_row_num = dst->h;
-  uint32_t sf_col_num = dst->w;
-  uint32_t rec_row_num = dst->h;
-  uint32_t rec_col_num = dst->w;
-  if (dstrect != NULL){
-    start_pos = dstrect->x + dstrect->y * dst->w;
-    rec_row_num = dstrect->h;
-    rec_col_num = dstrect->w;
-  }
-  if (dst->format->BitsPerPixel == 32){
-    for (int row = 0; row < rec_row_num; ++row)
-      memset((uint32_t *)dst->pixels + start_pos + row * sf_col_num, color, rec_col_num * sizeof(uint32_t));
-  }
-  else if (dst->format->BitsPerPixel == 8){
-    for (int row = 0; row < rec_row_num; ++row)
-      memset((uint8_t *)dst->pixels + start_pos + row * sf_col_num, color, rec_col_num * sizeof(uint8_t));
-  }
-  else
-    assert(0);
-  return;
 }
 
-void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h){
-  // improtant: only w == 0 && h == 0, then set the s size.
-  if (w == 0 && h == 0){
-    w = s->w;
-    h = s->h;
-  }
-
-  uint32_t len = w * h;
-  uint32_t *buf = malloc(sizeof(uint32_t) * len);
-  uint32_t start_pos = x + y * s->w;
-  uint32_t i = 0;
-  for (size_t row = 0; row < h; ++row){
-    for (size_t col = 0; col < w; ++col){
-      uint32_t offset = col + row * s->w;
-      if (s->format->BitsPerPixel == 32){
-        s->pixels[start_pos + offset];
-        buf[i++] = s->pixels[start_pos + 4 * offset + 3] << 24 | s->pixels[start_pos + 4 * offset + 2] << 16 | s->pixels[start_pos + 4 * offset + 1] << 8 | s->pixels[start_pos + 4 * offset];
-      }
-      else if (s->format->BitsPerPixel == 8){
-        SDL_Color rgba_color = s->format->palette->colors[s->pixels[start_pos + offset]];
-        buf[i++] = rgba_color.a << 24 | rgba_color.r << 16 | rgba_color.g << 8 | rgba_color.b;
-      }
-      else
-        assert(0);    
-    }
-  }
-
-  NDL_DrawRect(buf, x, y, w, h);
-
-  free(buf);
+void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
 }
 
 // APIs below are already implemented.
@@ -194,16 +120,6 @@ void SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else {
     assert(0);
-    printf("src size is %d, %d\n", src->w, src->h);
-    printf("dst size is %d, %d\n", dst->w, dst->h);
-    int w_ratio = dstrect->w/w, h_ratio = dstrect->h/h;
-    printf("ratio is %d, %d\n", w_ratio,h_ratio);
-    for(int row = y; row < y + w; ++row){
-      for(int col = x; col < x + h; ++col){
-        dst->pixels[col + row * w] = src->pixels[w_ratio * col + h_ratio * row * w ];
-        // printf("from [%d, %d] to [%d, %d]\n", row, col, h_ratio * row, w_ratio * col);
-      }
-    }
   }
 }
 

@@ -23,54 +23,18 @@ static void sh_prompt() {
 }
 
 static void sh_handle_cmd(const char *cmd) {
-  char inst[64];
-  strcpy(inst, cmd);
-  inst[strlen(inst) - 1] = '\0';
-  
-  char *token = strtok(inst, " ");
-  char *argv[16];
-  int argc = 0;
-  
-  while(token) {
-    argv[argc++] = token;
-    token = strtok(NULL, " ");
-  }
-  argv[argc] = NULL;
-  
-  execvp(argv[0], argv);
-  /*
-  char command[128];
-  strcpy(command, cmd);
-  command[strlen(command) - 1] = '\0';
-
-  const char split[2] = " ";
-  char *token;
-  char *argv[16];
-  int argc = 0;
-
-  token = strtok(command, split);
-  while(token) {
-    argv[argc++] = token;
-    token = strtok(NULL, split);
-  }
-  argv[argc] = NULL;
-  
-  execvp(argv[0], argv);
-  */
 }
 
 void builtin_sh_run() {
   sh_banner();
   sh_prompt();
-  
-  setenv("PATH", "/bin:/usr/bin", 0);
+
   while (1) {
     SDL_Event ev;
     if (SDL_PollEvent(&ev)) {
       if (ev.type == SDL_KEYUP || ev.type == SDL_KEYDOWN) {
         const char *res = term->keypress(handle_key(&ev));
         if (res) {
-          sh_printf("load...");
           sh_handle_cmd(res);
           sh_prompt();
         }
