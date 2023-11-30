@@ -144,6 +144,8 @@ static int cmd_save(char *args){
   fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
 
   fclose(fp);
+
+  return 0;
 }
 
 static struct {
