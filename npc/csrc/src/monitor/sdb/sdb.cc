@@ -1,4 +1,5 @@
 #include "sdb.h"
+#include "cpu/difftest.h"
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <memory/paddr.h>
@@ -125,6 +126,16 @@ static int cmd_db(char *args){
   return 0;
 }
 
+static int cmd_detach(char *args){
+  difftest_detach();
+  return 0;
+}
+
+static int cmd_attach(char *args){
+  difftest_attach();
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -140,6 +151,8 @@ static struct {
   { "b", "set breakpoint", cmd_b },
   { "dw", "delete all watchpoint", cmd_dw },
   { "db", "delete all breakpoint", cmd_db },
+  {"detach", "exit difftest", cmd_detach},
+  {"attach", "start difftest", cmd_attach}
   /* TODO: Add more commands */
 
 };

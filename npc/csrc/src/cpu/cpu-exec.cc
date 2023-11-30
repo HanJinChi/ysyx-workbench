@@ -213,6 +213,8 @@ void exec_once(){
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
+  top->rootp->top__DOT__wb__DOT__pc_next = 0;
+
   #ifdef CONFIG_TRACE
     if(ins_count % 100000 == 0){
       #ifdef CONFIG_VCD_TRACE
@@ -296,5 +298,6 @@ void cpu_exec(uint64_t n){
 }
 
 void assert_fail_msg() {
-
+  isa_reg_display();
+  statistic();
 }

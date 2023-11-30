@@ -113,6 +113,7 @@ static int parse_args(int argc, char *argv[])
       break;
     case 'x':
       exception_log_file = optarg;
+      break;
     case 'a':
       elf_file_array = optarg;
       break;
