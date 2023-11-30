@@ -15,7 +15,7 @@ FILE *log_fp = NULL;
 FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
-ELF32 elf_array[10000];
+ELF32 elf_array[100000];
 uint32_t count = 0;
 int32_t space_count = 0;
 
@@ -119,7 +119,7 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
     }
     globfree(&result);
   }
-  printf("count is %d\n", count);
+  Log("count is %d", count);
 
 }
 
