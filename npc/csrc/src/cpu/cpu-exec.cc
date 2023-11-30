@@ -246,6 +246,10 @@ void execute(uint64_t n){
   }
 }
 
+void statistic(){
+  Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
+}
+
 void cpu_exec(uint64_t n){
   switch (npc_state.state) {
     case NPC_END: case NPC_ABORT:
@@ -264,9 +268,9 @@ void cpu_exec(uint64_t n){
            (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           npc_state.halt_pc);
-      Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
+      // Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
       // fall through
-    // case NPC_QUIT: statistic();
+    case NPC_QUIT: statistic();
     default: break;
   }
 }
