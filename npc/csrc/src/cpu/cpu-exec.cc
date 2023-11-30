@@ -212,7 +212,8 @@ void exec_once(){
   copy_cpu_state();
 
   #ifdef CONFIG_TRACE
-    s.pc = top->rootp->top__DOT__wb__DOT__pc;
+    s.pc   = top->rootp->top__DOT__wb__DOT__pc;
+    s.dnpc = top->rootp->top__DOT__wb__DOT__pc_next;
     s.inst = top->rootp->top__DOT__wb__DOT__instruction;
 
     char *p = s.logbuf;
