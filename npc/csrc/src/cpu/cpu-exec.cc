@@ -214,7 +214,8 @@ void exec_once(){
   copy_cpu_state();
 
   if(ins_count % 10 == 0){
-    tfp->flush();
+    tfp->close();
+    tfp->open("dump.vcd");
     reopen_all_log();
   }
 
