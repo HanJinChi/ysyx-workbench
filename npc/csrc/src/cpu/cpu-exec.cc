@@ -5,6 +5,7 @@
 #include <isa.h>
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
+#include "utils.h"
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC* tfp = NULL;
@@ -18,7 +19,11 @@ bool end = 0;
 uint32_t  clock_count = 0;
 uint32_t  ins_count = 0;
 
+bool check_watchpoint();
+bool check_breakpoint(word_t pc);
 void ftrace_check_address(int, uint32_t, uint32_t);
+void sdb_mainloop();
+
 void step_and_dump_wave();
 
 void device_update();
@@ -121,6 +126,19 @@ void trace_and_difftest(){
   #ifdef CONFIG_DIFFTEST
     difftest_step(cpu.pc,0);
   #endif
+
+#ifdef CONFIG_WATCHPOINT
+  if(check_watchpoint()) { 
+    npc_state.state = NPC_STOP;
+    printf("reach watchpoint\n");
+    sdb_mainloop();
+  }
+  if(check_breakpoint(s.pc)) { 
+    npc_state.state = NPC_STOP;
+    printf("reach breakpoint\n");
+    sdb_mainloop();
+  }
+#endif
 }
 
 void init_cpu(){
