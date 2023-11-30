@@ -219,6 +219,13 @@ bool exception_log_enable(){
 }
 
 void reopen_all_log(){
+  fclose(log_fp);
+  fclose(memory_log_fp);
+  fclose(function_log_fp);
+  fclose(device_log_fp);
+  fclose(exception_log_fp);
+
+
   log_fp            = fopen(log_name, "w");
   memory_log_fp     = fopen(memory_log_name, "w");
   function_log_fp   = fopen(function_log_name, "w");
