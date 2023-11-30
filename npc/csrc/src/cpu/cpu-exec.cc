@@ -16,8 +16,8 @@ static Decode s;
 uint32_t ins = 0;
 bool end = 0;
 
-uint32_t  clock_count = 0;
-uint32_t  ins_count = 0;
+uint64_t  clock_count = 0;
+uint64_t  ins_count = 0;
 
 bool check_watchpoint();
 bool check_breakpoint(word_t pc);
