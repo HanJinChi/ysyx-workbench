@@ -139,13 +139,21 @@ static int cmd_attach(char *args){
 }
 
 static int cmd_save(char *args){
-  FILE *fp = fopen("state", "w");
+  FILE *fp = fopen("state", "wb");
 
   // fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
   fwrite(&cpu, sizeof(CPU_state), 1, fp);
   fclose(fp);
 
   return 0;
+}
+
+static int cmd_load(char *args){
+  FILE *fp = fopen("state", "rb");
+
+  fread(&cpu, sizeof(CPU_state), 1, fp);
+
+  fclose(fp);
 }
 
 static struct {
@@ -165,7 +173,8 @@ static struct {
   { "db", "delete all breakpoint", cmd_db },
   {"detach", "exit difftest", cmd_detach},
   {"attach", "start difftest", cmd_attach},
-  {"save", "save cpu and memory state to path", cmd_save}
+  {"save", "save cpu and memory state to path", cmd_save},
+  {"load", "load cpu and memory state to path", cmd_load}
   /* TODO: Add more commands */
 
 };
