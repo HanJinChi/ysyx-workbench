@@ -171,6 +171,7 @@ void init_cpu(){
 
   top->rst = 0;
   top->clk = 0;
+  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = 0xf3;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
