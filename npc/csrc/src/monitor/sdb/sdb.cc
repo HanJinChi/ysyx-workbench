@@ -154,6 +154,7 @@ static int cmd_load(char *args){
   fread(&cpu, sizeof(CPU_state), 1, fp);
 
   fclose(fp);
+  return 0;
 }
 
 static struct {
