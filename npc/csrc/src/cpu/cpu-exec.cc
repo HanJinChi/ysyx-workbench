@@ -247,7 +247,7 @@ void execute(uint64_t n){
 }
 
 void statistic(){
-  Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
+  Log("clock count: %d, inst_count : %d, IPC: %f", clock_count, ins_count, (1.0*ins_count)/clock_count);
 }
 
 void cpu_exec(uint64_t n){
