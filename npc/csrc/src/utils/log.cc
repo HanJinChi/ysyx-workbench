@@ -15,7 +15,7 @@ FILE *log_fp = NULL;
 FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
-ELF32 elf_array[100000];
+ELF32 elf_array[5000];
 uint32_t count = 0;
 int32_t space_count = 0;
 
