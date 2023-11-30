@@ -20,6 +20,12 @@ module wbu(
     output  [31:0]  csra
 );
 
+  reg  ecall_r;
+  always @(posedge clk) begin
+    if(rst) ecall_r <= 0;
+    else    ecall_r <= ecall;
+  end
+
   reg  [31:0] instruction;
   wire [31:0] instruction_subsequent;
   wire [31:0] instruction_previous;

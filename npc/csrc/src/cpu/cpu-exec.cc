@@ -67,9 +67,6 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 }
 
 void copy_cpu_state(){
-  // for(int i = 0; i < 32; i++) {
-  //   GPR_COPY(i);
-  // }
   cpu.csr.mcause =  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4;
   cpu.csr.mepc   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4;
   cpu.csr.mstatus   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4;
@@ -229,6 +226,12 @@ void exec_once(){
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
     disassemble(p, s.logbuf + sizeof(s.logbuf) - p,
         s.pc, (uint8_t *)&s.inst, 4);
+  #endif
+
+  #ifdef CONFIG_XTRACE
+    if(top->rootp->top__DOT__ls__DOT__ecall_r == 1){
+      exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", s.pc, cpu.gpr[15]);
+    }
   #endif
 
 
