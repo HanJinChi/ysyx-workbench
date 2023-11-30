@@ -8,6 +8,7 @@ void init_log(const char *log_file);
 void init_memory_log(const char *log_file);
 void init_function_log(const char *log_file);
 void init_device_log(const char *log_file);
+void init_exception_log(const char* log_file);
 void init_mem();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
@@ -36,6 +37,7 @@ static char *log_file = NULL;
 static char *memory_log_file = NULL;
 static char *function_log_file = NULL;
 static char *device_log_file = NULL;
+static char *exception_log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static char *elf_file = NULL;
@@ -74,6 +76,7 @@ static int parse_args(int argc, char *argv[])
       {"flog", required_argument, NULL, 'f'},
       {"vlog", required_argument, NULL, 'v'},
       {"elf",  required_argument, NULL, 'e'},
+      {"xlog", required_argument, NULL, 'x'},
       {"elf_array", required_argument, NULL, 'a'},
       {"diff", required_argument, NULL, 'd'},
       {"port", required_argument, NULL, 'p'},
@@ -81,7 +84,7 @@ static int parse_args(int argc, char *argv[])
       {0, 0, NULL, 0},
   };
   int o;
-  while ((o = getopt_long(argc, argv, "-bhl:d:p:m:f:e:v:a:", table, NULL)) != -1)
+  while ((o = getopt_long(argc, argv, "-bhl:d:p:m:f:e:v:a:x:", table, NULL)) != -1)
   {
     switch (o)
     {
@@ -108,6 +111,8 @@ static int parse_args(int argc, char *argv[])
     case 'v':
       device_log_file = optarg;
       break;
+    case 'x':
+      exception_log_file = optarg;
     case 'a':
       elf_file_array = optarg;
       break;
@@ -147,6 +152,7 @@ void init_monitor(int argc, char *argv[])
   init_memory_log(memory_log_file);
   init_function_log(function_log_file);
   init_device_log(device_log_file);
+  init_exception_log(exception_log_file);
 
   /* Initialize memory. */
   init_mem();

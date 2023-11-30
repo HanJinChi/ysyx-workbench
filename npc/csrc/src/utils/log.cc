@@ -1,6 +1,5 @@
 
 #include <common.h>
-#include <cstdio>
 #include <elf.h>
 #include <glob.h>
 
@@ -15,6 +14,7 @@ FILE *log_fp = NULL;
 FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
+FILE *exception_log_fp = NULL;
 ELF32 elf_array[5000];
 uint32_t count = 0;
 int32_t space_count = 0;
@@ -58,6 +58,16 @@ void init_device_log(const char *log_file){
     device_log_fp = fp;
   }
   Log("Device Log is written to %s", log_file ? log_file : "stdout");
+}
+
+void init_exception_log(const char* log_file){
+  exception_log_fp = stdout;
+  if(log_file != NULL){
+    FILE* fp = fopen(log_file, "w");
+    Assert(fp, "Can not open '%s'", log_file);
+    exception_log_fp = fp;
+  }
+  Log("Exception Log is written to %s", log_file ? log_file : "stdout");
 }
 
 void add_elf_array(const char *elf_file){
@@ -190,4 +200,8 @@ bool function_log_enable(){
 
 bool device_log_enable(){
   return MUXDEF(CONFIG_VTRACE, true, false);
+}
+
+bool exception_log_enable(){
+  return MUXDEF(CONFIG_XTRACE, true, false);
 }
