@@ -213,11 +213,15 @@ void exec_once(){
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
-  if(ins_count % 100000 == 0){
-    tfp->close();
-    tfp->open("dump.vcd");
-    reopen_all_log();
-  }
+  #ifdef CONFIG_TRACE
+    if(ins_count % 100000 == 0){
+      #ifdef CONFIG_VCD_TRACE
+        tfp->close();
+        tfp->open("dump.vcd");
+      #endif
+        reopen_all_log();
+    }
+  #endif
 
   #ifdef CONFIG_TRACE
     s.pc   = top->rootp->top__DOT__wb__DOT__pc;
