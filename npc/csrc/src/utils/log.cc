@@ -225,10 +225,9 @@ void reopen_all_log(){
   fclose(device_log_fp);
   fclose(exception_log_fp);
 
-
   log_fp            = fopen(log_name, "w");
   memory_log_fp     = fopen(memory_log_name, "w");
   function_log_fp   = fopen(function_log_name, "w");
   device_log_fp     = fopen(device_log_name, "w");
-  exception_log_fp  = fopen(log_name, "w");
+  exception_log_fp  = fopen(exception_log_name, "w");
 }

@@ -139,6 +139,10 @@ void trace_and_difftest(){
 #endif
 }
 
+void reopen_tfp(){
+  tfp->flush();
+}
+
 void init_cpu(){
   contextp = new VerilatedContext;
   tfp = new VerilatedVcdC;
@@ -209,7 +213,8 @@ void exec_once(){
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
-  if(ins_count % 100000 == 0){
+  if(ins_count % 10 == 0){
+    tfp->flush();
     reopen_all_log();
   }
 
