@@ -229,7 +229,7 @@ void exec_once(){
   #endif
 
   #ifdef CONFIG_XTRACE
-    if(top->rootp->top__DOT__ls__DOT__ecall_r == 1){
+    if(top->rootp->top__DOT__wb__DOT__ecall_r == 1){
       exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", s.pc, cpu.gpr[15]);
     }
   #endif
