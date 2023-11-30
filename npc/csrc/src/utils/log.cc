@@ -1,5 +1,6 @@
 
 #include <common.h>
+#include <cstdio>
 #include <elf.h>
 #include <glob.h>
 
@@ -118,6 +119,8 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
     }
     globfree(&result);
   }
+  printf("count is %d\n", count);
+
 }
 
 
