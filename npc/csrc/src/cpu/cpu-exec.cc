@@ -213,7 +213,7 @@ void exec_once(){
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
-  if(ins_count % 100000 == 0){
+  if(ins_count % 2 == 0){
     tfp->close();
     tfp->open("dump.vcd");
     reopen_all_log();
