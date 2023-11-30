@@ -23,6 +23,7 @@ bool check_watchpoint();
 bool check_breakpoint(word_t pc);
 void ftrace_check_address(int, uint32_t, uint32_t);
 void sdb_mainloop();
+void reopen_all_log();
 
 void step_and_dump_wave();
 
@@ -207,6 +208,10 @@ void exec_once(){
   ins_count++;
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
+
+  if(ins_count % 100000 == 0){
+    reopen_all_log();
+  }
 
   #ifdef CONFIG_TRACE
     s.pc   = top->rootp->top__DOT__wb__DOT__pc;

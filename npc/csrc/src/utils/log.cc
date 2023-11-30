@@ -1,5 +1,6 @@
 
 #include <common.h>
+#include <cstdio>
 #include <elf.h>
 #include <glob.h>
 
@@ -15,11 +16,19 @@ FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
 FILE *exception_log_fp = NULL;
+
+char *log_name = NULL;
+char *memory_log_name = NULL;
+char *function_log_name = NULL;
+char *device_log_name = NULL;
+char *exception_log_name = NULL;
+
 ELF32 elf_array[5000];
 uint32_t count = 0;
 int32_t space_count = 0;
 
 void init_log(const char *log_file) {
+  log_name = (char*)log_file;
   log_fp = stdout;
   if (log_file != NULL) {
     FILE *fp = fopen(log_file, "w");
@@ -30,6 +39,7 @@ void init_log(const char *log_file) {
 }
 
 void init_memory_log(const char *log_file){
+  memory_log_name = (char*)log_file;
   memory_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -39,8 +49,8 @@ void init_memory_log(const char *log_file){
   Log("Memory Log is written to %s", log_file ? log_file : "stdout");
 }
 
-
 void init_function_log(const char *log_file){
+  function_log_name = (char*)log_file;
   function_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -51,6 +61,7 @@ void init_function_log(const char *log_file){
 }
 
 void init_device_log(const char *log_file){
+  device_log_name = (char*)log_file;
   device_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -61,6 +72,7 @@ void init_device_log(const char *log_file){
 }
 
 void init_exception_log(const char* log_file){
+  exception_log_name = (char*)log_file;
   exception_log_fp = stdout;
   if(log_file != NULL){
     FILE* fp = fopen(log_file, "w");
@@ -204,4 +216,12 @@ bool device_log_enable(){
 
 bool exception_log_enable(){
   return MUXDEF(CONFIG_XTRACE, true, false);
+}
+
+void reopen_all_log(){
+  log_fp            = fopen(log_name, "w");
+  memory_log_fp     = fopen(memory_log_name, "w");
+  function_log_fp   = fopen(function_log_name, "w");
+  device_log_fp     = fopen(device_log_name, "w");
+  exception_log_fp  = fopen(log_name, "w");
 }
