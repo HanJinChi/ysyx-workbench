@@ -139,9 +139,6 @@ void trace_and_difftest(){
 #endif
 }
 
-void reopen_tfp(){
-  tfp->flush();
-}
 
 void init_cpu(){
   contextp = new VerilatedContext;
@@ -171,7 +168,6 @@ void init_cpu(){
 
   top->rst = 0;
   top->clk = 0;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = 0xf3;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
@@ -214,7 +210,6 @@ void exec_once(){
   cpu.pc = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
   copy_cpu_state();
 
-  top->rootp->top__DOT__wb__DOT__pc_next = 0;
 
   #ifdef CONFIG_TRACE
     if(ins_count % 100000 == 0){
