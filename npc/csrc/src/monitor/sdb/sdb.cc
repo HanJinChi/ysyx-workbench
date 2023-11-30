@@ -1,5 +1,7 @@
 #include "sdb.h"
 #include "cpu/difftest.h"
+#include <bits/types/FILE.h>
+#include <cstdio>
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <memory/paddr.h>
@@ -136,6 +138,14 @@ static int cmd_attach(char *args){
   return 0;
 }
 
+static int cmd_save(char *args){
+  FILE *fp = fopen("state", "w");
+
+  fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
+
+  fclose(fp);
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -152,7 +162,8 @@ static struct {
   { "dw", "delete all watchpoint", cmd_dw },
   { "db", "delete all breakpoint", cmd_db },
   {"detach", "exit difftest", cmd_detach},
-  {"attach", "start difftest", cmd_attach}
+  {"attach", "start difftest", cmd_attach},
+  {"save", "save cpu and memory state to path", cmd_save}
   /* TODO: Add more commands */
 
 };
