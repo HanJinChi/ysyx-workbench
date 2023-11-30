@@ -8,6 +8,9 @@
 static int is_batch_mode = false;
 
 void init_regex();
+void init_wp_pool();
+void init_bp_pool();
+
 
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -44,13 +47,17 @@ static int cmd_si(char *args){
 }
 
 static int cmd_q(char *args) {
-  // npc_state.state = NPC_QUIT;
+  npc_state.state = NPC_QUIT;
   return -1;
 }
 
 static int cmd_info(char *args){
   if(strcmp(args, "r") == 0){
     isa_reg_display();
+  }else if(strcmp(args, "w") == 0){
+    info_watchpoint();
+  }else if(strcmp(args, "b") == 0){
+    info_breakpoint();
   }
   return 0;
 }
@@ -96,6 +103,28 @@ static int cmd_p(char *args){
   return 0;
 }
 
+static int cmd_w(char* args){
+  store_watchpoint(args);
+  return 0;
+}
+
+static int cmd_b(char* args){
+  store_breakpoint(args);
+  return 0;
+}
+
+static int cmd_dw(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_watchpoint(n);
+  return 0;
+}
+
+static int cmd_db(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_breakpoint(n);
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -107,6 +136,10 @@ static struct {
   { "info", "Print relevant information", cmd_info },
   { "x", "Scan Memory", cmd_x },
   { "p", "Calculate the value of [expr]", cmd_p },
+  { "w", "watch the value of [expr]", cmd_w },
+  { "b", "set breakpoint", cmd_b },
+  { "dw", "delete all watchpoint", cmd_dw },
+  { "db", "delete all breakpoint", cmd_db },
   /* TODO: Add more commands */
 
 };
@@ -156,4 +189,8 @@ void sdb_mainloop() {
 
 void init_sdb(){
   init_regex();
+
+  init_wp_pool();
+
+  init_bp_pool();
 }
