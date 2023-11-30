@@ -141,8 +141,8 @@ static int cmd_attach(char *args){
 static int cmd_save(char *args){
   FILE *fp = fopen("state", "w");
 
-  fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
-
+  // fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
+  fwrite(&cpu, sizeof(CPU_state), 1, fp);
   fclose(fp);
 
   return 0;

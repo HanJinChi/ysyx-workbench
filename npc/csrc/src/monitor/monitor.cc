@@ -1,4 +1,5 @@
 
+#include "isa.h"
 #include <memory/paddr.h>
 #include <stdio.h>
 
@@ -16,6 +17,7 @@ void init_sdb();
 void init_read_elf(const char* elf_file, const char* elf_file_array);
 void init_disasm(const char *triple);
 void init_cpu();
+
 
 static void welcome()
 {
