@@ -15,6 +15,8 @@ void init_regex();
 void init_wp_pool();
 void init_bp_pool();
 
+extern void set_cpu_state();
+
 
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -157,6 +159,8 @@ static int cmd_load(char *args){
   fread(&cpu, sizeof(CPU_state), 1, fp);
 
   fclose(fp);
+
+  set_cpu_state();
   return 0;
 }
 
