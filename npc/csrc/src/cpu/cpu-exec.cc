@@ -268,13 +268,13 @@ void exec_once(){
 
 
   #ifdef CONFIG_TRACE
-    if(ins_count % 100000 == 0){
-      #ifdef CONFIG_VCD_TRACE
-        tfp->close();
-        tfp->open("dump.vcd");
-      #endif
-        reopen_all_log();
-    }
+    // if(ins_count % 100000 == 0){
+    //   #ifdef CONFIG_VCD_TRACE
+    //     tfp->close();
+    //     tfp->open("dump.vcd");
+    //   #endif
+    //     reopen_all_log();
+    // }
   #endif
 
   #ifdef CONFIG_TRACE
