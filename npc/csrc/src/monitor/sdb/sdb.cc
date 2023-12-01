@@ -161,6 +161,7 @@ static int cmd_load(char *args){
   fclose(fp);
 
   set_cpu_state();
+  cmd_attach(args);
   return 0;
 }
 
