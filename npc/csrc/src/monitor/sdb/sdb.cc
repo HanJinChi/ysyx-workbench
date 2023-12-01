@@ -1,13 +1,22 @@
 #include "sdb.h"
+#include "cpu/difftest.h"
+#include <bits/types/FILE.h>
+#include <cstdio>
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <memory/paddr.h>
+#include <device/map.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
 static int is_batch_mode = false;
 
 void init_regex();
+void init_wp_pool();
+void init_bp_pool();
+
+extern void set_cpu_state();
+
 
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -44,13 +53,17 @@ static int cmd_si(char *args){
 }
 
 static int cmd_q(char *args) {
-  // npc_state.state = NPC_QUIT;
+  npc_state.state = NPC_QUIT;
   return -1;
 }
 
 static int cmd_info(char *args){
   if(strcmp(args, "r") == 0){
     isa_reg_display();
+  }else if(strcmp(args, "w") == 0){
+    info_watchpoint();
+  }else if(strcmp(args, "b") == 0){
+    info_breakpoint();
   }
   return 0;
 }
@@ -96,6 +109,62 @@ static int cmd_p(char *args){
   return 0;
 }
 
+static int cmd_w(char* args){
+  store_watchpoint(args);
+  return 0;
+}
+
+static int cmd_b(char* args){
+  store_breakpoint(args);
+  return 0;
+}
+
+static int cmd_dw(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_watchpoint(n);
+  return 0;
+}
+
+static int cmd_db(char *args){
+  int n = strtol(args, NULL, 0);
+  delete_breakpoint(n);
+  return 0;
+}
+
+static int cmd_detach(char *args){
+  difftest_detach();
+  return 0;
+}
+
+static int cmd_attach(char *args){
+  difftest_attach();
+  return 0;
+}
+
+static int cmd_save(char *args){
+  FILE *fp = fopen(args, "wb");
+
+  fwrite(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
+
+  fwrite(&cpu, sizeof(CPU_state), 1, fp);
+  fclose(fp);
+
+  return 0;
+}
+
+static int cmd_load(char *args){
+  FILE *fp = fopen(args, "rb");
+
+  fread(guest_to_host(RESET_VECTOR), MSIZE, 1, fp);
+  fread(&cpu, sizeof(CPU_state), 1, fp);
+
+  fclose(fp);
+
+  set_cpu_state();
+  cmd_attach(args);
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -107,6 +176,14 @@ static struct {
   { "info", "Print relevant information", cmd_info },
   { "x", "Scan Memory", cmd_x },
   { "p", "Calculate the value of [expr]", cmd_p },
+  { "w", "watch the value of [expr]", cmd_w },
+  { "b", "set breakpoint", cmd_b },
+  { "dw", "delete all watchpoint", cmd_dw },
+  { "db", "delete all breakpoint", cmd_db },
+  {"detach", "exit difftest", cmd_detach},
+  {"attach", "start difftest", cmd_attach},
+  {"save", "save cpu and memory state to path", cmd_save},
+  {"load", "load cpu and memory state to path", cmd_load}
   /* TODO: Add more commands */
 
 };
@@ -156,4 +233,8 @@ void sdb_mainloop() {
 
 void init_sdb(){
   init_regex();
+
+  init_wp_pool();
+
+  init_bp_pool();
 }

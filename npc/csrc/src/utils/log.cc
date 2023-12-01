@@ -1,5 +1,6 @@
 
 #include <common.h>
+#include <cstdio>
 #include <elf.h>
 #include <glob.h>
 
@@ -14,11 +15,20 @@ FILE *log_fp = NULL;
 FILE *memory_log_fp = NULL;
 FILE *function_log_fp = NULL;
 FILE *device_log_fp = NULL;
-ELF32 elf_array[1000];
+FILE *exception_log_fp = NULL;
+
+char *log_name = NULL;
+char *memory_log_name = NULL;
+char *function_log_name = NULL;
+char *device_log_name = NULL;
+char *exception_log_name = NULL;
+
+ELF32 elf_array[5000];
 uint32_t count = 0;
 int32_t space_count = 0;
 
 void init_log(const char *log_file) {
+  log_name = (char*)log_file;
   log_fp = stdout;
   if (log_file != NULL) {
     FILE *fp = fopen(log_file, "w");
@@ -29,6 +39,7 @@ void init_log(const char *log_file) {
 }
 
 void init_memory_log(const char *log_file){
+  memory_log_name = (char*)log_file;
   memory_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -38,8 +49,8 @@ void init_memory_log(const char *log_file){
   Log("Memory Log is written to %s", log_file ? log_file : "stdout");
 }
 
-
 void init_function_log(const char *log_file){
+  function_log_name = (char*)log_file;
   function_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -50,6 +61,7 @@ void init_function_log(const char *log_file){
 }
 
 void init_device_log(const char *log_file){
+  device_log_name = (char*)log_file;
   device_log_fp = stdout;
   if(log_file != NULL){
     FILE *fp = fopen(log_file, "w");
@@ -57,6 +69,17 @@ void init_device_log(const char *log_file){
     device_log_fp = fp;
   }
   Log("Device Log is written to %s", log_file ? log_file : "stdout");
+}
+
+void init_exception_log(const char* log_file){
+  exception_log_name = (char*)log_file;
+  exception_log_fp = stdout;
+  if(log_file != NULL){
+    FILE* fp = fopen(log_file, "w");
+    Assert(fp, "Can not open '%s'", log_file);
+    exception_log_fp = fp;
+  }
+  Log("Exception Log is written to %s", log_file ? log_file : "stdout");
 }
 
 void add_elf_array(const char *elf_file){
@@ -118,6 +141,8 @@ void init_read_elf(const char* elf_file, const char* elf_file_array){
     }
     globfree(&result);
   }
+  Log("count is %d", count);
+
 }
 
 
@@ -187,4 +212,22 @@ bool function_log_enable(){
 
 bool device_log_enable(){
   return MUXDEF(CONFIG_VTRACE, true, false);
+}
+
+bool exception_log_enable(){
+  return MUXDEF(CONFIG_XTRACE, true, false);
+}
+
+void reopen_all_log(){
+  fclose(log_fp);
+  fclose(memory_log_fp);
+  fclose(function_log_fp);
+  fclose(device_log_fp);
+  fclose(exception_log_fp);
+
+  log_fp            = fopen(log_name, "w");
+  memory_log_fp     = fopen(memory_log_name, "w");
+  function_log_fp   = fopen(function_log_name, "w");
+  device_log_fp     = fopen(device_log_name, "w");
+  exception_log_fp  = fopen(exception_log_name, "w");
 }

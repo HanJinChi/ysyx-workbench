@@ -140,6 +140,27 @@ static int cmd_db(char *args){
   return 0;
 }
 
+static int cmd_save(char *args){
+  FILE *fp = fopen(args, "wb");
+
+  fwrite(guest_to_host(RESET_VECTOR), CONFIG_MSIZE, 1, fp);
+  fwrite(&cpu, sizeof(CPU_state), 1, fp);
+  fclose(fp);
+
+  return 0;
+}
+
+static int cmd_load(char *args){
+  FILE *fp = fopen(args, "rb");
+  int ret = 0;
+
+  ret = fread(guest_to_host(RESET_VECTOR), CONFIG_MSIZE, 1, fp);
+  ret = fread(&cpu, sizeof(CPU_state), 1, fp);
+
+  fclose(fp);
+  return ret;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -158,6 +179,8 @@ static struct {
   { "b", "set breakpoint", cmd_b },
   { "dw", "delete all watchpoint", cmd_dw },
   { "db", "delete all breakpoint", cmd_db },
+  {"save", "save cpu and memory state to path", cmd_save},
+  {"load", "load cpu and memory state to path", cmd_load}
 
   /* TODO: Add more commands */
 

@@ -19,13 +19,13 @@
 #include <common.h>
 
 word_t expr(char *e, bool *success);
-// void store_watchpoint(char *str);
-// void delete_watchpoint(int n);
-// void info_watchpoint();
-// bool check_watchpoint();
+void store_watchpoint(char *str);
+void delete_watchpoint(int n);
+void info_watchpoint();
+bool check_watchpoint();
 
-// void store_breakpoint(char *str);
-// void delete_breakpoint(int n);
-// void info_breakpoint();
-// bool check_breakpoint();
+void store_breakpoint(char *str);
+void delete_breakpoint(int n);
+void info_breakpoint();
+bool check_breakpoint();
 #endif

@@ -84,6 +84,17 @@ uint64_t get_time();
   } while (0) \
 )
 
+#define exception_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+  do { \
+    extern FILE* exception_log_fp; \
+    extern bool exception_log_enable(); \
+    if (exception_log_enable()) { \
+      fprintf(exception_log_fp, __VA_ARGS__); \
+      fflush(exception_log_fp); \
+    } \
+  } while (0) \
+)
+
 #define _Log(...) \
   do { \
     printf(__VA_ARGS__); \

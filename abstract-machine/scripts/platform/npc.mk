@@ -13,10 +13,11 @@ CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
 						 --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start 
-DIFF_ARGS = -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so
+DIFF_ARGS = -d $(NPC_HOME)/riscv32-nemu-interpreter-so
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 CFLAGS += -I$(AM_HOME)/am/src/riscv/npc/include
 NPCFLAGS += -b -l $(shell dirname $(IMAGE).elf)/npc-log.txt -m $(shell dirname $(IMAGE).elf)/memory-npc-log.txt -f $(shell dirname $(IMAGE).elf)/function-npc-log.txt -e $(IMAGE).elf -v $(shell dirname $(IMAGE).elf)/device-npc-log.txt
+NPCFLAGS += -a $(shell dirname $(IMAGE).elf)/bin -x $(shell dirname $(IMAGE).elf)/exception-npc-log.txt
 NPCFLAGS += $(DIFF_ARGS)
 
 

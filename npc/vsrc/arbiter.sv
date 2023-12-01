@@ -36,54 +36,61 @@ module arbiter(
   output   wire  [1 :0]  brespA, 
   output   wire  [1 :0]  brespB
 );
-
-  reg   arstate;
-  always @(posedge clk) begin
-    if(rst) begin
-      arstate <= 0;
-    end else begin
-      if(arstate == 0) begin
-        if(arvalidA || arvalidB) arstate  <= 1;
-      end else begin
-        if(rready && rvalid) arstate <= 0;
-      end
-    end
-  end
-
-
+  parameter IDLE = 0, MEM_R_A = 1, MEM_R_B = 2;
+  reg   [1 :0]  ar_state;
+  reg   [1 :0]  ar_next_state;
   reg   [1 :0]  araddrMux;
-  reg           wait_for_read_addr;
   reg           arvalid;
   wire  [31:0]  araddr;
   wire          arready;
+  wire          rready;
+  wire  [31:0]  rdata;
+  wire  [1 :0]  rresp;
+  wire          rvalid;
+
+  always @(posedge clk) begin
+    if(rst) ar_state <= 0;
+    else    ar_state <= ar_next_state; 
+  end
+
+  always@(*) begin
+    case(ar_state)
+      IDLE:
+        if(arvalidA || arvalidB)
+          ar_next_state = MEM_R_A;
+        else
+          ar_next_state = IDLE;
+      MEM_R_A:
+        if(arvalid && arready)
+          ar_next_state = MEM_R_B;
+        else
+          ar_next_state = MEM_R_A;
+      MEM_R_B:
+        if(rvalid && rready) 
+          ar_next_state = IDLE;
+        else
+          ar_next_state = MEM_R_B;
+    endcase
+  end
+
   always @(posedge clk) begin
     if(rst) begin
-      araddrMux <= 0;  // 默认选择情况下谁都不选择
-      wait_for_read_addr <= 0;
-    end
-    else begin
-      if(wait_for_read_addr) begin
-        assert(arstate == 1);
-        if(arready) begin
-          assert(arvalid == 1);
-          wait_for_read_addr <= 0;
-          arvalid <= 0; 
-          // araddrMux <= 0;  // 后续的读取数据选择还要使用araddrMux,因此在这里不能置0
-        end
-      end else begin
-        if(arstate == 0) begin
+      araddrMux <= 0;
+    end else begin
+      if(ar_next_state == MEM_R_A) begin
+        if(arvalid == 0) begin
           if(arvalidA) begin
-            arvalid   <= 1;
-            araddrMux <= 2'b01;
-            if(!arready) wait_for_read_addr <= 1;
+            arvalid    <= 1;
+            araddrMux  <= 2'b01;
           end else if(arvalidB) begin
-            arvalid   <= 1;
-            araddrMux <= 2'b10;
-            if(!arready) wait_for_read_addr <= 1;
-          end 
-        end else begin
-          if(arvalid && arready) arvalid <= 1'b0;
+            arvalid    <= 1;
+            araddrMux  <= 2'b10;
+          end
         end
+      end else if(ar_next_state == MEM_R_B) begin
+        arvalid <= 0;
+      end else if(ar_next_state == IDLE) begin
+        if(araddrMux != 0) araddrMux <= 0;
       end
     end
   end
@@ -93,7 +100,6 @@ module arbiter(
     2'b10, araddrB
   });
 
-  // 使用流水线时要进行修改
   MuxKeyWithDefault #(1, 2, 1) a_m2(arreadyA, araddrMux, 1'b0, {
     2'b01, arready
   });
@@ -101,10 +107,6 @@ module arbiter(
     2'b10, arready
   });
 
-  wire          rready;
-  wire  [31:0]  rdata;
-  wire  [1 :0]  rresp;
-  wire          rvalid;
   MuxKeyWithDefault #(2, 2, 1) a_m4(rready, araddrMux, 1'b0, {
     2'b01, rreadyA,
     2'b10, rreadyB
@@ -128,65 +130,15 @@ module arbiter(
     2'b10, rvalid
   });
 
-  always @(posedge clk) begin
-    if(rready && rvalid) begin
-      assert(araddrMux != 0);
-      araddrMux <= 0;
-    end
-  end
-
-  reg   [1 :0]  awaddrMux;
+  parameter MEM_W_A = 1, MEM_W_B = 2;
+  reg   [1 :0]  wMux;
   reg           wait_for_write_addr;
   reg           awvalid;
   wire  [31:0]  awaddr;
   wire          awready;
-  always @(posedge clk) begin
-    if(rst) begin
-      awaddrMux <= 0;  // 默认选择情况下谁都不选择
-      wait_for_write_addr <= 0;
-    end
-    else begin
-      if(wait_for_write_addr) begin
-        if(awready) begin
-          assert(awvalid == 1);
-          wait_for_write_addr <= 0;
-          awvalid <= 0; 
-          awaddrMux <= 0;  
-        end
-      end else begin
-        if(awvalidA) begin
-          awvalid <= 1;
-          awaddrMux <= 2'b01;
-          if(!awready) wait_for_write_addr <= 1;
-        end else if(awvalidB) begin
-          awvalid <= 1;
-          awaddrMux <= 2'b10;
-          if(!awready) wait_for_write_addr <= 1;
-        end else begin
-          if(awvalid && awready) begin
-            awvalid <= 1'b0;
-            awaddrMux <= 0;
-          end 
-        end
-      end
-    end
-  end
+  reg   [1 :0]  aw_state;
+  reg   [1 :0]  aw_next_state;
 
-  MuxKeyWithDefault #(2, 2, 32) a_m11(awaddr, awaddrMux, 32'b0, {
-    2'b01, awaddrA,
-    2'b10, awaddrB
-  });
-
-  // 使用流水线时要进行修改
-  MuxKeyWithDefault #(1, 2, 1) a_m12(awreadyA, awaddrMux, 1'b0, {
-    2'b01, awready
-  });
-  MuxKeyWithDefault #(1, 2, 1) a_m13(awreadyB, awaddrMux, 1'b0, {
-    2'b10, awready
-  });
-
-  reg   [1 :0]  wdataMux;
-  reg           wait_for_write_data;
   reg           wvalid;
   wire  [31:0]  wdata;
   wire  [7 :0]  wstrb;
@@ -195,77 +147,104 @@ module arbiter(
   wire          bready;
   wire  [1 :0]  bresp;
   always @(posedge clk) begin
+    if(rst) aw_state <= 0;
+    else    aw_state <= aw_next_state; 
+  end
+
+  always@(*) begin
+    case(aw_state)
+      IDLE:
+        if(awvalidA || awvalidB)
+          aw_next_state = MEM_W_A;
+        else
+          aw_next_state = IDLE;
+      MEM_W_A:
+        if(awvalid && awready)
+          aw_next_state = MEM_W_B;
+        else
+          aw_next_state = MEM_W_A;
+      MEM_W_B:
+        if(bvalid && bready)
+          aw_next_state = IDLE;
+        else
+          aw_next_state = MEM_W_B;
+    endcase
+  end
+
+  always @(posedge clk) begin
     if(rst) begin
-      wdataMux <= 0;  // 默认选择情况下谁都不选择
-      wait_for_write_data <= 0;
-    end
-    else begin
-      if(wait_for_write_data) begin
-        if(wready) begin
-          assert(wvalid == 1);
-          wait_for_write_data <= 0;
-          wvalid <= 0; 
-          // wdataMux <= 0;  
+      wMux  <= 0;
+    end else begin
+      if(aw_next_state == MEM_W_A) begin
+        if(awvalid == 0) begin
+          if(awvalidA) begin
+            awvalid   <= 1;
+            wvalid    <= 1;
+            wMux <= 2'b01;
+          end else if(awvalidB) begin
+            awvalid   <= 1;
+            wvalid    <= 1;
+            wMux <= 2'b10;
+          end
         end
-      end else begin
-        if(wvalidA) begin
-          wvalid <= 1;
-          wdataMux <= 2'b01;
-          if(!wready) wait_for_write_data <= 1;
-        end else if(wvalidB) begin
-          wvalid <= 1;
-          wdataMux <= 2'b10;
-          if(!wready) wait_for_write_data <= 1;
-        end else begin
-          if(wvalid && wready) begin
-            wvalid <= 1'b0;
-            // wdataMux <= 0;
-          end 
-        end
+      end else if(aw_next_state == MEM_W_B) begin
+        awvalid <= 0;
+        wvalid  <= 0;
+      end else if(aw_next_state == IDLE) begin
+        if(wMux != 0) wMux <= 0;
       end
     end
   end
 
-  MuxKeyWithDefault #(2, 2, 32) a_m14(wdata, wdataMux, 32'b0, {
+  MuxKeyWithDefault #(2, 2, 32) a_m11(awaddr, wMux, 32'b0, {
+    2'b01, awaddrA,
+    2'b10, awaddrB
+  });
+
+  // 使用流水线时要进行修改
+  MuxKeyWithDefault #(1, 2, 1) a_m12(awreadyA, wMux, 1'b0, {
+    2'b01, awready
+  });
+  MuxKeyWithDefault #(1, 2, 1) a_m13(awreadyB, wMux, 1'b0, {
+    2'b10, awready
+  });
+
+
+  MuxKeyWithDefault #(2, 2, 32) a_m14(wdata, wMux, 32'b0, {
     2'b01, wdataA,
     2'b10, wdataB
   });
 
-  MuxKeyWithDefault #(2, 2, 8) a_m15(wstrb, wdataMux, 8'b0, {
+  MuxKeyWithDefault #(2, 2, 8) a_m15(wstrb, wMux, 8'b0, {
     2'b01, wstrbA,
     2'b10, wstrbB
   });
 
-  // 使用流水线时要进行修改
-  MuxKeyWithDefault #(1, 2, 1) a_m16(wreadyA, wdataMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m16(wreadyA, wMux, 1'b0, {
     2'b01, wready
   });
-  MuxKeyWithDefault #(1, 2, 1) a_m17(wreadyB, wdataMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m17(wreadyB, wMux, 1'b0, {
     2'b10, wready
   });
 
-  MuxKeyWithDefault #(1, 2, 1) a_m18(bvalidA, wdataMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m18(bvalidA, wMux, 1'b0, {
     2'b01, bvalid
   });
-  MuxKeyWithDefault #(1, 2, 1) a_m19(bvalidB, wdataMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m19(bvalidB, wMux, 1'b0, {
     2'b10, bvalid
   });
 
-  MuxKeyWithDefault #(2, 2, 1) a_m20(bready, wdataMux, 1'b0, {
+  MuxKeyWithDefault #(2, 2, 1) a_m20(bready, wMux, 1'b0, {
     2'b01, breadyA,
     2'b10, breadyB
   });
 
-  MuxKeyWithDefault #(1, 2, 2) a_m21(brespA, wdataMux, 2'b01, {
+  MuxKeyWithDefault #(1, 2, 2) a_m21(brespA, wMux, 2'b01, {
     2'b01, bresp
   });
-  MuxKeyWithDefault #(1, 2, 2) a_m22(brespB, wdataMux, 2'b01, {
+  MuxKeyWithDefault #(1, 2, 2) a_m22(brespB, wMux, 2'b01, {
     2'b10, bresp
   });
-
-  always@(posedge clk) begin
-    if(bready && bvalid) wdataMux <= 0;
-  end
 
   axi_sram ar(
     .aclk(clk),
