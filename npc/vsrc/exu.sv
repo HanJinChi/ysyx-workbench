@@ -27,59 +27,36 @@ module exu(
   input   wire   [1 :0]  csr_rd_input,
   output  wire   [31:0]  alu_result,
   output  wire           zero,
-  output  wire   [31:0]  src1,
-  output  wire   [31:0]  src2,
-  output  wire   [31:0]  imm,
-  output  wire   [1 :0]  pcOp,
-  output  wire   [1 :0]  wdOp,
-  output  wire           csrwdOp,
-  output  wire   [2 :0]  BOp,
-  output  wire           ren,
-  output  wire           wen,
-  output  wire   [7 :0]  wmask,
-  output  wire   [31:0]  rmask,
-  output  wire           memory_read_signed,
-  output  wire           reg_write_en,
-  output  wire           csreg_write_en,
-  output  wire           ecall,
-  output  wire   [31:0]  pc,
-  output  wire   [31:0]  pc_next,
-  output  wire   [31:0]  instruction,
-  output  wire   [31:0]  rsb,
-  output  wire   [4 :0]  rd,
-  output  wire   [1 :0]  csr_rd, 
-  output  wire           exu_send_valid,
-  output  wire           exu_send_ready,
+  output  reg    [31:0]  src1,
+  output  reg    [31:0]  src2,
+  output  reg    [31:0]  imm,
+  output  reg    [1 :0]  pcOp,
+  output  reg    [1 :0]  wdOp,
+  output  reg            csrwdOp,
+  output  reg    [2 :0]  BOp,
+  output  reg            ren,
+  output  reg            wen,
+  output  reg    [7 :0]  wmask,
+  output  reg    [31:0]  rmask,
+  output  reg            memory_read_signed,
+  output  reg            reg_write_en,
+  output  reg            csreg_write_en,
+  output  reg            ecall,
+  output  reg    [31:0]  pc,
+  output  reg    [31:0]  pc_next,
+  output  reg    [31:0]  instruction,
+  output  reg    [31:0]  rsb,
+  output  reg    [4 :0]  rd,
+  output  reg    [1 :0]  csr_rd, 
+  output  reg            exu_send_valid,
+  output  reg            exu_send_ready,
   output  wire           exu_state
 );
 
-  reg  [4: 0]  aluOp;
-  reg          state, next_state;
-  reg          wait_for_exu_result;
-  reg  [31:0]  src1_r;
-  reg  [31:0]  src2_r;
-  reg  [31:0]  imm_r;
-  reg  [1 :0]  pcOp_r;
-  reg  [1 :0]  wdOp_r;
-  reg          csrwdOp_r;
-  reg  [2 :0]  BOp_r;
-  reg          ren_r;
-  reg          wen_r;
-  reg  [7 :0]  wmask_r;
-  reg  [31:0]  rmask_r;
-  reg          memory_read_signed_r;
-  reg          reg_write_en_r;
-  reg          csreg_write_en_r;
-  reg          ecall_r;
-  reg  [31:0]  pc_r;
-  reg  [31:0]  pc_next_r;
-  reg  [31:0]  instruction_r;
-  reg  [31:0]  rsb_r;
-  reg  [4 :0]  rd_r;
-  reg  [1 :0]  csr_rd_r; 
-  reg          exu_send_valid_r;
-  reg          exu_send_ready_r;
-  parameter    IDLE = 0, COMPUTE = 1;
+  reg  [4:0]  aluOp;
+  reg         state, next_state;
+  reg         wait_for_exu_result;
+  parameter   IDLE = 0, COMPUTE = 1;
 
   always @(posedge clk) begin
     if(rst)  state <= IDLE;
@@ -103,89 +80,68 @@ module exu(
 
   always @(posedge clk) begin
     if(rst) begin
-      src1_r                <= 0;
-      src2_r                <= 0;
-      aluOp                 <= 0;
-      imm_r                 <= 0;
-      pcOp_r                <= 0;
-      wdOp_r                <= 0;
-      csrwdOp_r             <= 0;
-      BOp_r                 <= 0;
-      ren_r                 <= 0;
-      wen_r                 <= 0;
-      wmask_r               <= 0;
-      rmask_r               <= 0;
-      pc_r                  <= 0;
-      pc_next_r             <= 0;
-      rd_r                  <= 0;
-      csr_rd_r              <= 0;
-      rsb_r                 <= 0;
-      memory_read_signed_r  <= 0;
-      reg_write_en_r        <= 0;
-      csreg_write_en_r      <= 0;
-      ecall_r               <= 0;
-      exu_send_valid_r      <= 0;
-      exu_send_ready_r      <= 0;
-      instruction_r         <= 0;
+      src1                <= 0;
+      src2                <= 0;
+      aluOp               <= 0;
+      imm                 <= 0;
+      pcOp                <= 0;
+      wdOp                <= 0;
+      csrwdOp             <= 0;
+      BOp                 <= 0;
+      ren                 <= 0;
+      wen                 <= 0;
+      wmask               <= 0;
+      rmask               <= 0;
+      pc                  <= 0;
+      pc_next             <= 0;
+      rd                  <= 0;
+      csr_rd              <= 0;
+      rsb                 <= 0;
+      memory_read_signed  <= 0;
+      reg_write_en        <= 0;
+      csreg_write_en      <= 0;
+      ecall               <= 0;
+      exu_send_valid      <= 0;
+      exu_send_ready      <= 0;
+      instruction         <= 0;
     end else begin
       if(next_state == COMPUTE) begin
-        exu_send_ready_r     <= 1;
-        exu_send_valid_r     <= 1;
-        src1_r               <= src1_input;
-        src2_r               <= src2_input;
-        aluOp                <= aluOp_input;
-        imm_r                <= imm_input;
-        pcOp_r               <= pcOp_input;
-        wdOp_r               <= wdOp_input;
-        csrwdOp_r            <= csrwdOp_input;
-        BOp_r                <= BOp_input;
-        ren_r                <= ren_input;
-        wen_r                <= wen_input;
-        wmask_r              <= wmask_input;
-        rmask_r              <= rmask_input;
-        memory_read_signed_r <= memory_read_signed_input;
-        reg_write_en_r       <= reg_write_en_input;
-        csreg_write_en_r     <= csreg_write_en_input;
-        ecall_r              <= ecall_input;
-        pc_r                 <= pc_input;
-        pc_next_r            <= pc_next_input;
-        rd_r                 <= rd_input;
-        csr_rd_r             <= csr_rd_input;
-        rsb_r                <= rsb_input;
-        instruction_r        <= instruction_input;
+        state              <= 1;
+        exu_send_ready     <= 1;
+        exu_send_valid     <= 1;
+        src1               <= src1_input;
+        src2               <= src2_input;
+        aluOp              <= aluOp_input;
+        imm                <= imm_input;
+        pcOp               <= pcOp_input;
+        wdOp               <= wdOp_input;
+        csrwdOp            <= csrwdOp_input;
+        BOp                <= BOp_input;
+        ren                <= ren_input;
+        wen                <= wen_input;
+        wmask              <= wmask_input;
+        rmask              <= rmask_input;
+        memory_read_signed <= memory_read_signed_input;
+        reg_write_en       <= reg_write_en_input;
+        csreg_write_en     <= csreg_write_en_input;
+        ecall              <= ecall_input;
+        pc                 <= pc_input;
+        pc_next            <= pc_next_input;
+        rd                 <= rd_input;
+        csr_rd             <= csr_rd_input;
+        rsb                <= rsb_input;
+        instruction        <= instruction_input;
       end else begin  // IDLE
-        if(exu_send_valid_r) begin
-          exu_send_ready_r <= 0;
-          exu_send_valid_r <= 0;
+        if(exu_send_valid) begin
+          exu_send_ready <= 0;
+          exu_send_valid <= 0;
         end
       end
     end
   end
 
-  assign exu_state          = (next_state == COMPUTE);
-  assign src1               = src1_r;
-  assign src2               = src2_r;
-  assign imm                = imm_r;
-  assign pcOp               = pcOp_r;
-  assign wdOp               = wdOp_r;
-  assign csrwdOp            = csrwdOp_r;
-  assign BOp                = BOp_r;
-  assign ren                = ren_r;
-  assign wen                = wen_r;
-  assign wmask              = wmask_r;
-  assign rmask              = rmask_r;
-  assign memory_read_signed = memory_read_signed_r;
-  assign reg_write_en       = reg_write_en_r;
-  assign csreg_write_en     = csreg_write_en_r;
-  assign ecall              = ecall_r;
-  assign pc                 = pc_r;
-  assign pc_next            = pc_next_r;
-  assign instruction        = instruction_r;
-  assign rsb                = rsb_r;
-  assign rd                 = rd_r;
-  assign csr_rd             = csr_rd_r;
-  assign exu_send_valid     = exu_send_valid_r;
-  assign exu_send_ready     = exu_send_ready_r;
+  assign exu_state = (next_state == COMPUTE);
+
 
   wire [31:0] result_arr [17:0];
   wire zero_arr [17:0];
