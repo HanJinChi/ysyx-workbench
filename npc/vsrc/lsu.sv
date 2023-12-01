@@ -182,8 +182,11 @@ module lsu (
             reg_write_en_r       <= reg_write_en_input;
             csreg_write_en_r     <= csreg_write_en_input;
           end
+          else
+            lsu_send_ready_r <= 0;
         end else if(next_state == MEM_READ_B) begin
           arvalid_r <= 0;
+          lsu_send_ready_r <= 0;
         end else if(next_state == MEM_WRITE_A) begin
           if(awvalid_r == 0) begin
             lsu_send_ready_r    <= 1;
@@ -199,6 +202,8 @@ module lsu (
             reg_write_en_r      <= reg_write_en_input;
             csreg_write_en_r    <= csreg_write_en_input;
           end
+          else
+            lsu_send_ready_r <= 0;
         end else if(next_state == MEM_WRITE_B) begin
           awvalid_r <= 0;
           wvalid_r  <= 0; 
