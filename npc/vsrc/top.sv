@@ -388,9 +388,6 @@ module top(
   );
 
   reg [31:0] set_pc;
-  always @(posedge clk) begin
-    if(rst) set_pc <= 0;
-  end
 
   // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
 
