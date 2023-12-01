@@ -14,6 +14,7 @@ INC_PATH = $(WORK_DIR)/csrc/include
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
 ARGS += --log=$(BUILD_DIR)/npclog.txt --mlog=$(BUILD_DIR)/memory-npc-log.txt --flog=$(BUILD_DIR)/function-npc-log.txt --vlog=$(BUILD_DIR)/device-npc-log.txt -d $(NPC_HOME)/riscv32-nemu-interpreter-so
+ARGS += --xlog=$(BUILD_DIR)/exception-npc-log.txt
 
 # Include all filelist.mk to merge file lists
 FILELIST_MK = $(shell find -L ./csrc/src -name "filelist.mk")
