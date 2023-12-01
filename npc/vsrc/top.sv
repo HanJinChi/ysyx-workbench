@@ -144,7 +144,7 @@ module top(
   wire                  bvalidB;
 
 
-  Reg #(32, 32'h80000000) regd(clk, rst, (set_pc!=0) ? set_pc : pc_next_idu, pc,  (set_pc!=0) ? 1 : pc_write_enable); // assign pc value
+  Reg #(32, 32'h80000000) regd(clk, rst, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
 
   // instruction fetch Unit
