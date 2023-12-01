@@ -352,4 +352,5 @@ void cpu_exec(uint64_t n){
 void assert_fail_msg() {
   isa_reg_display();
   statistic();
+  cpu_exit();
 }
