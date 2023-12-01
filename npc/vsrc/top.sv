@@ -27,7 +27,7 @@ import "DPI-C" function void n_pmem_write(input int waddr, input int wdata, inpu
 module top(
     input                 clk,
     input                 rst,
-    output      [31:0]    pc_next,
+    output reg  [31:0]    pc_next,
     output reg  [31:0]    pc
 );
 
@@ -387,8 +387,26 @@ module top(
     .brespB(brespB)
   );
 
+  reg [31:0] set_pc;
+  always @(posedge clk) begin
+    if(rst) set_pc <= 0;
+    else    set_pc <= 0;
+  end
 
-  assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
+  // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
+
+  always @(*) begin
+    if(pc_write_enable) begin
+      pc_next = pc_next_idu; 
+    end else begin
+      if(set_pc != 0) begin
+        pc_next = set_pc;
+      end else begin
+        if(pc == 32'h80000000) pc_next = 32'h80000000;
+        else                   pc_next = pc_next_idu;
+      end
+    end
+  end
  
   always@(*) begin
     end_sim({32{endflag}});

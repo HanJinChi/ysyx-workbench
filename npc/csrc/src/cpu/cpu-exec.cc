@@ -108,7 +108,7 @@ void copy_cpu_state(){
 }
 
 void set_cpu_state(){
-  top->rootp->top__DOT__pc_next_idu = cpu.pc;
+  
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4 = cpu.csr.mcause ;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4 = cpu.csr.mepc;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4 = cpu.csr.mstatus ;
