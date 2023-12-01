@@ -112,6 +112,10 @@ void set_cpu_state(){
   top->rst = 1;
 
   top->eval();
+#ifdef CONFIG_VCD_TRACE
+  tfp->dump(contextp->time());
+  contextp->timeInc(1);
+#endif
   top->clk = 0;
   top->rst = 0;
   top->rootp->top__DOT__set_pc = cpu.pc;
@@ -152,8 +156,11 @@ void set_cpu_state(){
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4 = cpu.gpr[30];
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = cpu.gpr[31];
   top->eval();
+#ifdef CONFIG_VCD_TRACE
+  tfp->dump(contextp->time());
+  contextp->timeInc(1);
+#endif
   top->rootp->top__DOT__set_pc = 0;
-
 }
 
 void trace_and_difftest(){
