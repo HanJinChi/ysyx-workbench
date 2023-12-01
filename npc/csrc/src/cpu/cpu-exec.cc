@@ -108,7 +108,13 @@ void copy_cpu_state(){
 }
 
 void set_cpu_state(){
-  top->rootp->top__DOT__ifufetch__DOT__araddr_r = cpu.pc;
+  top->clk = 1;
+  top->rst = 1;
+
+  top->eval();
+  top->clk = 0;
+  top->rst = 0;
+  top->rootp->top__DOT__set_pc = cpu.pc;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4 = cpu.csr.mcause ;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4 = cpu.csr.mepc;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4 = cpu.csr.mstatus ;
@@ -145,6 +151,9 @@ void set_cpu_state(){
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4 = cpu.gpr[29];
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4 = cpu.gpr[30];
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = cpu.gpr[31];
+  top->eval();
+  top->rootp->top__DOT__set_pc = 0;
+
 }
 
 void trace_and_difftest(){
