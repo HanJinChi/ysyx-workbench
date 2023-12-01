@@ -398,12 +398,8 @@ module top(
     if(pc_write_enable) begin
       pc_next = pc_next_idu; 
     end else begin
-      if(set_pc != 0) begin
-        pc_next = set_pc;
-      end else begin
-        if(pc == 32'h80000000) pc_next = 32'h80000000;
-        else                   pc_next = pc_next_idu;
-      end
+      if(pc == 32'h80000000) pc_next = 32'h80000000;
+      else                   pc_next = pc_next_idu;
     end
   end
  
