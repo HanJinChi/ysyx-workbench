@@ -170,11 +170,11 @@ module idu(
     32'h300, 2'b10,
     32'h305, 2'b11    
   });
-  assign csr_rs = (ecall == 1'b1) ? (2'b11) : ((mret == 1'b1) ? (2'b01) : csr_rsA); 
+  // assign csr_rs = (ecall == 1'b1) ? (2'b11) : ((mret == 1'b1) ? (2'b01) : csr_rsA); 
   assign csr_rd = (ecall == 1'b1) ? (2'b01) : csr_rsA;
 
-  assign rs1  = instruction[19:15];
-  assign rs2  = instruction[24:20];
+  // assign rs1  = instruction[19:15];
+  // assign rs2  = instruction[24:20];
   assign rd   = instruction[11:7];
 
 
@@ -276,21 +276,21 @@ module idu(
   });
   assign pcOp = ((mret | ecall) == 1'b1) ? 2'b11 : pcOpA;
   
-  // src1Op
-  MuxKeyWithDefault #(2, 7, 1) idu_i7(src1Op, instruction[6:0], 1'b0, {
-    7'b0010111, 1'b1,
-    7'b1101111, 1'b1
-  });
+  // // src1Op
+  // MuxKeyWithDefault #(2, 7, 1) idu_i7(src1Op, instruction[6:0], 1'b0, {
+  //   7'b0010111, 1'b1,
+  //   7'b1101111, 1'b1
+  // });
 
-  // src2Op
-  MuxKeyWithDefault #(6, 7, 2) idu_i8 (src2Op, instruction[6:0], 2'b00, {
-    7'b0010111, 2'b01,
-    7'b0110111, 2'b01,
-    7'b0000011, 2'b01,
-    7'b0010011, 2'b01,
-    7'b0100011, 2'b01,
-    7'b1110011, 2'b10
-  });
+  // // src2Op
+  // MuxKeyWithDefault #(6, 7, 2) idu_i8 (src2Op, instruction[6:0], 2'b00, {
+  //   7'b0010111, 2'b01,
+  //   7'b0110111, 2'b01,
+  //   7'b0000011, 2'b01,
+  //   7'b0010011, 2'b01,
+  //   7'b0100011, 2'b01,
+  //   7'b1110011, 2'b10
+  // });
 
   // wdOpA
   wire [1:0] wdOpA;
@@ -366,6 +366,25 @@ module idu(
   wire            src1Op;
   wire   [1 :0]   src2Op;
 
+  wire            src1Op_input;
+  wire   [1 :0]   src2Op_input;
+
+  // src1Op_input
+  MuxKeyWithDefault #(2, 7, 1) idu_7(src1Op_input, instruction[6:0], 1'b0, {
+    7'b0010111, 1'b1,
+    7'b1101111, 1'b1
+  });
+
+  // src2Op_input
+  MuxKeyWithDefault #(6, 7, 2) idu_i8 (src2Op_input, instruction[6:0], 2'b00, {
+    7'b0010111, 2'b01,
+    7'b0110111, 2'b01,
+    7'b0000011, 2'b01,
+    7'b0010011, 2'b01,
+    7'b0100011, 2'b01,
+    7'b1110011, 2'b10
+  });
+
   // MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
   //   1'b0, rsa,
   //   1'b1, pc
@@ -397,7 +416,7 @@ module idu(
     end else if(wbu_state && (rs1_input == rd_wbu)) begin
       src1_r = wd_wbu;
     end else begin
-      case(src1Op)
+      case(src1Op_input)
         1'b0:
           src1_r = rsa;
         1'b1:
@@ -413,7 +432,7 @@ module idu(
     end else if(wbu_state && (rs2_input == rd_wbu)) begin
       src2_r = wd_wbu;
     end else begin
-      case(src2Op) 
+      case(src2Op_input) 
         2'b00:
           src2_r = rsb;
         2'b01:
@@ -490,13 +509,17 @@ module idu(
 
   wire   [1:0]  csr_rs_input;
   assign csr_rs_input = (ecall_input == 1'b1) ? (2'b11) : ((mret_input == 1'b1) ? (2'b01) : csr_rsA_input);
+  assign csr_rs       = csr_rs_input;
 
   wire   [4:0]  rs1_input;
   wire   [4:0]  rs2_input;
   wire   [4:0]  rd_input;
+
   assign rs1_input  = instruction_input[19:15];
   assign rs2_input  = instruction_input[24:20];
   assign rd_input   = instruction_input[11:7];
+  assign rs1        = rs1_input;
+  assign rs2        = rs2_input;
 
   wire   exu_conflict;
   wire   lsu_conflict;
