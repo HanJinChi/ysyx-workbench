@@ -18,14 +18,15 @@ module idu(
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
   input    wire          exu_state,
+  input    wire  [31:0]  wd_exu,  // may be wd or csr_wd
   input    wire  [4 :0]  rd_lsu,
   input    wire  [1 :0]  csr_rd_lsu,
   input    wire          lsu_state,
+  input    wire          wbu_state,
   input    wire  [4 :0]  rd_wbu,
   input    wire  [1 :0]  csr_rd_wbu,
   input    wire  [31:0]  wd_wbu,
   input    wire  [31:0]  csr_wd_wbu,
-  input    wire          wbu_state,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
   output   wire  [4 :0]  rs1,
@@ -381,16 +382,20 @@ module idu(
   reg  [31:0]   csra_a;
 
   always @(*) begin
-    if(wbu_state && (csr_rs_input == csr_rd_lsu)) begin
+    if(exu_state && csr_rs_input == csr_rd) begin
+      csra_a = wd_exu;
+    end else if(wbu_state && csr_rs_input == csr_rd_wbu) begin
       csra_a = csr_wd_wbu;
-    end else
+    end else begin
       csra_a = csra;
+    end
   end
 
   always @(*) begin
-    if(wbu_state && (rs1_input == rd_lsu)) begin
+    if(exu_state && rs1_input == rd) begin
+      src1_r = wd_exu;
+    end else if(wbu_state && (rs1_input == rd_wbu)) begin
       src1_r = wd_wbu;
-      $display("save one cycle"); 
     end else begin
       case(src1Op)
         1'b0:
@@ -403,9 +408,10 @@ module idu(
   end
 
   always @(*) begin
-    if(wbu_state && (rs2_input == rd_lsu)) begin
+    if(exu_state && rs2_input == rd) begin
+      src2_r = wd_exu;
+    end else if(wbu_state && (rs2_input == rd_wbu)) begin
       src2_r = wd_wbu;
-      $display("save one cycle"); 
     end else begin
       case(src2Op) 
         2'b00:
@@ -497,8 +503,8 @@ module idu(
   wire   conflict;
 
 
-  assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
+  // assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
   assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
-  assign conflict = exu_conflict || lsu_conflict ;
+  assign conflict = lsu_conflict ;
 
 endmodule

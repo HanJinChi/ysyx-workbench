@@ -176,6 +176,7 @@ module top(
     .rsb(rsb),
     .csra(csra),
     .exu_state(exu_state),
+    .wd_exu(exu_result),
     .rd_lsu(rd_exu), // rd_exu是rd_lsu的输入
     .csr_rd_lsu(csr_rd_exu),
     .lsu_state(lsu_state),
