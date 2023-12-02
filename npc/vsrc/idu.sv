@@ -67,6 +67,8 @@ module idu(
   reg         idu_send_to_ifu_valid_r;
   reg         idu_send_valid_r;
   reg         idu_send_ready_r;
+  reg  [31:0] src1_r;
+  reg  [31:0] src2_r;
 
   always @(posedge clk) begin
     if(rst) state <= IDLE;
@@ -96,6 +98,8 @@ module idu(
       pc_r                     <= 0;
       idu_send_valid_r         <= 0;
       idu_send_to_ifu_valid_r  <= 1;
+      src1_r                   <= 0;
+      src2_r                   <= 0;
     end else begin
       if(next_state == DECODE) begin
         if(idu_send_ready_r == 0) begin
@@ -106,6 +110,8 @@ module idu(
         if(!conflict) begin
           idu_send_valid_r        <= 1;
           idu_send_to_ifu_valid_r <= 1;
+          src1_r                  <= src1_i_r;
+          src2_r                  <= src2_i_r;
         end
       end else begin  // next_state == IDLE
         if(idu_send_valid_r) begin
@@ -121,6 +127,8 @@ module idu(
   assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
   assign idu_send_valid         = idu_send_valid_r;
   assign pc                     = pc_r;
+  assign src1                   = src1_r;
+  assign src2                   = src2_r;
 
 
   wire [2: 0] instruction_type;
@@ -396,31 +404,31 @@ module idu(
   //   2'b10, csra
   // });
 
-  reg  [31:0]   src1_r;
-  reg  [31:0]   src2_r;
-  reg  [31:0]   csra_a;
+  reg  [31:0]   src1_i_r;
+  reg  [31:0]   src2_i_r;
+  reg  [31:0]   csra_i_a;
 
   always @(*) begin
     if(exu_state && csr_rs_input == csr_rd) begin
-      csra_a = wd_exu;
+      csra_i_a = wd_exu;
     end else if(wbu_state && csr_rs_input == csr_rd_wbu) begin
-      csra_a = csr_wd_wbu;
+      csra_i_a = csr_wd_wbu;
     end else begin
-      csra_a = csra;
+      csra_i_a = csra;
     end
   end
 
   always @(*) begin
     if(exu_state && rs1_input == rd) begin
-      src1_r = wd_exu;
+      src1_i_r = wd_exu;
     end else if(wbu_state && (rs1_input == rd_wbu)) begin
-      src1_r = wd_wbu;
+      src1_i_r = wd_wbu;
     end else begin
       case(src1Op_input)
         1'b0:
-          src1_r = rsa;
+          src1_i_r = rsa;
         1'b1:
-          src1_r = pc;
+          src1_i_r = pc;
         default: begin end
       endcase
     end
@@ -428,25 +436,22 @@ module idu(
 
   always @(*) begin
     if(exu_state && rs2_input == rd) begin
-      src2_r = wd_exu;
+      src2_i_r = wd_exu;
     end else if(wbu_state && (rs2_input == rd_wbu)) begin
-      src2_r = wd_wbu;
+      src2_i_r = wd_wbu;
     end else begin
       case(src2Op_input) 
         2'b00:
-          src2_r = rsb;
+          src2_i_r = rsb;
         2'b01:
-          src2_r = imm;
+          src2_i_r = imm;
         2'b10:
-          src2_r = csra_a;
+          src2_i_r = csra;
         default:
-          src2_r = rsb;
+          src2_i_r = rsb;
       endcase
     end
   end
-
-  assign src1 = src1_r;
-  assign src2 = src2_r;
 
 
   wire [31:0]  Bresult;
@@ -486,7 +491,7 @@ module idu(
     2'b00, pc+4,
     2'b01, pc+imm,
     2'b10, result_arr[3]&(~1),
-    2'b11, csra_a
+    2'b11, csra_i_a
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
