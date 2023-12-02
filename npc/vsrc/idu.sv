@@ -389,7 +389,8 @@ module idu(
 
   always @(*) begin
     if(wbu_state && (rs1_input == rd_lsu)) begin
-      src1_r = wd_wbu; 
+      src1_r = wd_wbu;
+      $display("save one cycle"); 
     end else begin
       case(src1Op)
         1'b0:
@@ -404,6 +405,7 @@ module idu(
   always @(*) begin
     if(wbu_state && (rs2_input == rd_lsu)) begin
       src2_r = wd_wbu;
+      $display("save one cycle"); 
     end else begin
       case(src2Op) 
         2'b00:
