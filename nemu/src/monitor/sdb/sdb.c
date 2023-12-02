@@ -158,6 +158,7 @@ static int cmd_load(char *args){
   ret = fread(&cpu, sizeof(CPU_state), 1, fp);
 
   fclose(fp);
+
   return ret;
 }
 
