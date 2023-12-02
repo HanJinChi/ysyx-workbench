@@ -181,6 +181,8 @@ module top(
     .lsu_state(lsu_state),
     .rd_wbu(rd_lsu),
     .csr_rd_wbu(csr_rd_lsu),
+    .wd_wbu(wd),
+    .csr_wd_wbu(csr_wd),
     .wbu_state(lsu_send_valid),
     .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),

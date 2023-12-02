@@ -23,6 +23,8 @@ module idu(
   input    wire          lsu_state,
   input    wire  [4 :0]  rd_wbu,
   input    wire  [1 :0]  csr_rd_wbu,
+  input    wire  [31:0]  wd_wbu,
+  input    wire  [31:0]  csr_wd_wbu,
   input    wire          wbu_state,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
@@ -363,16 +365,61 @@ module idu(
   wire            src1Op;
   wire   [1 :0]   src2Op;
 
-  MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
-    1'b0, rsa,
-    1'b1, pc
-  });
+  // MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
+  //   1'b0, rsa,
+  //   1'b1, pc
+  // });
 
-  MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
-    2'b00, rsb,
-    2'b01, imm,
-    2'b10, csra
-  });
+  // MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
+  //   2'b00, rsb,
+  //   2'b01, imm,
+  //   2'b10, csra
+  // });
+
+  reg  [31:0]   src1_r;
+  reg  [31:0]   src2_r;
+  reg  [31:0]   csra_a;
+
+  always @(*) begin
+    if(wbu_state && (csr_rs_input == csr_rd_lsu)) begin
+      csra_a = csr_wd_wbu;
+    end else
+      csra_a = csra;
+  end
+
+  always @(*) begin
+    if(wbu_state && (rs1_input == rd_lsu)) begin
+      src1_r = wd_wbu; 
+    end else begin
+      case(src1Op)
+        1'b0:
+          src1_r = rsa;
+        1'b1:
+          src1_r = pc;
+        default: begin end
+      endcase
+    end
+  end
+
+  always @(*) begin
+    if(wbu_state && (rs2_input == rd_lsu)) begin
+      src2_r = wd_wbu;
+    end else begin
+      case(src2Op) 
+        2'b00:
+          src2_r = rsb;
+        2'b01:
+          src2_r = imm;
+        2'b10:
+          src2_r = csra_a;
+        default:
+          src2_r = rsb;
+      endcase
+    end
+  end
+
+  assign src1 = src1_r;
+  assign src2 = src2_r;
 
 
   wire [31:0]  Bresult;
@@ -412,7 +459,7 @@ module idu(
     2'b00, pc+4,
     2'b01, pc+imm,
     2'b10, result_arr[3]&(~1),
-    2'b11, csra
+    2'b11, csra_a
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
@@ -445,13 +492,11 @@ module idu(
 
   wire   exu_conflict;
   wire   lsu_conflict;
-  wire   wbu_conflict;
   wire   conflict;
 
 
   assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
   assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
-  assign wbu_conflict = (wbu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
-  assign conflict = exu_conflict || lsu_conflict || wbu_conflict;
+  assign conflict = exu_conflict || lsu_conflict ;
 
 endmodule
