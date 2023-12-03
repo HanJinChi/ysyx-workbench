@@ -185,6 +185,8 @@ module top(
     .wd_wbu(wd),
     .csr_wd_wbu(csr_wd),
     .wbu_state(lsu_send_valid),
+    .reg_write_en_wbu(reg_write_en_lsu),
+    .csreg_write_en_wbu(csreg_write_en_lsu),
     .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),
     .rs2(rs2),

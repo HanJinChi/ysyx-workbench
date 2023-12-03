@@ -27,6 +27,8 @@ module idu(
   input    wire  [1 :0]  csr_rd_wbu,
   input    wire  [31:0]  wd_wbu,
   input    wire  [31:0]  csr_wd_wbu,
+  input    wire          reg_write_en_wbu,
+  input    wire          csreg_write_en_wbu,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
   output   wire  [4 :0]  rs1,
@@ -472,7 +474,7 @@ module idu(
   always @(*) begin
     if(exu_state && (csr_rs == csr_rd_o)) begin
       csra_i_a = wd_exu;
-    end else if(wbu_state && csr_rs == csr_rd_wbu) begin
+    end else if(csreg_write_en_wbu && wbu_state && csr_rs == csr_rd_wbu) begin
       csra_i_a = csr_wd_wbu;
     end else begin
       csra_i_a = csra;
@@ -482,7 +484,7 @@ module idu(
   always @(*) begin
     if(exu_state && rs1 == rd_o && src1Op == 0) begin
       src1_i_r = wd_exu;
-    end else if(wbu_state && rs1 == rd_wbu && src1Op == 0) begin
+    end else if(reg_write_en_wbu && wbu_state && rs1 == rd_wbu && src1Op == 0) begin
       src1_i_r = wd_wbu;
     end else begin
       case(src1Op)
@@ -498,7 +500,7 @@ module idu(
   always @(*) begin
     if(exu_state && (rs2 == rd_o) && (src2Op == 2'b00)) begin
       src2_i_r = wd_exu;
-    end else if(wbu_state && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
+    end else if(reg_write_en_wbu && wbu_state && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
       src2_i_r = wd_wbu;
     end else begin
       case(src2Op) 
@@ -556,7 +558,6 @@ module idu(
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
-
 
   wire   lsu_conflict;
   wire   conflict;
