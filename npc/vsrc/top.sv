@@ -19,8 +19,6 @@
 
 
 // define ALU TYPE
-import "DPI-C" function void end_sim (input int endflag);
-import "DPI-C" function void set_decode_inst (input int pc, input int instruction);
 import "DPI-C" function void n_pmem_read(input int raddr, output int rdata);
 import "DPI-C" function void n_pmem_write(input int waddr, input int wdata, input byte wmask);
 
@@ -28,7 +26,8 @@ module top(
     input                 clk,
     input                 rst,
     output reg  [31:0]    pc_next,
-    output reg  [31:0]    pc
+    output reg  [31:0]    pc,
+    output                ebreak_t
 );
 
   wire                  endflag; 
@@ -82,6 +81,9 @@ module top(
   wire                  ecall;
   wire                  ecall_exu;
   wire                  ecall_lsu;
+  wire                  ebreak;
+  wire                  ebreak_exu;
+  wire                  ebreak_lsu;
   wire                  csrwdOp;
   wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
@@ -170,44 +172,49 @@ module top(
   idu id(
     .clk(clk),
     .rst(rst),
-    .instruction_input(instruction),
+    .instruction(instruction),
     .pc_input(pc),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra),
     .exu_state(exu_state),
+    .wd_exu(exu_result),
     .rd_lsu(rd_exu), // rd_exu是rd_lsu的输入
     .csr_rd_lsu(csr_rd_exu),
     .lsu_state(lsu_state),
     .rd_wbu(rd_lsu),
     .csr_rd_wbu(csr_rd_lsu),
+    .wd_wbu(wd),
+    .csr_wd_wbu(csr_wd),
     .wbu_state(lsu_send_valid),
+    .reg_write_en_wbu(reg_write_en_lsu),
+    .csreg_write_en_wbu(csreg_write_en_lsu),
     .idu_receive_valid(ifu_send_valid),
     .rs1(rs1),
     .rs2(rs2),
     .csr_rs(csr_rs),
-    .rd(rd),
-    .csr_rd(csr_rd),
-    .imm(imm),
-    .pcOp(pcOp),
-    .aluOp(aluOp),
-    .src1(src1),
-    .src2(src2),
-    .BOp(BOp),
-    .wdOp(wdOp),
-    .csrwdOp(csrwdOp),
-    .ren(ren),
-    .wen(wen),
-    .wmask(wmask),
-    .rmask(rmask),
-    .memory_read_signed(memory_read_signed),
-    .reg_write_en(reg_write_en),
-    .csreg_write_en(csreg_write_en),
-    .ecall(ecall),
-    .ebreak(endflag),
-    .pc(pc_idu),
-    .pc_next(pc_next_idu),
-    .instruction(instruction_idu),
+    .rd_o(rd),
+    .csr_rd_o(csr_rd),
+    .imm_o(imm),
+    .pcOp_o(pcOp),
+    .aluOp_o(aluOp),
+    .src1_o(src1),
+    .src2_o(src2),
+    .BOp_o(BOp),
+    .wdOp_o(wdOp),
+    .csrwdOp_o(csrwdOp),
+    .ren_o(ren),
+    .wen_o(wen),
+    .wmask_o(wmask),
+    .rmask_o(rmask),
+    .memory_read_signed_o(memory_read_signed),
+    .reg_write_en_o(reg_write_en),
+    .csreg_write_en_o(csreg_write_en),
+    .ecall_o(ecall),
+    .ebreak_o(ebreak),
+    .pc_o(pc_idu),
+    .pc_next_o(pc_next_idu),
+    .instruction_o(instruction_idu),
     .pc_write_enable(pc_write_enable),
     .idu_send_valid(idu_send_valid),
     .idu_send_ready(idu_send_ready),
@@ -229,10 +236,12 @@ module top(
     .csr_wd(csr_wd),
     .pc_next_input(pc_next_lsu),
     .pc_input(pc_lsu),
+    .ebreak_i(ebreak_lsu),
     .instruction_input(instruction_lsu),
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
+    .ebreak_o(ebreak_t),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra)
@@ -261,6 +270,7 @@ module top(
     .reg_write_en_input(reg_write_en),
     .csreg_write_en_input(csreg_write_en),
     .ecall_input(ecall),
+    .ebreak_input(ebreak),
     .pc_input(pc_idu),
     .pc_next_input(pc_next_idu),
     .instruction_input(instruction_idu),
@@ -283,6 +293,7 @@ module top(
     .reg_write_en(reg_write_en_exu),
     .csreg_write_en(csreg_write_en_exu),
     .ecall(ecall_exu),
+    .ebreak(ebreak_exu),
     .pc(pc_exu),
     .rsb(rsb_exu),
     .rd(rd_exu),
@@ -316,6 +327,7 @@ module top(
     .reg_write_en_input(reg_write_en_exu),
     .csreg_write_en_input(csreg_write_en_exu),
     .ecall_input(ecall_exu),
+    .ebreak_input(ebreak_exu),
     .lsu_send_valid(lsu_send_valid),
     .wd(wd),
     .csr_wd(csr_wd),
@@ -324,6 +336,7 @@ module top(
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
+    .ebreak(ebreak_lsu),
     .pc_next(pc_next_lsu),
     .pc(pc_lsu),
     .instruction(instruction_lsu),
@@ -404,10 +417,5 @@ module top(
     end
   end
  
-  always@(*) begin
-    end_sim({32{endflag}});
-    set_decode_inst(pc_idu, instruction);
-  end
 
 endmodule
-

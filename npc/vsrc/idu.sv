@@ -12,46 +12,51 @@
 module idu(
   input    wire          clk,
   input    wire          rst,
-  input    wire  [31:0]  instruction_input,
+  input    wire  [31:0]  instruction,
   input    wire  [31:0]  pc_input,
   input    wire  [31:0]  rsa,
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
   input    wire          exu_state,
+  input    wire  [31:0]  wd_exu,  // may be wd or csr_wd
   input    wire  [4 :0]  rd_lsu,
   input    wire  [1 :0]  csr_rd_lsu,
   input    wire          lsu_state,
+  input    wire          wbu_state,
   input    wire  [4 :0]  rd_wbu,
   input    wire  [1 :0]  csr_rd_wbu,
-  input    wire          wbu_state,
+  input    wire  [31:0]  wd_wbu,
+  input    wire  [31:0]  csr_wd_wbu,
+  input    wire          reg_write_en_wbu,
+  input    wire          csreg_write_en_wbu,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
   output   wire  [4 :0]  rs1,
   output   wire  [4 :0]  rs2,
   output   wire  [1 :0]  csr_rs, 
-  output   wire  [4 :0]  rd,
-  output   wire  [1 :0]  csr_rd,
-  output   wire  [31:0]  imm,
-  output   wire  [1 :0]  pcOp,
-  output   wire  [4 :0]  aluOp,
-  output   wire  [31:0]  src1,
-  output   wire  [31:0]  src2,
-  output   wire  [1 :0]  wdOp,
-  output   wire          csrwdOp,
-  output   wire  [2 :0]  BOp,
-  output   wire          ren,
-  output   wire          wen,
-  output   wire  [7 :0]  wmask,
-  output   wire  [31:0]  rmask,
-  output   wire          memory_read_signed,
-  output   wire          reg_write_en,
-  output   wire          csreg_write_en,
-  output   wire          ecall, 
-  output   wire          ebreak,
-  output   wire  [31:0]  pc_next,
+  output   wire  [4 :0]  rd_o,
+  output   wire  [1 :0]  csr_rd_o,
+  output   wire  [31:0]  imm_o,
+  output   wire  [1 :0]  pcOp_o,
+  output   wire  [4 :0]  aluOp_o,
+  output   wire  [31:0]  src1_o,
+  output   wire  [31:0]  src2_o,
+  output   wire  [1 :0]  wdOp_o,
+  output   wire          csrwdOp_o,
+  output   wire  [2 :0]  BOp_o,
+  output   wire          ren_o,
+  output   wire          wen_o,
+  output   wire  [7 :0]  wmask_o,
+  output   wire  [31:0]  rmask_o,
+  output   wire          memory_read_signed_o,
+  output   wire          reg_write_en_o,
+  output   wire          csreg_write_en_o,
+  output   wire          ecall_o, 
+  output   wire          ebreak_o,
+  output   wire  [31:0]  pc_next_o,
   output   wire          pc_write_enable,
-  output   wire  [31:0]  pc,
-  output   wire  [31:0]  instruction,
+  output   wire  [31:0]  pc_o,
+  output   wire  [31:0]  instruction_o,
   output   wire          idu_send_to_ifu_valid,
   output   wire          idu_send_valid,
   output   wire          idu_send_ready
@@ -59,11 +64,31 @@ module idu(
 
   parameter   IDLE = 0, DECODE = 1;
   reg         state, next_state;
-  reg  [31:0] instruction_r;
-  reg  [31:0] pc_r;
   reg         idu_send_to_ifu_valid_r;
   reg         idu_send_valid_r;
   reg         idu_send_ready_r;
+  reg  [31:0] instruction_o_r;
+  reg  [31:0] pc_o_r;
+  reg  [31:0] src1_o_r;
+  reg  [31:0] src2_o_r;
+  reg  [4 :0] rd_o_r;
+  reg  [1 :0] csr_rd_o_r;
+  reg  [31:0] imm_o_r;
+  reg  [1 :0] pcOp_o_r;
+  reg  [4 :0] aluOp_o_r;
+  reg  [1 :0] wdOp_o_r;
+  reg         csrwdOp_o_r;
+  reg  [2 :0] BOp_o_r;
+  reg         ren_o_r;
+  reg         wen_o_r;
+  reg  [7 :0] wmask_o_r;
+  reg  [31:0] rmask_o_r;
+  reg         memory_read_signed_o_r;
+  reg         reg_write_en_o_r;
+  reg         csreg_write_en_o_r;
+  reg         ecall_o_r;
+  reg         ebreak_o_r;
+  reg  [31:0] pc_next_o_r;
 
   always @(posedge clk) begin
     if(rst) state <= IDLE;
@@ -89,20 +114,60 @@ module idu(
     if(rst) begin
       state                    <= 0;
       idu_send_ready_r         <= 0;
-      instruction_r            <= 0;
-      pc_r                     <= 0;
+      instruction_o_r          <= 0;
+      pc_o_r                   <= 0;
       idu_send_valid_r         <= 0;
       idu_send_to_ifu_valid_r  <= 1;
+      src1_o_r                 <= 0;
+      src2_o_r                 <= 0;
+      rd_o_r                   <= 0;
+      csr_rd_o_r               <= 0;
+      imm_o_r                  <= 0;
+      pcOp_o_r                 <= 0;
+      aluOp_o_r                <= 0;
+      wdOp_o_r                 <= 0;
+      csrwdOp_o_r              <= 0;
+      BOp_o_r                  <= 0;
+      ren_o_r                  <= 0;
+      wen_o_r                  <= 0;
+      wmask_o_r                <= 0;
+      rmask_o_r                <= 0;
+      memory_read_signed_o_r   <= 0;
+      reg_write_en_o_r         <= 0;
+      csreg_write_en_o_r       <= 0;
+      ecall_o_r                <= 0;
+      ebreak_o_r               <= 0;
+      pc_next_o_r              <= 0;
     end else begin
       if(next_state == DECODE) begin
         if(idu_send_ready_r == 0) begin
           idu_send_ready_r <= 1;
-          instruction_r    <= instruction_input;
-          pc_r             <= pc_input;
+          instruction_o_r  <= instruction;
+          pc_o_r           <= pc_input;
         end
-        if(!conflict) begin
+        if((idu_send_valid_r == 0) && !conflict) begin
           idu_send_valid_r        <= 1;
           idu_send_to_ifu_valid_r <= 1;
+          src1_o_r                <= src1_i_r;
+          src2_o_r                <= src2_i_r;
+          rd_o_r                  <= rd;
+          csr_rd_o_r              <= csr_rd;
+          imm_o_r                 <= imm;
+          pcOp_o_r                <= pcOp;
+          aluOp_o_r               <= aluOp;
+          wdOp_o_r                <= wdOp;
+          csrwdOp_o_r             <= csrwdOp;
+          BOp_o_r                 <= BOp;
+          ren_o_r                 <= ren;
+          wen_o_r                 <= wen;
+          wmask_o_r               <= wmask;
+          rmask_o_r               <= rmask;
+          memory_read_signed_o_r  <= memory_read_signed;
+          reg_write_en_o_r        <= reg_write_en;
+          csreg_write_en_o_r      <= csreg_write_en;
+          ecall_o_r               <= ecall;
+          ebreak_o_r              <= ebreak;
+          pc_next_o_r             <= pc_next;
         end
       end else begin  // next_state == IDLE
         if(idu_send_valid_r) begin
@@ -114,15 +179,54 @@ module idu(
     end
   end
   assign idu_send_ready         = idu_send_ready_r;
-  assign instruction            = instruction_r;
+  assign instruction_o          = instruction_o_r;
   assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
   assign idu_send_valid         = idu_send_valid_r;
-  assign pc                     = pc_r;
+  assign pc_o                   = pc_o_r;
+  assign src1_o                 = src1_o_r;
+  assign src2_o                 = src2_o_r;
+  assign rd_o                   = rd_o_r;
+  assign csr_rd_o               = csr_rd_o_r;
+  assign imm_o                  = imm_o_r;
+  assign pcOp_o                 = pcOp_o_r;
+  assign aluOp_o                = aluOp_o_r;
+  assign wdOp_o                 = wdOp_o_r;
+  assign csrwdOp_o              = csrwdOp_o_r;
+  assign BOp_o                  = BOp_o_r;
+  assign ren_o                  = ren_o_r;
+  assign wen_o                  = wen_o_r;
+  assign wmask_o                = wmask_o_r;
+  assign rmask_o                = rmask_o_r;
+  assign memory_read_signed_o   = memory_read_signed_o_r;
+  assign reg_write_en_o         = reg_write_en_o_r;
+  assign csreg_write_en_o       = csreg_write_en_o_r;
+  assign ecall_o                = ecall_o_r;
+  assign ebreak_o               = ebreak_o_r;
+  assign pc_next_o              = pc_next_o_r;
 
-
-  wire [2: 0] instruction_type;
-  wire [31:0] immI, immU, immS, immJ, immB, immV;
-  wire [31:0] immJa, immJb;
+  wire  [2: 0]  instruction_type;
+  wire  [31:0]  immI, immU, immS, immJ, immB, immV;
+  wire  [31:0]  immJa, immJb;
+  wire  [4 :0]  rd;
+  wire  [1 :0]  csr_rd;
+  wire  [31:0]  imm;
+  wire  [1 :0]  pcOp;
+  wire  [4 :0]  aluOp;
+  wire  [31:0]  src1;
+  wire  [31:0]  src2;
+  wire  [1 :0]  wdOp;
+  wire          csrwdOp;
+  wire  [2 :0]  BOp;
+  wire          ren;
+  wire          wen;
+  wire  [7 :0]  wmask;
+  wire  [31:0]  rmask;
+  wire          memory_read_signed;
+  wire          reg_write_en;
+  wire          csreg_write_en;
+  wire          ecall;
+  wire          ebreak;
+  wire  [31:0]  pc_next;
 
   MuxKeyWithDefault #(10, 7, 3) idu_i0 (instruction_type, instruction[6:0], 3'b0, {
     7'b0010111, `YSYX_23060059_TYPE_U,
@@ -363,16 +467,54 @@ module idu(
   wire            src1Op;
   wire   [1 :0]   src2Op;
 
-  MuxKeyWithDefault #(2, 1, 32) exsrc1(src1, src1Op, rsa, {
-    1'b0, rsa,
-    1'b1, pc
-  });
+  reg  [31:0]   src1_i_r;
+  reg  [31:0]   src2_i_r;
+  reg  [31:0]   csra_i_a;
 
-  MuxKeyWithDefault #(3, 2, 32) exsrc2(src2, src2Op, rsb, {
-    2'b00, rsb,
-    2'b01, imm,
-    2'b10, csra
-  });
+  always @(*) begin
+    if(exu_state && (csr_rs == csr_rd_o)) begin
+      csra_i_a = wd_exu;
+    end else if(csreg_write_en_wbu && wbu_state && csr_rs == csr_rd_wbu) begin
+      csra_i_a = csr_wd_wbu;
+    end else begin
+      csra_i_a = csra;
+    end
+  end
+
+  always @(*) begin
+    if(exu_state && rs1 == rd_o && src1Op == 0) begin
+      src1_i_r = wd_exu;
+    end else if(reg_write_en_wbu && wbu_state && rs1 == rd_wbu && src1Op == 0) begin
+      src1_i_r = wd_wbu;
+    end else begin
+      case(src1Op)
+        1'b0:
+          src1_i_r = rsa;
+        1'b1:
+          src1_i_r = pc_input;
+        default: begin end
+      endcase
+    end
+  end
+
+  always @(*) begin
+    if(exu_state && (rs2 == rd_o) && (src2Op == 2'b00)) begin
+      src2_i_r = wd_exu;
+    end else if(reg_write_en_wbu && wbu_state && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
+      src2_i_r = wd_wbu;
+    end else begin
+      case(src2Op) 
+        2'b00:
+          src2_i_r = rsb;
+        2'b01:
+          src2_i_r = imm;
+        2'b10:
+          src2_i_r = csra;
+        default:
+          src2_i_r = rsb;
+      endcase
+    end
+  end
 
 
   wire [31:0]  Bresult;
@@ -380,20 +522,20 @@ module idu(
   wire         zero_arr[2:0];
   // ULES
   wire [32:0] ules_temp;
-  assign ules_temp     = {1'b0, src1} - {1'b0, src2};
+  assign ules_temp     = {1'b0, src1_i_r} - {1'b0, src2_i_r};
   assign result_arr[0] = {31'h0, ules_temp[32]};
   assign zero_arr[0]   = 0;
 
   // SUB
-  assign result_arr[1] = src1 -src2;
+  assign result_arr[1] = src1_i_r -src2_i_r;
   assign zero_arr[1] = result_arr[1] == 0;
 
   // SLES
-  assign result_arr[2] = {31'h0, $signed(src1) < $signed(src2) };
+  assign result_arr[2] = {31'h0, $signed(src1_i_r) < $signed(src2_i_r) };
   assign zero_arr[2] = 0;
 
   // ADD
-  assign result_arr[3] = src1 + imm;
+  assign result_arr[3] = src1_i_r + imm;
 
   wire       Bjump;
   wire [1:0] pcOpI;
@@ -408,50 +550,20 @@ module idu(
   assign pcOpI = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
 
   // pc choose
-  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc+4, {
-    2'b00, pc+4,
-    2'b01, pc+imm,
+  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc_input+4, {
+    2'b00, pc_input+4,
+    2'b01, pc_input+imm,
     2'b10, result_arr[3]&(~1),
-    2'b11, csra
+    2'b11, csra_i_a
   });
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
-  // ecall 
-  wire   ecall_input;
-  assign ecall_input = (instruction_input == 32'h73);
-  // mret
-  wire   mret_input;
-  assign mret_input = (instruction_input == 32'h30200073);
-
-  wire [1:0] csr_rsA_input;
-  wire [31:0] immV_input;
-  MuxKeyWithDefault #(4, 32, 2) idu_i26(csr_rsA_input, immV_input, 2'b11, {
-    32'h342, 2'b00,
-    32'h341, 2'b01,
-    32'h300, 2'b10,
-    32'h305, 2'b11    
-  });
-
-  wire   [1:0]  csr_rs_input;
-  assign csr_rs_input = (ecall_input == 1'b1) ? (2'b11) : ((mret_input == 1'b1) ? (2'b01) : csr_rsA_input);
-
-  wire   [4:0]  rs1_input;
-  wire   [4:0]  rs2_input;
-  wire   [4:0]  rd_input;
-  assign rs1_input  = instruction_input[19:15];
-  assign rs2_input  = instruction_input[24:20];
-  assign rd_input   = instruction_input[11:7];
-
-  wire   exu_conflict;
   wire   lsu_conflict;
-  wire   wbu_conflict;
   wire   conflict;
 
 
-  assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
-  assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
-  assign wbu_conflict = (wbu_state == 0) ? 0 : ((rs1_input == rd_lsu) || (rs2_input == rd_lsu) || (csr_rs_input == csr_rd_lsu));
-  assign conflict = exu_conflict || lsu_conflict || wbu_conflict;
+  assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu));
+  assign conflict = lsu_conflict ;
 
 endmodule

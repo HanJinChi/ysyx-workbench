@@ -29,10 +29,6 @@ void step_and_dump_wave();
 
 void device_update();
 
-void end_sim(int end_simluation){
-  end = (end_simluation != 0);
-}
-
 void set_decode_inst(int pc, int inst){
   s.pc = (vaddr_t)pc;
   s.inst = inst;
@@ -302,7 +298,7 @@ void exec_once(){
       exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", s.pc, cpu.gpr[15]);
     }
   #endif
-
+  end = top->ebreak_t;
 
   if(end){
     NPCTRAP(s.pc, cpu.gpr[0]);
@@ -342,7 +338,6 @@ void cpu_exec(uint64_t n){
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           npc_state.halt_pc);
       // Log("clock count: %d, inst_count : %d, IPC: %f\n", clock_count, ins_count, (1.0*ins_count)/clock_count);
-      break;
       // fall through
     case NPC_QUIT: statistic();
     default: break;

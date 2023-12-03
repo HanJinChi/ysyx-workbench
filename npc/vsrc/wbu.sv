@@ -9,6 +9,7 @@ module wbu(
     input   [1 :0]  csr_rd, // write csr reg
     input   [31:0]  wd,
     input   [31:0]  csr_wd, 
+    input           ebreak_i,
     input           reg_write_en,
     input           csreg_write_en,
     input           ecall,
@@ -17,8 +18,19 @@ module wbu(
     input   [31:0]  instruction_input,
     output  [31:0]  rsa,
     output  [31:0]  rsb,
-    output  [31:0]  csra
+    output  [31:0]  csra,
+    output          ebreak_o
 );
+
+
+  reg ebreak_o_r;
+  always @(posedge clk) begin
+    if(rst) ebreak_o_r <= 0;
+    else  if(wbu_receive_valid) ebreak_o_r <= ebreak_i;
+  end
+
+  assign ebreak_o = ebreak_o_r;
+
 
   reg  ecall_r;
   always @(posedge clk) begin

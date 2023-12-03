@@ -20,6 +20,7 @@ module lsu (
   input    wire          reg_write_en_input,
   input    wire          csreg_write_en_input,
   input    wire          ecall_input,
+  input    wire          ebreak_input,
   input    wire          arready,
   input    wire  [31:0]  rdata,
   input    wire  [1 :0]  rresp,
@@ -40,6 +41,7 @@ module lsu (
   output   wire          reg_write_en,
   output   wire          csreg_write_en,
   output   wire          ecall,
+  output   wire          ebreak,
   output   wire  [31:0]  araddr,
   output   wire          arvalid,
   output   wire          rready,
@@ -118,6 +120,7 @@ module lsu (
   reg          reg_write_en_r;
   reg          csreg_write_en_r;
   reg          ecall_r;
+  reg          ebreak_r;
   reg  [31:0]  araddr_r;
   reg          arvalid_r;
   reg          rready_r;
@@ -145,6 +148,7 @@ module lsu (
       reg_write_en_r     <= 0;
       csreg_write_en_r   <= 0;
       ecall_r            <= 0;
+      ebreak_r           <= 0;
       instruction_r      <= 0;
       pc_next_r          <= 0;
       rsb                <= 0;
@@ -173,6 +177,7 @@ module lsu (
             memory_read_signed   <= memory_read_signed_input;
             rmask                <= rmask_input;
             ecall_r              <= ecall_input;
+            ebreak_r             <= ebreak_input;
             src2                 <= src2_input;
             rsb                  <= rsb_input;
             wdOp                 <= wdOp_input;
@@ -199,6 +204,7 @@ module lsu (
             pc_next_r           <= pc_next_input;
             instruction_r       <= instruction_input;
             ecall_r             <= ecall_input;
+            ebreak_r            <= ebreak_input;
             reg_write_en_r      <= reg_write_en_input;
             csreg_write_en_r    <= csreg_write_en_input;
           end
@@ -218,6 +224,7 @@ module lsu (
               pc_next_r            <= pc_next_input;
               instruction_r        <= instruction_input;
               ecall_r              <= ecall_input;
+              ebreak_r             <= ebreak_input;
               reg_write_en_r       <= reg_write_en_input;
               csreg_write_en_r     <= csreg_write_en_input;
               src2                 <= src2_input;
@@ -253,6 +260,7 @@ module lsu (
   assign bready         = bready_r;
   assign wdata          = wdata_r;
   assign wstrb          = wstrb_r;
+  assign ebreak         = ebreak_r;
 
   always @(posedge clk) begin
     if(rst) rready_r <= 0;
