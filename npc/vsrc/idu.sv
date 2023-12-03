@@ -200,6 +200,7 @@ module idu(
   assign csreg_write_en_o       = csreg_write_en_o_r;
   assign ecall_o                = ecall_o_r;
   assign ebreak_o               = ebreak_o_r;
+  assign pc_next_o              = pc_next_o_r;
 
   wire  [2: 0]  instruction_type;
   wire  [31:0]  immI, immU, immS, immJ, immB, immV;
