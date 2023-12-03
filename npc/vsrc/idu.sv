@@ -143,7 +143,7 @@ module idu(
           instruction_o_r  <= instruction;
           pc_o_r           <= pc_input;
         end
-        if(!conflict) begin
+        if((idu_send_valid_r == 0) && !conflict) begin
           idu_send_valid_r        <= 1;
           idu_send_to_ifu_valid_r <= 1;
           src1_o_r                <= src1_i_r;
@@ -569,12 +569,10 @@ module idu(
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
 
-  // wire   exu_conflict;
   wire   lsu_conflict;
   wire   conflict;
 
 
-  // assign exu_conflict = (exu_state == 0) ? 0 : ((rs1_input == rd) || (rs2_input == rd) || (csr_rs_input == csr_rd));
   assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu));
   assign conflict = lsu_conflict ;
 
