@@ -19,8 +19,6 @@
 
 
 // define ALU TYPE
-import "DPI-C" function void end_sim (input int endflag);
-import "DPI-C" function void set_decode_inst (input int pc, input int instruction);
 import "DPI-C" function void n_pmem_read(input int raddr, output int rdata);
 import "DPI-C" function void n_pmem_write(input int waddr, input int wdata, input byte wmask);
 
@@ -28,7 +26,8 @@ module top(
     input                 clk,
     input                 rst,
     output reg  [31:0]    pc_next,
-    output reg  [31:0]    pc
+    output reg  [31:0]    pc,
+    output                ebreak_t
 );
 
   wire                  endflag; 
@@ -82,6 +81,9 @@ module top(
   wire                  ecall;
   wire                  ecall_exu;
   wire                  ecall_lsu;
+  wire                  ebreak;
+  wire                  ebreak_exu;
+  wire                  ebreak_lsu;
   wire                  csrwdOp;
   wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
@@ -209,7 +211,7 @@ module top(
     .reg_write_en_o(reg_write_en),
     .csreg_write_en_o(csreg_write_en),
     .ecall_o(ecall),
-    .ebreak_o(endflag),
+    .ebreak_o(ebreak),
     .pc_o(pc_idu),
     .pc_next_o(pc_next_idu),
     .instruction_o(instruction_idu),
@@ -234,10 +236,12 @@ module top(
     .csr_wd(csr_wd),
     .pc_next_input(pc_next_lsu),
     .pc_input(pc_lsu),
+    .ebreak_i(ebreak_lsu),
     .instruction_input(instruction_lsu),
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
+    .ebreak_o(ebreak_t),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra)
@@ -266,6 +270,7 @@ module top(
     .reg_write_en_input(reg_write_en),
     .csreg_write_en_input(csreg_write_en),
     .ecall_input(ecall),
+    .ebreak_input(ebreak),
     .pc_input(pc_idu),
     .pc_next_input(pc_next_idu),
     .instruction_input(instruction_idu),
@@ -288,6 +293,7 @@ module top(
     .reg_write_en(reg_write_en_exu),
     .csreg_write_en(csreg_write_en_exu),
     .ecall(ecall_exu),
+    .ebreak(ebreak_exu),
     .pc(pc_exu),
     .rsb(rsb_exu),
     .rd(rd_exu),
@@ -321,6 +327,7 @@ module top(
     .reg_write_en_input(reg_write_en_exu),
     .csreg_write_en_input(csreg_write_en_exu),
     .ecall_input(ecall_exu),
+    .ebreak_input(ebreak_exu),
     .lsu_send_valid(lsu_send_valid),
     .wd(wd),
     .csr_wd(csr_wd),
@@ -329,6 +336,7 @@ module top(
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
+    .ebreak(ebreak_lsu),
     .pc_next(pc_next_lsu),
     .pc(pc_lsu),
     .instruction(instruction_lsu),
@@ -409,10 +417,6 @@ module top(
     end
   end
  
-  always@(*) begin
-    end_sim({32{endflag}});
-    set_decode_inst(pc_idu, instruction);
-  end
 
 endmodule
 

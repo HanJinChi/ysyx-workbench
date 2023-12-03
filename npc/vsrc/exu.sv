@@ -20,6 +20,7 @@ module exu(
   input   wire           reg_write_en_input,
   input   wire           csreg_write_en_input,
   input   wire           ecall_input,
+  input   wire           ebreak_input,
   input   wire   [31:0]  pc_input,
   input   wire   [31:0]  pc_next_input,
   input   wire   [31:0]  instruction_input,
@@ -42,6 +43,7 @@ module exu(
   output  wire           reg_write_en,
   output  wire           csreg_write_en,
   output  wire           ecall,
+  output  wire           ebreak,
   output  wire   [31:0]  pc,
   output  wire   [31:0]  pc_next,
   output  wire   [31:0]  instruction,
@@ -71,6 +73,7 @@ module exu(
   reg          reg_write_en_r;
   reg          csreg_write_en_r;
   reg          ecall_r;
+  reg          ebreak_r;
   reg  [31:0]  pc_r;
   reg  [31:0]  pc_next_r;
   reg  [31:0]  instruction_r;
@@ -124,6 +127,7 @@ module exu(
       reg_write_en_r        <= 0;
       csreg_write_en_r      <= 0;
       ecall_r               <= 0;
+      ebreak_r              <= 0;
       exu_send_valid_r      <= 0;
       exu_send_ready_r      <= 0;
       instruction_r         <= 0;
@@ -147,6 +151,7 @@ module exu(
         reg_write_en_r       <= reg_write_en_input;
         csreg_write_en_r     <= csreg_write_en_input;
         ecall_r              <= ecall_input;
+        ebreak_r             <= ebreak_input;
         pc_r                 <= pc_input;
         pc_next_r            <= pc_next_input;
         rd_r                 <= rd_input;
@@ -186,6 +191,7 @@ module exu(
   assign csr_rd             = csr_rd_r;
   assign exu_send_valid     = exu_send_valid_r;
   assign exu_send_ready     = exu_send_ready_r;
+  assign ebreak             = ebreak_r;
 
   wire [31:0] result_arr [17:0];
   wire zero_arr [17:0];
