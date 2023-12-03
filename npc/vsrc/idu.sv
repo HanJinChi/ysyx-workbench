@@ -470,7 +470,7 @@ module idu(
   reg  [31:0]   csra_i_a;
 
   always @(*) begin
-    if(exu_state && csr_rs == csr_rd_o) begin
+    if(exu_state && (csr_rs == csr_rd_o)) begin
       csra_i_a = wd_exu;
     end else if(wbu_state && csr_rs == csr_rd_wbu) begin
       csra_i_a = csr_wd_wbu;
@@ -480,9 +480,9 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state && rs1 == rd_o) begin
+    if(exu_state && rs1 == rd_o && src1Op == 0) begin
       src1_i_r = wd_exu;
-    end else if(wbu_state && (rs1 == rd_wbu)) begin
+    end else if(wbu_state && rs1 == rd_wbu && src1Op == 0) begin
       src1_i_r = wd_wbu;
     end else begin
       case(src1Op)
