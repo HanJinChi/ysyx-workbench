@@ -19,6 +19,7 @@ module wbu(
     output  [31:0]  rsa,
     output  [31:0]  rsb,
     output  [31:0]  csra,
+    output  [2 :0]  wbu_state_o,
     output          ebreak_o
 );
 
@@ -120,5 +121,16 @@ module wbu(
   assign rsa  = regarray[rs1   ] ;
   assign rsb  = regarray[rs2   ] ;
   assign csra = csrarray[csr_rs] ;
+
+  reg [2:0] wbu_state_o_r;
+  always @(*) begin
+    if(!wbu_receive_valid) begin
+      wbu_state_o_r = 0;
+    end else 
+      wbu_state_o_r = {csreg_write_en, reg_write_en, 1'b1};
+  end 
+  
+  assign wbu_state_o = wbu_state_o_r;
+
 
 endmodule

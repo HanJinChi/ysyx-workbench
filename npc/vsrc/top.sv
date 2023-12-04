@@ -59,15 +59,16 @@ module top(
   wire   [4 :0]         aluOp;
   wire   [2 :0]         BOp;
   wire   [2 :0]         BOp_exu;
-  wire                  exu_state;
+  wire   [2 :0]         exu_state;
   wire                  lsu_state;
+  wire   [2 :0]         wbu_state;
   wire                  Bjump;
   wire                  ren;
   wire                  ren_exu;
   wire                  wen;
   wire                  wen_exu;
-  wire   [7:0]          wmask;
-  wire   [7:0]          wmask_exu;
+  wire   [7 :0]         wmask;
+  wire   [7 :0]         wmask_exu;
   wire   [31:0]         rmask;
   wire   [31:0]         rmask_exu;
   wire                  memory_read_signed;
@@ -154,6 +155,7 @@ module top(
     .clk(clk),
     .rst(rst),
     .pc_next(pc_next),
+    .pc_next_idu(pc_next_idu),
     .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
@@ -186,7 +188,7 @@ module top(
     .csr_rd_wbu(csr_rd_lsu),
     .wd_wbu(wd),
     .csr_wd_wbu(csr_wd),
-    .wbu_state(lsu_send_valid),
+    .wbu_state(wbu_state),
     .reg_write_en_wbu(reg_write_en_lsu),
     .csreg_write_en_wbu(csreg_write_en_lsu),
     .idu_receive_valid(ifu_send_valid),
@@ -242,6 +244,7 @@ module top(
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),
     .ebreak_o(ebreak_t),
+    .wbu_state_o(wbu_state),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra)
@@ -302,7 +305,7 @@ module top(
     .csr_rd(csr_rd_exu),
     .exu_send_valid(exu_send_valid),
     .exu_send_ready(exu_send_ready),
-    .exu_state(exu_state)
+    .exu_state_o(exu_state)
   );
 
   lsu ls(
@@ -404,17 +407,42 @@ module top(
 
   // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
 
+  // always @(*) begin
+  //   if(pc_write_enable) begin
+  //     pc_next = pc_next_idu; 
+  //   end else begin
+  //     if(set_pc != 0) begin
+  //       pc_next = set_pc;
+  //     end else begin
+  //       if(pc == 32'h80000000) pc_next = 32'h80000000;
+  //       else                   pc_next = pc_next_idu;
+  //     end
+  //   end
+  // end
+
   always @(*) begin
-    if(pc_write_enable) begin
-      pc_next = pc_next_idu; 
-    end else begin
-      if(set_pc != 0) begin
-        pc_next = set_pc;
-      end else begin
-        if(pc == 32'h80000000) pc_next = 32'h80000000;
-        else                   pc_next = pc_next_idu;
-      end
-    end
+    // if(pc == 32'h80000000) pc_next = 32'h80000000;
+    // else 
+    //   if(ifu_send_valid)
+    //     pc_next = pc_next_r + 4;
+    //   else if(pc_write_enable)
+    //     pc_next = pc_next_idu;
+    //   else
+    //     pc_next = pc_next_r;
+    if(ifu_send_valid)
+      pc_next = pc + 4;
+    else if(pc_write_enable)
+      pc_next = pc_next_idu;
+    else 
+      if(pc == 32'h80000000) pc_next = 32'h80000000;
+      else                   pc_next = pc_next_r;
+  end
+
+  reg [31:0] pc_next_r;
+  always @(posedge clk) begin
+    if(rst) pc_next_r <= 0;
+    else
+      pc_next_r <= pc_next;
   end
  
 

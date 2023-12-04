@@ -301,7 +301,7 @@ void exec_once(){
   end = top->ebreak_t;
 
   if(end){
-    NPCTRAP(s.pc, cpu.gpr[0]);
+    NPCTRAP(top->rootp->top__DOT__wb__DOT__pc, cpu.gpr[0]);
   } 
 }
 

@@ -17,12 +17,12 @@ module idu(
   input    wire  [31:0]  rsa,
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
-  input    wire          exu_state,
+  input    wire  [2 :0]  exu_state,
   input    wire  [31:0]  wd_exu,  // may be wd or csr_wd
   input    wire  [4 :0]  rd_lsu,
   input    wire  [1 :0]  csr_rd_lsu,
   input    wire          lsu_state,
-  input    wire          wbu_state,
+  input    wire  [2 :0]  wbu_state,
   input    wire  [4 :0]  rd_wbu,
   input    wire  [1 :0]  csr_rd_wbu,
   input    wire  [31:0]  wd_wbu,
@@ -294,14 +294,15 @@ module idu(
     6'b000000, `YSYX_23060059_SR
   });
   // aluOpIb
-  MuxKeyWithDefault #(7, 3, 5) idu_i3 (aluOpIb, instruction[14:12], `YSYX_23060059_ADD, {
+  MuxKeyWithDefault #(8, 3, 5) idu_i3 (aluOpIb, instruction[14:12], `YSYX_23060059_ADD, {
     3'b000, `YSYX_23060059_ADD ,
     3'b111, `YSYX_23060059_AND ,
     3'b100, `YSYX_23060059_XOR ,
     3'b101,  aluOpIba          , 
     3'b010, `YSYX_23060059_SLES,
     3'b011, `YSYX_23060059_ULES,
-    3'b001, `YSYX_23060059_SL
+    3'b001, `YSYX_23060059_SL  ,
+    3'b110, `YSYX_23060059_OR
   });
   // aluOpIc
   assign aluOpIc = `YSYX_23060059_ADD;
@@ -472,9 +473,9 @@ module idu(
   reg  [31:0]   csra_i_a;
 
   always @(*) begin
-    if(exu_state && (csr_rs == csr_rd_o)) begin
+    if(exu_state[2] && (csr_rs == csr_rd_o)) begin
       csra_i_a = wd_exu;
-    end else if(csreg_write_en_wbu && wbu_state && csr_rs == csr_rd_wbu) begin
+    end else if(wbu_state[2] && csr_rs == csr_rd_wbu) begin
       csra_i_a = csr_wd_wbu;
     end else begin
       csra_i_a = csra;
@@ -482,9 +483,12 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state && rs1 == rd_o && src1Op == 0) begin
-      src1_i_r = wd_exu;
-    end else if(reg_write_en_wbu && wbu_state && rs1 == rd_wbu && src1Op == 0) begin
+    if(exu_state[1] && (rs1 == rd_o) && src1Op == 0) begin
+      if(exu_state[2])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state = 3'b111,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
+        src1_i_r = wd_exu;
+      else
+        src1_i_r = src2_o; 
+    end else if(wbu_state[1] && (rs1 == rd_wbu) && src1Op == 0) begin
       src1_i_r = wd_wbu;
     end else begin
       case(src1Op)
@@ -498,9 +502,12 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state && (rs2 == rd_o) && (src2Op == 2'b00)) begin
-      src2_i_r = wd_exu;
-    end else if(reg_write_en_wbu && wbu_state && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
+    if(exu_state[1] == 1 && (rs2 == rd_o) && (src2Op == 2'b00)) begin
+      if(exu_state[2])
+        src2_i_r = wd_exu;
+      else
+        src2_i_r = src2_o;
+    end else if(wbu_state[1] && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
       src2_i_r = wd_wbu;
     end else begin
       case(src2Op) 
@@ -559,11 +566,8 @@ module idu(
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
-  wire   lsu_conflict;
   wire   conflict;
 
-
-  assign lsu_conflict = (lsu_state == 0) ? 0 : ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu));
-  assign conflict = lsu_conflict ;
+  assign conflict = (lsu_state == 0) ? 0 : ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu));
 
 endmodule

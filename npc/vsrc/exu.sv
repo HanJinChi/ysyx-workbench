@@ -52,7 +52,7 @@ module exu(
   output  wire   [1 :0]  csr_rd, 
   output  wire           exu_send_valid,
   output  wire           exu_send_ready,
-  output  wire           exu_state
+  output  wire   [2 :0]  exu_state_o
 );
 
   reg  [4: 0]  aluOp;
@@ -133,31 +133,33 @@ module exu(
       instruction_r         <= 0;
     end else begin
       if(next_state == COMPUTE) begin
-        exu_send_ready_r     <= 1;
-        exu_send_valid_r     <= 1;
-        src1_r               <= src1_input;
-        src2_r               <= src2_input;
-        aluOp                <= aluOp_input;
-        imm_r                <= imm_input;
-        pcOp_r               <= pcOp_input;
-        wdOp_r               <= wdOp_input;
-        csrwdOp_r            <= csrwdOp_input;
-        BOp_r                <= BOp_input;
-        ren_r                <= ren_input;
-        wen_r                <= wen_input;
-        wmask_r              <= wmask_input;
-        rmask_r              <= rmask_input;
-        memory_read_signed_r <= memory_read_signed_input;
-        reg_write_en_r       <= reg_write_en_input;
-        csreg_write_en_r     <= csreg_write_en_input;
-        ecall_r              <= ecall_input;
-        ebreak_r             <= ebreak_input;
-        pc_r                 <= pc_input;
-        pc_next_r            <= pc_next_input;
-        rd_r                 <= rd_input;
-        csr_rd_r             <= csr_rd_input;
-        rsb_r                <= rsb_input;
-        instruction_r        <= instruction_input;
+        if(exu_send_ready_r == 0) exu_send_ready_r     <= 1;
+        if(exu_send_valid_r == 0) begin
+          exu_send_valid_r     <= 1;
+          src1_r               <= src1_input;
+          src2_r               <= src2_input;
+          aluOp                <= aluOp_input;
+          imm_r                <= imm_input;
+          pcOp_r               <= pcOp_input;
+          wdOp_r               <= wdOp_input;
+          csrwdOp_r            <= csrwdOp_input;
+          BOp_r                <= BOp_input;
+          ren_r                <= ren_input;
+          wen_r                <= wen_input;
+          wmask_r              <= wmask_input;
+          rmask_r              <= rmask_input;
+          memory_read_signed_r <= memory_read_signed_input;
+          reg_write_en_r       <= reg_write_en_input;
+          csreg_write_en_r     <= csreg_write_en_input;
+          ecall_r              <= ecall_input;
+          ebreak_r             <= ebreak_input;
+          pc_r                 <= pc_input;
+          pc_next_r            <= pc_next_input;
+          rd_r                 <= rd_input;
+          csr_rd_r             <= csr_rd_input;
+          rsb_r                <= rsb_input;
+          instruction_r        <= instruction_input;
+        end
       end else begin  // IDLE
         if(exu_send_valid_r) begin
           exu_send_ready_r <= 0;
@@ -167,7 +169,6 @@ module exu(
     end
   end
 
-  assign exu_state          = (next_state == COMPUTE);
   assign src1               = src1_r;
   assign src2               = src2_r;
   assign imm                = imm_r;
@@ -305,5 +306,19 @@ module exu(
     `YSYX_23060059_SRC,  zero_arr[16],
     `YSYS_23060059_MULHU, zero_arr[17]
   });
+
+  // 第1bit代表是否出于工作状态
+  // 第2bit代表处于exu的指令是否要写通用寄存器
+  // 第3bit代表处于exu的指令是否要写csr寄存器
+  reg  [2:0]  exu_state_o_r;
+  always@(*) begin
+    if(next_state == IDLE)
+      exu_state_o_r = 0;
+    else begin
+      exu_state_o_r = {csreg_write_en_input, reg_write_en_input, 1'b1};
+    end
+  end
+  assign exu_state_o = exu_state_o_r;
+
 
 endmodule
