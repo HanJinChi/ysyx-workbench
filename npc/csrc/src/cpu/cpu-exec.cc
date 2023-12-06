@@ -19,6 +19,9 @@ bool end = 0;
 uint64_t  clock_count = 0;
 uint64_t  ins_count = 0;
 
+uint64_t cost_time = 0;
+
+
 bool check_watchpoint();
 bool check_breakpoint(word_t pc);
 void ftrace_check_address(int, uint32_t, uint32_t);
@@ -317,6 +320,8 @@ void execute(uint64_t n){
 
 void statistic(){
   Log("clock count: %ld, inst_count : %ld, IPC: %f", clock_count, ins_count, (1.0*ins_count)/clock_count);
+  Log("host time spent = %ld us", cost_time);
+  if (cost_time > 0) Log("simulation frequency = %ld inst/s", ins_count * 1000000 / cost_time);
 }
 
 void cpu_exec(uint64_t n){
@@ -326,7 +331,12 @@ void cpu_exec(uint64_t n){
       return;
     default: npc_state.state = NPC_RUNNING;
   }
+
+  uint64_t start_time = get_time();
+
   execute(n);
+
+  cost_time = get_time() - start_time;
 
   switch (npc_state.state) {
     case NPC_RUNNING: npc_state.state = NPC_STOP; break;

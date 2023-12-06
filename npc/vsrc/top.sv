@@ -90,6 +90,7 @@ module top(
   wire   [31:0]         rsa;
   wire   [31:0]         rsb;
   wire   [31:0]         rsb_exu;
+  wire   [31:0]         pc_ifu_to_idu;
   wire   [31:0]         pc_idu;
   wire   [31:0]         pc_next_idu;
   wire   [31:0]         pc_exu;
@@ -156,10 +157,11 @@ module top(
     .rst(rst),
     .pc_next(pc_next),
     .pc_next_idu(pc_next_idu),
-    .ifu_receive_valid(ifu_receive_valid),
+    .ifu_receive_valid(1),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
     .ifu_receive_ready(idu_send_ready),
+    .pc_ifu_to_idu(pc_ifu_to_idu),
     .instruction(instruction),
     .arready(arreadyA),
     .rdata(rdataA),
@@ -174,8 +176,8 @@ module top(
   idu id(
     .clk(clk),
     .rst(rst),
-    .instruction(instruction),
-    .pc_input(pc),
+    .instruction_i(instruction),
+    .pc_i(pc_ifu_to_idu),
     .rsa(rsa),
     .rsb(rsb),
     .csra(csra),
@@ -407,19 +409,6 @@ module top(
 
   // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
 
-  // always @(*) begin
-  //   if(pc_write_enable) begin
-  //     pc_next = pc_next_idu; 
-  //   end else begin
-  //     if(set_pc != 0) begin
-  //       pc_next = set_pc;
-  //     end else begin
-  //       if(pc == 32'h80000000) pc_next = 32'h80000000;
-  //       else                   pc_next = pc_next_idu;
-  //     end
-  //   end
-  // end
-
   always @(*) begin
     // if(pc == 32'h80000000) pc_next = 32'h80000000;
     // else 
@@ -433,9 +422,12 @@ module top(
       pc_next = pc + 4;
     else if(pc_write_enable)
       pc_next = pc_next_idu;
-    else 
-      if(pc == 32'h80000000) pc_next = 32'h80000000;
-      else                   pc_next = pc_next_r;
+    else
+      if(set_pc != 0) begin
+        pc_next = set_pc;
+      end else 
+        if(pc == 32'h80000000) pc_next = 32'h80000000;
+        else                   pc_next = pc_next_r;
   end
 
   reg [31:0] pc_next_r;

@@ -12,6 +12,7 @@ module ifu(
     output   wire          ifu_send_valid,
     output   wire          ifu_send_ready,
     output   wire  [31:0]  instruction,
+    output   wire  [31:0]  pc_ifu_to_idu,
     output   wire  [31:0]  araddr,
     output   wire          arvalid,
     output   wire          rready
@@ -76,6 +77,7 @@ module ifu(
   reg        arvalid_r;
   reg        rready_r;
   reg        ifu_re_fetch;
+  reg [31:0] pc_ifu_to_idu_r;
   reg [31:0] addr_beginner; // 最开始取值的addr
 
   always@(posedge clk) begin
@@ -101,6 +103,7 @@ module ifu(
       instruction_r        <= 0;
       ifu_send_valid_r     <= 0;
       ifu_re_fetch         <= 0;
+      pc_ifu_to_idu_r      <= 0;
     end else begin
       if(next_state == READ_A) begin
         if(ifu_send_valid_r) 
@@ -120,6 +123,7 @@ module ifu(
             instruction_r    <= rdata;
             ifu_send_valid_r <= 1;
             rresp_r          <= rresp;
+            pc_ifu_to_idu_r  <= araddr_r;
           end
           else                         // 不相等代表预测错误，重新取值
             ifu_re_fetch     <= 1;
@@ -136,6 +140,6 @@ module ifu(
   assign araddr         = araddr_r;
   assign arvalid        = arvalid_r;
   assign rready         = rready_r;
-
+  assign pc_ifu_to_idu  = pc_ifu_to_idu_r;
 
 endmodule

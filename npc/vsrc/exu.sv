@@ -82,6 +82,7 @@ module exu(
   reg  [1 :0]  csr_rd_r; 
   reg          exu_send_valid_r;
   reg          exu_send_ready_r;
+  reg          exu_have_send_ready_r;
   parameter    IDLE = 0, COMPUTE = 1;
 
   always @(posedge clk) begin
@@ -130,10 +131,17 @@ module exu(
       ebreak_r              <= 0;
       exu_send_valid_r      <= 0;
       exu_send_ready_r      <= 0;
+      exu_have_send_ready_r <= 0;
       instruction_r         <= 0;
     end else begin
       if(next_state == COMPUTE) begin
-        if(exu_send_ready_r == 0) exu_send_ready_r     <= 1;
+        if(exu_have_send_ready_r == 0) begin
+          assert(exu_send_ready_r == 0);
+          exu_send_ready_r      <= 1;
+          exu_have_send_ready_r <= 1; 
+        end else begin
+          exu_send_ready_r <= 0;
+        end
         if(exu_send_valid_r == 0) begin
           exu_send_valid_r     <= 1;
           src1_r               <= src1_input;
@@ -164,6 +172,7 @@ module exu(
         if(exu_send_valid_r) begin
           exu_send_ready_r <= 0;
           exu_send_valid_r <= 0;
+          exu_have_send_ready_r <= 0;
         end
       end
     end

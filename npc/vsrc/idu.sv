@@ -12,8 +12,8 @@
 module idu(
   input    wire          clk,
   input    wire          rst,
-  input    wire  [31:0]  instruction,
-  input    wire  [31:0]  pc_input,
+  input    wire  [31:0]  instruction_i,
+  input    wire  [31:0]  pc_i,
   input    wire  [31:0]  rsa,
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
@@ -66,7 +66,6 @@ module idu(
   reg         state, next_state;
   reg         idu_send_to_ifu_valid_r;
   reg         idu_send_valid_r;
-  reg         idu_send_ready_r;
   reg  [31:0] instruction_o_r;
   reg  [31:0] pc_o_r;
   reg  [31:0] src1_o_r;
@@ -104,16 +103,45 @@ module idu(
           next_state = IDLE;
       DECODE:
         if(idu_send_valid && idu_receive_ready)
-          next_state = IDLE;
+          if(idu_receive_valid)
+            next_state = DECODE;
+          else
+            next_state = IDLE;
         else
           next_state = DECODE;
     endcase
   end
 
+  reg  [31:0]  instruction_b;
+  reg  [31:0]  pc_b;
+  reg          buffer;
+  wire [31:0]  instruction;
+  wire [31:0]  pc;
+  always @(posedge clk) begin
+    if(rst) begin
+      instruction_b  <=  0;
+      pc_b           <=  0;
+      buffer         <=  0;
+    end else begin
+      if(next_state == DECODE) begin
+        if(buffer == 0) begin
+          if(idu_receive_valid && idu_send_valid) begin
+            instruction_b <= instruction_i;
+            pc_b          <= pc_i;
+            buffer        <= 1;
+          end
+        end
+      end
+    end
+  end
+  assign idu_send_ready = !buffer; // buffer长度为1时则不能再接受数据
+  assign instruction = idu_receive_valid ? instruction_i : (buffer ? instruction_b : instruction_i);
+  assign pc          = idu_receive_valid ? pc_i          : (buffer ? pc_b          : pc_i);
+  
+
   always @(posedge clk) begin
     if(rst) begin
       state                    <= 0;
-      idu_send_ready_r         <= 0;
       instruction_o_r          <= 0;
       pc_o_r                   <= 0;
       idu_send_valid_r         <= 0;
@@ -140,45 +168,76 @@ module idu(
       pc_next_o_r              <= 0;
     end else begin
       if(next_state == DECODE) begin
-        if(idu_send_ready_r == 0) begin
-          idu_send_ready_r <= 1;
-          instruction_o_r  <= instruction;
-          pc_o_r           <= pc_input;
-        end
-        if((idu_send_valid_r == 0) && !conflict) begin
-          idu_send_valid_r        <= 1;
-          idu_send_to_ifu_valid_r <= 1;
-          src1_o_r                <= src1_i_r;
-          src2_o_r                <= src2_i_r;
-          rd_o_r                  <= rd;
-          csr_rd_o_r              <= csr_rd;
-          imm_o_r                 <= imm;
-          pcOp_o_r                <= pcOp;
-          aluOp_o_r               <= aluOp;
-          wdOp_o_r                <= wdOp;
-          csrwdOp_o_r             <= csrwdOp;
-          BOp_o_r                 <= BOp;
-          ren_o_r                 <= ren;
-          wen_o_r                 <= wen;
-          wmask_o_r               <= wmask;
-          rmask_o_r               <= rmask;
-          memory_read_signed_o_r  <= memory_read_signed;
-          reg_write_en_o_r        <= reg_write_en;
-          csreg_write_en_o_r      <= csreg_write_en;
-          ecall_o_r               <= ecall;
-          ebreak_o_r              <= ebreak;
-          pc_next_o_r             <= pc_next;
+        if(buffer) begin
+          if(conflict) begin
+            assert(idu_send_valid_r == 1);
+            idu_send_valid_r         <= 0;
+            idu_send_to_ifu_valid_r  <= 0;
+          end else begin
+            if(idu_send_valid_r == 0) begin
+              idu_send_valid_r         <= 1;
+              idu_send_to_ifu_valid_r  <= 1;
+            end
+            instruction_o_r         <= instruction;
+            pc_o_r                  <= pc;
+            src1_o_r                <= src1_i_r;
+            src2_o_r                <= src2_i_r;
+            rd_o_r                  <= rd;
+            csr_rd_o_r              <= csr_rd;
+            imm_o_r                 <= imm;
+            pcOp_o_r                <= pcOp;
+            aluOp_o_r               <= aluOp;
+            wdOp_o_r                <= wdOp;
+            csrwdOp_o_r             <= csrwdOp;
+            BOp_o_r                 <= BOp;
+            ren_o_r                 <= ren;
+            wen_o_r                 <= wen;
+            wmask_o_r               <= wmask;
+            rmask_o_r               <= rmask;
+            memory_read_signed_o_r  <= memory_read_signed;
+            reg_write_en_o_r        <= reg_write_en;
+            csreg_write_en_o_r      <= csreg_write_en;
+            ecall_o_r               <= ecall;
+            ebreak_o_r              <= ebreak;
+            pc_next_o_r             <= pc_next;
+            buffer                  <= 0;
+          end
+        end else begin
+          if((idu_send_valid_r == 0) && !conflict) begin
+            idu_send_valid_r        <= 1;
+            idu_send_to_ifu_valid_r <= 1;
+            instruction_o_r         <= instruction;
+            pc_o_r                  <= pc;
+            src1_o_r                <= src1_i_r;
+            src2_o_r                <= src2_i_r;
+            rd_o_r                  <= rd;
+            csr_rd_o_r              <= csr_rd;
+            imm_o_r                 <= imm;
+            pcOp_o_r                <= pcOp;
+            aluOp_o_r               <= aluOp;
+            wdOp_o_r                <= wdOp;
+            csrwdOp_o_r             <= csrwdOp;
+            BOp_o_r                 <= BOp;
+            ren_o_r                 <= ren;
+            wen_o_r                 <= wen;
+            wmask_o_r               <= wmask;
+            rmask_o_r               <= rmask;
+            memory_read_signed_o_r  <= memory_read_signed;
+            reg_write_en_o_r        <= reg_write_en;
+            csreg_write_en_o_r      <= csreg_write_en;
+            ecall_o_r               <= ecall;
+            ebreak_o_r              <= ebreak;
+            pc_next_o_r             <= pc_next;
+          end
         end
       end else begin  // next_state == IDLE
         if(idu_send_valid_r) begin
           idu_send_valid_r        <= 0;
           idu_send_to_ifu_valid_r <= 0;
-          idu_send_ready_r        <= 0;
         end
       end
     end
   end
-  assign idu_send_ready         = idu_send_ready_r;
   assign instruction_o          = instruction_o_r;
   assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
   assign idu_send_valid         = idu_send_valid_r;
@@ -483,31 +542,31 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state[1] && (rs1 == rd_o) && src1Op == 0) begin
+    if(exu_state[1] && (rs1 != 0) && (rs1 == rd_o) && src1Op == 0) begin
       if(exu_state[2])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state = 3'b111,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
         src1_i_r = wd_exu;
       else
         src1_i_r = src2_o; 
-    end else if(wbu_state[1] && (rs1 == rd_wbu) && src1Op == 0) begin
+    end else if(wbu_state[1] && (rs1 != 0) && (rs1 == rd_wbu) && src1Op == 0) begin
       src1_i_r = wd_wbu;
     end else begin
       case(src1Op)
         1'b0:
           src1_i_r = rsa;
         1'b1:
-          src1_i_r = pc_input;
+          src1_i_r = pc;
         default: begin end
       endcase
     end
   end
 
   always @(*) begin
-    if(exu_state[1] == 1 && (rs2 == rd_o) && (src2Op == 2'b00)) begin
+    if(exu_state[1] == 1 && (rs2 != 0) && (rs2 == rd_o) && (src2Op == 2'b00)) begin 
       if(exu_state[2])
         src2_i_r = wd_exu;
       else
         src2_i_r = src2_o;
-    end else if(wbu_state[1] && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
+    end else if(wbu_state[1] && (rs2 != 0) && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
       src2_i_r = wd_wbu;
     end else begin
       case(src2Op) 
@@ -557,9 +616,9 @@ module idu(
   assign pcOpI = (BOp == 3'b010) ? pcOp : ((Bjump == 1) ? pcOp : 2'b00); 
 
   // pc choose
-  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc_input+4, {
-    2'b00, pc_input+4,
-    2'b01, pc_input+imm,
+  MuxKeyWithDefault #(4, 2, 32) pcc (pc_next, pcOpI, pc+4, {
+    2'b00, pc+4,
+    2'b01, pc+imm,
     2'b10, result_arr[3]&(~1),
     2'b11, csra_i_a
   });

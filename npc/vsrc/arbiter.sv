@@ -56,42 +56,47 @@ module arbiter(
   always@(*) begin
     case(ar_state)
       IDLE:
-        if(arvalidA || arvalidB)
+        if((arvalidA || arvalidB) && arready)
           ar_next_state = MEM_R_A;
         else
           ar_next_state = IDLE;
       MEM_R_A:
-        if(arvalid && arready)
-          ar_next_state = MEM_R_B;
-        else
-          ar_next_state = MEM_R_A;
-      MEM_R_B:
-        if(rvalid && rready) 
+        if(rvalid && rready)
           ar_next_state = IDLE;
         else
-          ar_next_state = MEM_R_B;
+          ar_next_state = MEM_R_A;
     endcase
   end
 
+  reg   [1 :0]  araddrMux_s;  // for save
   always @(posedge clk) begin
     if(rst) begin
-      araddrMux <= 0;
+      araddrMux_s  <= 0;
     end else begin
       if(ar_next_state == MEM_R_A) begin
-        if(arvalid == 0) begin
-          if(arvalidA) begin
-            arvalid    <= 1;
-            araddrMux  <= 2'b01;
-          end else if(arvalidB) begin
-            arvalid    <= 1;
-            araddrMux  <= 2'b10;
-          end
-        end
-      end else if(ar_next_state == MEM_R_B) begin
-        arvalid <= 0;
-      end else if(ar_next_state == IDLE) begin
-        if(araddrMux != 0) araddrMux <= 0;
+        araddrMux_s  <= araddrMux; 
+      end else begin
+        araddrMux_s  <= 0;
       end
+    end
+  end
+
+  // araddr
+  always @(*) begin
+    if(ar_next_state == MEM_R_A) begin
+      if(arvalidA) begin
+        araddrMux = 2'b01;
+        arvalid   = 1;
+      end else if(arvalidB) begin
+        araddrMux = 2'b10;
+        arvalid   = 1;
+      end else begin
+        araddrMux = araddrMux_s;  // waiting response
+        arvalid   = 0;
+      end
+    end else begin
+      araddrMux = araddrMux_s;
+      arvalid   = 0;
     end
   end
 
@@ -100,10 +105,10 @@ module arbiter(
     2'b10, araddrB
   });
 
-  MuxKeyWithDefault #(1, 2, 1) a_m2(arreadyA, araddrMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m2(arreadyA, araddrMux, 0, {
     2'b01, arready
   });
-  MuxKeyWithDefault #(1, 2, 1) a_m3(arreadyB, araddrMux, 1'b0, {
+  MuxKeyWithDefault #(1, 2, 1) a_m3(arreadyB, araddrMux, 0, {
     2'b10, arready
   });
 
@@ -154,45 +159,51 @@ module arbiter(
   always@(*) begin
     case(aw_state)
       IDLE:
-        if(awvalidA || awvalidB)
+        if((awvalidA || awvalidB) && awready)
           aw_next_state = MEM_W_A;
         else
           aw_next_state = IDLE;
       MEM_W_A:
-        if(awvalid && awready)
-          aw_next_state = MEM_W_B;
-        else
-          aw_next_state = MEM_W_A;
-      MEM_W_B:
         if(bvalid && bready)
           aw_next_state = IDLE;
         else
-          aw_next_state = MEM_W_B;
+          aw_next_state = MEM_W_A;
     endcase
   end
 
+  reg   [1 :0]  wMux_s;  // for save
   always @(posedge clk) begin
     if(rst) begin
-      wMux  <= 0;
+      wMux_s  <= 0;
     end else begin
       if(aw_next_state == MEM_W_A) begin
-        if(awvalid == 0) begin
-          if(awvalidA) begin
-            awvalid   <= 1;
-            wvalid    <= 1;
-            wMux <= 2'b01;
-          end else if(awvalidB) begin
-            awvalid   <= 1;
-            wvalid    <= 1;
-            wMux <= 2'b10;
-          end
-        end
-      end else if(aw_next_state == MEM_W_B) begin
-        awvalid <= 0;
-        wvalid  <= 0;
-      end else if(aw_next_state == IDLE) begin
-        if(wMux != 0) wMux <= 0;
+        wMux_s <= wMux; 
+      end else begin
+        wMux_s <= 0;
       end
+    end
+  end
+
+  // awaddr
+  always @(*) begin
+    if(aw_next_state == MEM_W_A) begin
+      if(awvalidA) begin
+        awvalid   = 1;
+        wvalid    = 1;
+        wMux      = 2'b01;
+      end else if(awvalidB) begin
+        awvalid   = 1;
+        wvalid    = 1;
+        wMux      = 2'b10;
+      end else begin
+        wMux      = wMux_s;
+        awvalid   = 0;
+        wvalid    = 0;
+      end
+    end else begin
+      wMux    = wMux_s;
+      awvalid = 0;
+      wvalid  = 0;
     end
   end
 
@@ -201,7 +212,6 @@ module arbiter(
     2'b10, awaddrB
   });
 
-  // 使用流水线时要进行修改
   MuxKeyWithDefault #(1, 2, 1) a_m12(awreadyA, wMux, 1'b0, {
     2'b01, awready
   });
