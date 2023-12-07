@@ -58,7 +58,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h){
-  // improtant: only w == 0 && h == 0, then set the s size.
+  // important: only w == 0 && h == 0, then set the s size.
   if (w == 0 && h == 0){
     w = s->w;
     h = s->h;

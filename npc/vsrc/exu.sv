@@ -105,6 +105,72 @@ module exu(
     endcase
   end
 
+  reg  [31:0]  src1_b;
+  reg  [31:0]  src2_b;
+  reg  [31:0]  imm_b;
+  reg  [1 :0]  pcOp_b;
+  reg  [1 :0]  wdOp_b;
+  reg          csrwdOp_b;
+  reg  [2 :0]  BOp_b;
+  reg          ren_b;
+  reg          wen_b;
+  reg  [7 :0]  wmask_b;
+  reg  [31:0]  rmask_b;
+  reg          memory_read_signed_b;
+  reg          reg_write_en_b;
+  reg          csreg_write_en_b;
+  reg          ecall_b;
+  reg          ebreak_b;
+
+  reg          buffer; 
+
+  always @(posedge clk) begin
+    if(rst) begin
+      src1_b                 <= 0;
+      src2_b                 <= 0;
+      imm_b                  <= 0;
+      pcOp_b                 <= 0;
+      wdOp_b                 <= 0;
+      csrwdOp_b              <= 0;
+      BOp_b                  <= 0;
+      ren_b                  <= 0;
+      wen_b                  <= 0;
+      wmask_b                <= 0;
+      rmask_b                <= 0;
+      memory_read_signed_b   <= 0;
+      reg_write_en_b         <= 0;
+      csreg_write_en_b       <= 0;
+      ecall_b                <= 0;
+      ebreak_b               <= 0;
+
+      // control buffer reg 
+      buffer                 <= 0;
+    end else begin
+      if(next_state == COMPUTE) begin
+        if(buffer == 0) begin
+          if(exu_receive_valid && exu_send_valid) begin
+            src1_b               <= src1_input;
+            src2_b               <= src2_input;
+            imm_b                <= imm_input;
+            pcOp_b               <= pcOp_input;
+            wdOp_b               <= wdOp_input;
+            csrwdOp_b            <= csrwdOp_input;
+            BOp_b                <= BOp_input;
+            ren_b                <= ren_input;
+            wen_b                <= wen_input;
+            wmask_b              <= wmask_input;
+            rmask_b              <= rmask_input;
+            memory_read_signed_b <= memory_read_signed_input;
+            reg_write_en_b       <= reg_write_en_input;
+            csreg_write_en_b     <= csreg_write_en_input;
+            ecall_b              <= ecall_input;
+            ebreak_b             <= ebreak_input;
+          end 
+        end
+      end
+    end
+  end 
+
   always @(posedge clk) begin
     if(rst) begin
       src1_r                <= 0;
