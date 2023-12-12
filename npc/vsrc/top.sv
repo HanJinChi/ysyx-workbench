@@ -41,9 +41,11 @@ module top(
   wire   [4 :0]         rd;
   wire   [4 :0]         rd_exu;
   wire   [4 :0]         rd_lsu;
+  wire   [4 :0]         rd_lsu_to_idu;
   wire   [1 :0]         csr_rd;
   wire   [1 :0]         csr_rd_exu;
   wire   [1 :0]         csr_rd_lsu;
+  wire   [1 :0]         csr_rd_lsu_to_idu;
   wire   [31:0]         imm;
   wire   [31:0]         imm_exu;
   wire   [1 :0]         pcOp;
@@ -183,8 +185,8 @@ module top(
     .csra(csra),
     .exu_state(exu_state),
     .wd_exu(exu_result),
-    .rd_lsu(rd_exu), // rd_exu是rd_lsu的输入
-    .csr_rd_lsu(csr_rd_exu),
+    .rd_lsu(rd_lsu_to_idu), // rd_exu是rd_lsu的输入
+    .csr_rd_lsu(csr_rd_lsu_to_idu),
     .lsu_state(lsu_state),
     .rd_wbu(rd_lsu),
     .csr_rd_wbu(csr_rd_lsu),
@@ -236,7 +238,7 @@ module top(
     .csr_rs(csr_rs),
     .rd(rd_lsu)  ,
     .csr_rd(csr_rd_lsu),
-    .wd(wd)  ,
+    .wd(wd),
     .csr_wd(csr_wd),
     .pc_next_input(pc_next_lsu),
     .pc_input(pc_lsu),
@@ -338,6 +340,8 @@ module top(
     .csr_wd(csr_wd),
     .rd(rd_lsu),
     .csr_rd(csr_rd_lsu),
+    .rd_lsu_to_idu(rd_lsu_to_idu),
+    .csr_rd_lsu_to_idu(csr_rd_lsu_to_idu),
     .reg_write_en(reg_write_en_lsu),
     .csreg_write_en(csreg_write_en_lsu),
     .ecall(ecall_lsu),

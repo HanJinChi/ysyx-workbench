@@ -34,10 +34,12 @@ module lsu (
   output   wire  [31:0]  wd,
   output   wire  [31:0]  csr_wd,
   output   wire  [4 :0]  rd,
+  output   wire  [4 :0]  rd_lsu_to_idu,
   output   wire  [31:0]  pc,
   output   wire  [31:0]  instruction,
   output   wire  [31:0]  pc_next,
   output   wire  [1 :0]  csr_rd,
+  output   wire  [1 :0]  csr_rd_lsu_to_idu,
   output   wire          reg_write_en,
   output   wire          csreg_write_en,
   output   wire          ecall,
@@ -291,5 +293,7 @@ module lsu (
   });
 
   assign  lsu_state = (next_state != IDLE);
+  assign  rd_lsu_to_idu = (state == IDLE) ? rd_input : rd;
+  assign  csr_rd_lsu_to_idu = (state == IDLE) ? csr_rd_input : csr_rd;
 
 endmodule
