@@ -27,8 +27,8 @@ module idu(
   input    wire  [1 :0]  csr_rd_wbu,
   input    wire  [31:0]  wd_wbu,
   input    wire  [31:0]  csr_wd_wbu,
-  input    wire          reg_write_en_wbu,
-  input    wire          csreg_write_en_wbu,
+  input    wire          reg_en_wbu,
+  input    wire          csreg_en_wbu,
   input    wire          idu_receive_valid,
   input    wire          idu_receive_ready,
   output   wire  [4 :0]  rs1,
@@ -48,9 +48,9 @@ module idu(
   output   wire          wen_o,
   output   wire  [7 :0]  wmask_o,
   output   wire  [31:0]  rmask_o,
-  output   wire          memory_read_signed_o,
-  output   wire          reg_write_en_o,
-  output   wire          csreg_write_en_o,
+  output   wire          m_signed_o,
+  output   wire          reg_en_o,
+  output   wire          csreg_en_o,
   output   wire          ecall_o, 
   output   wire          ebreak_o,
   output   wire  [31:0]  pc_next_o,
@@ -66,28 +66,7 @@ module idu(
   reg         state, next_state;
   reg         idu_send_to_ifu_valid_r;
   reg         idu_send_valid_r;
-  reg  [31:0] instruction_o_r;
-  reg  [31:0] pc_o_r;
-  reg  [31:0] src1_o_r;
-  reg  [31:0] src2_o_r;
-  reg  [4 :0] rd_o_r;
-  reg  [1 :0] csr_rd_o_r;
-  reg  [31:0] imm_o_r;
-  reg  [1 :0] pcOp_o_r;
-  reg  [4 :0] aluOp_o_r;
-  reg  [1 :0] wdOp_o_r;
-  reg         csrwdOp_o_r;
-  reg  [2 :0] BOp_o_r;
-  reg         ren_o_r;
-  reg         wen_o_r;
-  reg  [7 :0] wmask_o_r;
-  reg  [31:0] rmask_o_r;
-  reg         memory_read_signed_o_r;
-  reg         reg_write_en_o_r;
-  reg         csreg_write_en_o_r;
-  reg         ecall_o_r;
-  reg         ebreak_o_r;
-  reg  [31:0] pc_next_o_r;
+
 
   always @(posedge clk) begin
     if(rst) state <= IDLE;
@@ -133,61 +112,15 @@ module idu(
   assign instruction = buffer ? instruction_b : instruction_i;
   assign pc          = buffer ? pc_b : pc_i;
   
-
   always @(posedge clk) begin
     if(rst) begin
-      state                    <= 0;
-      instruction_o_r          <= 0;
-      pc_o_r                   <= 0;
       idu_send_valid_r         <= 0;
       idu_send_to_ifu_valid_r  <= 1;
-      src1_o_r                 <= 0;
-      src2_o_r                 <= 0;
-      rd_o_r                   <= 0;
-      csr_rd_o_r               <= 0;
-      imm_o_r                  <= 0;
-      pcOp_o_r                 <= 0;
-      aluOp_o_r                <= 0;
-      wdOp_o_r                 <= 0;
-      csrwdOp_o_r              <= 0;
-      BOp_o_r                  <= 0;
-      ren_o_r                  <= 0;
-      wen_o_r                  <= 0;
-      wmask_o_r                <= 0;
-      rmask_o_r                <= 0;
-      memory_read_signed_o_r   <= 0;
-      reg_write_en_o_r         <= 0;
-      csreg_write_en_o_r       <= 0;
-      ecall_o_r                <= 0;
-      ebreak_o_r               <= 0;
-      pc_next_o_r              <= 0;
     end else begin
       if(next_state == DECODE) begin
         if((idu_send_valid_r == 0) && !conflict) begin
           idu_send_valid_r        <= 1;
           idu_send_to_ifu_valid_r <= 1;
-          instruction_o_r         <= instruction;
-          pc_o_r                  <= pc;
-          src1_o_r                <= src1_i_r;
-          src2_o_r                <= src2_i_r;
-          rd_o_r                  <= rd;
-          csr_rd_o_r              <= csr_rd;
-          imm_o_r                 <= imm;
-          pcOp_o_r                <= pcOp;
-          aluOp_o_r               <= aluOp;
-          wdOp_o_r                <= wdOp;
-          csrwdOp_o_r             <= csrwdOp;
-          BOp_o_r                 <= BOp;
-          ren_o_r                 <= ren;
-          wen_o_r                 <= wen;
-          wmask_o_r               <= wmask;
-          rmask_o_r               <= rmask;
-          memory_read_signed_o_r  <= memory_read_signed;
-          reg_write_en_o_r        <= reg_write_en;
-          csreg_write_en_o_r      <= csreg_write_en;
-          ecall_o_r               <= ecall;
-          ebreak_o_r              <= ebreak;
-          pc_next_o_r             <= pc_next;
           if(buffer)
             buffer                <= 0;
         end
@@ -199,30 +132,41 @@ module idu(
       end
     end
   end
-  assign instruction_o          = instruction_o_r;
+
+  reg idu_to_exu_en;
+  always @(*) begin
+    if(next_state == DECODE && (idu_send_valid_r == 0) && !conflict) 
+      idu_to_exu_en = 1;
+    else
+      idu_to_exu_en = 0;
+  end
+
+  assign idu_send_valid           = idu_send_valid_r;
   assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
-  assign idu_send_valid         = idu_send_valid_r;
-  assign pc_o                   = pc_o_r;
-  assign src1_o                 = src1_o_r;
-  assign src2_o                 = src2_o_r;
-  assign rd_o                   = rd_o_r;
-  assign csr_rd_o               = csr_rd_o_r;
-  assign imm_o                  = imm_o_r;
-  assign pcOp_o                 = pcOp_o_r;
-  assign aluOp_o                = aluOp_o_r;
-  assign wdOp_o                 = wdOp_o_r;
-  assign csrwdOp_o              = csrwdOp_o_r;
-  assign BOp_o                  = BOp_o_r;
-  assign ren_o                  = ren_o_r;
-  assign wen_o                  = wen_o_r;
-  assign wmask_o                = wmask_o_r;
-  assign rmask_o                = rmask_o_r;
-  assign memory_read_signed_o   = memory_read_signed_o_r;
-  assign reg_write_en_o         = reg_write_en_o_r;
-  assign csreg_write_en_o       = csreg_write_en_o_r;
-  assign ecall_o                = ecall_o_r;
-  assign ebreak_o               = ebreak_o_r;
-  assign pc_next_o              = pc_next_o_r;
+
+  Reg #(32, 32'h0) regd0 (clk, rst, instruction, instruction_o, idu_to_exu_en);
+  Reg #(32, 32'h0) regd1 (clk, rst, pc,          pc_o         , idu_to_exu_en);
+  Reg #(32, 32'h0) regd2 (clk, rst, src1_i_r,    src1_o       , idu_to_exu_en);
+  Reg #(32, 32'h0) regd3 (clk, rst, src2_i_r,    src2_o       , idu_to_exu_en);
+  Reg #(5,  5 'h0) regd4 (clk, rst, rd,          rd_o         , idu_to_exu_en);
+  Reg #(2,  2 'h0) regd5 (clk, rst, csr_rd,      csr_rd_o     , idu_to_exu_en);
+  Reg #(32, 32'h0) regd6 (clk, rst, imm,         imm_o        , idu_to_exu_en);
+  Reg #(2,  2 'h0) regd7 (clk, rst, pcOp,        pcOp_o       , idu_to_exu_en);
+  Reg #(5,  5 'h0) regd8 (clk, rst, aluOp,       aluOp_o      , idu_to_exu_en);
+  Reg #(2,  2 'h0) regd9 (clk, rst, wdOp,        wdOp_o       , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd10(clk, rst, csrwdOp,     csrwdOp_o    , idu_to_exu_en);
+  Reg #(3,  3 'h0) regd11(clk, rst, BOp,         BOp_o        , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd12(clk, rst, ren,         ren_o        , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd13(clk, rst, wen,         wen_o        , idu_to_exu_en);
+  Reg #(8,  8 'h0) regd14(clk, rst, wmask,       wmask_o      , idu_to_exu_en);
+  Reg #(32, 32'h0) regd15(clk, rst, rmask,       rmask_o      , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd16(clk, rst, m_signed,    m_signed_o   , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd17(clk, rst, reg_en,      reg_en_o     , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd18(clk, rst, csreg_en,    csreg_en_o   , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd19(clk, rst, ecall,       ecall_o      , idu_to_exu_en);
+  Reg #(1,  1 'h0) regd20(clk, rst, ebreak,      ebreak_o     , idu_to_exu_en);
+  Reg #(32, 32'h0) regd21(clk, rst, pc_next,     pc_next_o    , idu_to_exu_en);
+
 
   wire  [2: 0]  instruction_type;
   wire  [31:0]  immI, immU, immS, immJ, immB, immV;
@@ -241,9 +185,9 @@ module idu(
   wire          wen;
   wire  [7 :0]  wmask;
   wire  [31:0]  rmask;
-  wire          memory_read_signed;
-  wire          reg_write_en;
-  wire          csreg_write_en;
+  wire          m_signed;
+  wire          reg_en;
+  wire          csreg_en;
   wire          ecall;
   wire          ebreak;
   wire  [31:0]  pc_next;
@@ -429,26 +373,26 @@ module idu(
   });
   assign wdOp = (instruction[6:0] == 7'b1110011) ? wdOpB : wdOpA;  
 
-  // reg_write_en
-  wire reg_write_enA;
-  wire reg_write_enB;
-  MuxKeyWithDefault #(2, 3, 1) idu_i10 (reg_write_enA, instruction_type, 1'b1, {
+  // reg_en
+  wire reg_enA;
+  wire reg_enB;
+  MuxKeyWithDefault #(2, 3, 1) idu_i10 (reg_enA, instruction_type, 1'b1, {
     `YSYX_23060059_TYPE_S, 1'b0,
     `YSYX_23060059_TYPE_B, 1'b0
   });
-  MuxKeyWithDefault #(2, 10, 1) idu_i24 (reg_write_enB, {instruction[14:12], instruction[6:0]}, 1'b0, {
+  MuxKeyWithDefault #(2, 10, 1) idu_i24 (reg_enB, {instruction[14:12], instruction[6:0]}, 1'b0, {
     10'b0101110011, 1'b1,
     10'b0011110011, 1'b1
   }); 
-  assign reg_write_en = (instruction[6:0] == 7'b1110011) ? reg_write_enB : reg_write_enA;
+  assign reg_en = (instruction[6:0] == 7'b1110011) ? reg_enB : reg_enA;
 
-  wire csreg_write_enA;
-  // csreg_write_enA
-  MuxKeyWithDefault #(2, 10, 1) idu_i22(csreg_write_enA, {instruction[14:12], instruction[6:0]}, 1'b0, {
+  wire csreg_enA;
+  // csreg_enA
+  MuxKeyWithDefault #(2, 10, 1) idu_i22(csreg_enA, {instruction[14:12], instruction[6:0]}, 1'b0, {
     10'b0101110011, 1'b1,
     10'b0011110011, 1'b1
   });
-  assign csreg_write_en = csreg_write_enA | ecall; // csrrs | csrrw | ecall 
+  assign csreg_en = csreg_enA | ecall; // csrrs | csrrw | ecall 
 
   assign csrwdOp = ecall; // ecall : 1, csrwd choose pc, else choose exu_result;
 
@@ -473,8 +417,8 @@ module idu(
     3'b010, 32'hffffffff
   });
 
-  // memory_read_signed 
-  MuxKeyWithDefault #(2, 3, 1) idu_i23(memory_read_signed, instruction[14:12], 1'b0, {
+  // m_signed 
+  MuxKeyWithDefault #(2, 3, 1) idu_i23(m_signed, instruction[14:12], 1'b0, {
     3'b000, 1'b1,
     3'b001, 1'b1
   });

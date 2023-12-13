@@ -3,83 +3,59 @@ module exu(
   input   wire           rst,
   input   wire           exu_receive_valid,
   input   wire           exu_receive_ready,
-  input   wire   [31:0]  src1_input,
-  input   wire   [31:0]  src2_input,
-  input   wire   [31:0]  rsb_input,
-  input   wire   [4 :0]  aluOp_input,
-  input   wire   [31:0]  imm_input,
-  input   wire   [1 :0]  pcOp_input,
-  input   wire   [1 :0]  wdOp_input,
-  input   wire           csrwdOp_input,
-  input   wire   [2 :0]  BOp_input,
-  input   wire           ren_input,
-  input   wire           wen_input,
-  input   wire   [7 :0]  wmask_input,
-  input   wire   [31:0]  rmask_input,
-  input   wire           memory_read_signed_input,
-  input   wire           reg_write_en_input,
-  input   wire           csreg_write_en_input,
-  input   wire           ecall_input,
-  input   wire           ebreak_input,
-  input   wire   [31:0]  pc_input,
-  input   wire   [31:0]  pc_next_input,
-  input   wire   [31:0]  instruction_input,
-  input   wire   [4 :0]  rd_input,
-  input   wire   [1 :0]  csr_rd_input,
-  output  wire   [31:0]  alu_result,
-  output  wire           zero,
-  output  wire   [31:0]  src1,
-  output  wire   [31:0]  src2,
-  output  wire   [31:0]  imm,
-  output  wire   [1 :0]  pcOp,
-  output  wire   [1 :0]  wdOp,
-  output  wire           csrwdOp,
-  output  wire   [2 :0]  BOp,
-  output  wire           ren,
-  output  wire           wen,
-  output  wire   [7 :0]  wmask,
-  output  wire   [31:0]  rmask,
-  output  wire           memory_read_signed,
-  output  wire           reg_write_en,
-  output  wire           csreg_write_en,
-  output  wire           ecall,
-  output  wire           ebreak,
-  output  wire   [31:0]  pc,
-  output  wire   [31:0]  pc_next,
-  output  wire   [31:0]  instruction,
-  output  wire   [31:0]  rsb,
-  output  wire   [4 :0]  rd,
-  output  wire   [1 :0]  csr_rd, 
+  input   wire   [31:0]  src1_i,
+  input   wire   [31:0]  src2_i,
+  input   wire   [31:0]  rsb_i,
+  input   wire   [4 :0]  aluOp_i,
+  input   wire   [31:0]  imm_i,
+  input   wire   [1 :0]  pcOp_i,
+  input   wire   [1 :0]  wdOp_i,
+  input   wire           csrwdOp_i,
+  input   wire   [2 :0]  BOp_i,
+  input   wire           ren_i,
+  input   wire           wen_i,
+  input   wire   [7 :0]  wmask_i,
+  input   wire   [31:0]  rmask_i,
+  input   wire           m_signed_i,
+  input   wire           reg_en_i,
+  input   wire           csreg_en_i,
+  input   wire           ecall_i,
+  input   wire           ebreak_i,
+  input   wire   [31:0]  pc_i,
+  input   wire   [31:0]  pc_next_i,
+  input   wire   [31:0]  instruction_i,
+  input   wire   [4 :0]  rd_i,
+  input   wire   [1 :0]  csr_rd_i,
+  output  wire   [31:0]  exu_result_o,
+  output  wire           zero_o,
+  output  wire   [31:0]  src1_o,
+  output  wire   [31:0]  src2_o,
+  output  wire   [31:0]  imm_o,
+  output  wire   [1 :0]  pcOp_o,
+  output  wire   [1 :0]  wdOp_o,
+  output  wire           csrwdOp_o,
+  output  wire   [2 :0]  BOp_o,
+  output  wire           ren_o,
+  output  wire           wen_o,
+  output  wire   [7 :0]  wmask_o,
+  output  wire   [31:0]  rmask_o,
+  output  wire           m_signed_o,
+  output  wire           reg_en_o,
+  output  wire           csreg_en_o,
+  output  wire           ecall_o,
+  output  wire           ebreak_o,
+  output  wire   [31:0]  pc_o,
+  output  wire   [31:0]  pc_next_o,
+  output  wire   [31:0]  instruction_o,
+  output  wire   [31:0]  rsb_o,
+  output  wire   [4 :0]  rd_o,
+  output  wire   [1 :0]  csr_rd_o, 
   output  wire           exu_send_valid,
   output  wire           exu_send_ready,
   output  wire   [3 :0]  exu_state_o
 );
 
   reg          state, next_state;
-  reg          wait_for_exu_result;
-  reg  [31:0]  src1_r;
-  reg  [31:0]  src2_r;
-  reg  [4: 0]  aluOp_r;
-  reg  [31:0]  imm_r;
-  reg  [1 :0]  pcOp_r;
-  reg  [1 :0]  wdOp_r;
-  reg          csrwdOp_r;
-  reg  [2 :0]  BOp_r;
-  reg          ren_r;
-  reg          wen_r;
-  reg  [7 :0]  wmask_r;
-  reg  [31:0]  rmask_r;
-  reg          memory_read_signed_r;
-  reg          reg_write_en_r;
-  reg          csreg_write_en_r;
-  reg          ecall_r;
-  reg          ebreak_r;
-  reg  [31:0]  pc_r;
-  reg  [31:0]  pc_next_r;
-  reg  [31:0]  instruction_r;
-  reg  [31:0]  rsb_r;
-  reg  [4 :0]  rd_r;
-  reg  [1 :0]  csr_rd_r; 
   reg          exu_send_valid_r;
   parameter    IDLE = 0, COMPUTE = 1;
 
@@ -103,201 +79,148 @@ module exu(
     endcase
   end
 
-  reg  [31:0]  src1_b;
-  reg  [31:0]  src2_b;
-  reg  [4 :0]  aluOp_b;
-  reg  [31:0]  imm_b;
-  reg  [1 :0]  pcOp_b;
-  reg  [1 :0]  wdOp_b;
-  reg          csrwdOp_b;
-  reg  [2 :0]  BOp_b;
-  reg          ren_b;
-  reg          wen_b;
-  reg  [7 :0]  wmask_b;
-  reg  [31:0]  rmask_b;
-  reg          memory_read_signed_b;
-  reg          reg_write_en_b;
-  reg          csreg_write_en_b;
-  reg          ecall_b;
-  reg          ebreak_b;
-  reg  [31:0]  pc_b;
-  reg  [31:0]  pc_next_b;
-  reg  [31:0]  instruction_b;
-  reg  [31:0]  rsb_b;
-  reg  [4 :0]  rd_b;
-  reg  [1 :0]  csr_rd_b;
-  reg          buffer; 
+  wire  [31:0]  src1_b;
+  wire  [31:0]  src2_b;
+  wire  [4 :0]  aluOp_b;
+  wire  [31:0]  imm_b;
+  wire  [1 :0]  pcOp_b;
+  wire  [1 :0]  wdOp_b;
+  wire          csrwdOp_b;
+  wire  [2 :0]  BOp_b;
+  wire          ren_b;
+  wire          wen_b;
+  wire  [7 :0]  wmask_b;
+  wire  [31:0]  rmask_b;
+  wire          m_signed_b;
+  wire          reg_en_b;
+  wire          csreg_en_b;
+  wire          ecall_b;
+  wire          ebreak_b;
+  wire  [31:0]  pc_b;
+  wire  [31:0]  pc_next_b;
+  wire  [31:0]  instruction_b;
+  wire  [31:0]  rsb_b;
+  wire  [4 :0]  rd_b;
+  wire  [1 :0]  csr_rd_b;
 
-  always @(posedge clk) begin
-    if(rst) begin
-      src1_b                 <= 0;
-      src2_b                 <= 0;
-      aluOp_b                <= 0;
-      imm_b                  <= 0;
-      pcOp_b                 <= 0;
-      wdOp_b                 <= 0;
-      csrwdOp_b              <= 0;
-      BOp_b                  <= 0;
-      ren_b                  <= 0;
-      wen_b                  <= 0;
-      wmask_b                <= 0;
-      rmask_b                <= 0;
-      memory_read_signed_b   <= 0;
-      reg_write_en_b         <= 0;
-      csreg_write_en_b       <= 0;
-      ecall_b                <= 0;
-      ebreak_b               <= 0;
-      pc_b                   <= 0;
-      pc_next_b              <= 0;
-      instruction_b          <= 0;
-      rsb_b                  <= 0;
-      rd_b                   <= 0;
-      csr_rd_b               <= 0;
-      // control buffer reg 
-      buffer                 <= 0;
-    end else begin
-        if(buffer == 0) begin
-          if(exu_receive_valid && exu_send_valid) begin
-            src1_b               <= src1_input;
-            src2_b               <= src2_input;
-            aluOp_b              <= aluOp_input;
-            imm_b                <= imm_input;
-            pcOp_b               <= pcOp_input;
-            wdOp_b               <= wdOp_input;
-            csrwdOp_b            <= csrwdOp_input;
-            BOp_b                <= BOp_input;
-            ren_b                <= ren_input;
-            wen_b                <= wen_input;
-            wmask_b              <= wmask_input;
-            rmask_b              <= rmask_input;
-            memory_read_signed_b <= memory_read_signed_input;
-            reg_write_en_b       <= reg_write_en_input;
-            csreg_write_en_b     <= csreg_write_en_input;
-            ecall_b              <= ecall_input;
-            ebreak_b             <= ebreak_input;
-            pc_b                 <= pc_input;
-            pc_next_b            <= pc_next_input;
-            instruction_b        <= instruction_input;
-            rsb_b                <= rsb_input;
-            rd_b                 <= rd_input;
-            csr_rd_b             <= csr_rd_input;
-            buffer               <= 1;
-          end 
-      end
-    end
-  end 
+  Reg #(32, 32'h0) regd0 (clk, rst, src1_i,        src1_b,       buffer_en);
+  Reg #(32, 32'h0) regd1 (clk, rst, src2_i,        src2_b,       buffer_en);
+  Reg #(5,  5 'h0) regd2 (clk, rst, aluOp_i,       aluOp_b,      buffer_en);
+  Reg #(32, 32'h0) regd3 (clk, rst, imm_i,         imm_b,        buffer_en);
+  Reg #(2,  2 'h0) regd4 (clk, rst, pcOp_i,        pcOp_b,       buffer_en);
+  Reg #(2,  2 'h0) regd5 (clk, rst, wdOp_i,        wdOp_b,       buffer_en);
+  Reg #(1,  1 'h0) regd6 (clk, rst, csrwdOp_i,     csrwdOp_b,    buffer_en);
+  Reg #(3,  3 'h0) regd7 (clk, rst, BOp_i,         BOp_b,        buffer_en);
+  Reg #(1,  1 'h0) regd8 (clk, rst, ren_i,         ren_b,        buffer_en);
+  Reg #(1,  1 'h0) regd9 (clk, rst, wen_i,         wen_b,        buffer_en);
+  Reg #(8,  8 'h0) regd10(clk, rst, wmask_i,       wmask_b,      buffer_en);
+  Reg #(32, 32'h0) regd11(clk, rst, rmask_i,       rmask_b,      buffer_en);
+  Reg #(1,  1 'h0) regd12(clk, rst, m_signed_i,    m_signed_b,   buffer_en);
+  Reg #(1,  1 'h0) regd13(clk, rst, reg_en_i,      reg_en_b,     buffer_en);
+  Reg #(1,  1 'h0) regd14(clk, rst, csreg_en_i,    csreg_en_b,   buffer_en);
+  Reg #(1,  1 'h0) regd15(clk, rst, ecall_i,       ecall_b,      buffer_en);
+  Reg #(1,  1 'h0) regd16(clk, rst, ebreak_i,      ebreak_b,     buffer_en);
+  Reg #(32, 32'h0) regd17(clk, rst, pc_i,          pc_b,         buffer_en);
+  Reg #(32, 32'h0) regd18(clk, rst, pc_next_i,     pc_next_b,    buffer_en);
+  Reg #(32, 32'h0) regd19(clk, rst, instruction_i, instruction_b,buffer_en);
+  Reg #(32, 32'h0) regd20(clk, rst, rsb_i,         rsb_b,        buffer_en);
+  Reg #(5,  5 'h0) regd21(clk, rst, rd_i,          rd_b,         buffer_en);
+  Reg #(2,  2 'h0) regd22(clk, rst, csr_rd_i,      csr_rd_b,     buffer_en);
 
+  reg  buffer;
   always @(posedge clk) begin
-    if(rst) begin
-      src1_r                <= 0;
-      src2_r                <= 0;
-      aluOp_r               <= 0;
-      imm_r                 <= 0;
-      pcOp_r                <= 0;
-      wdOp_r                <= 0;
-      csrwdOp_r             <= 0;
-      BOp_r                 <= 0;
-      ren_r                 <= 0;
-      wen_r                 <= 0;
-      wmask_r               <= 0;
-      rmask_r               <= 0;
-      pc_r                  <= 0;
-      pc_next_r             <= 0;
-      rd_r                  <= 0;
-      csr_rd_r              <= 0;
-      rsb_r                 <= 0;
-      memory_read_signed_r  <= 0;
-      reg_write_en_r        <= 0;
-      csreg_write_en_r      <= 0;
-      ecall_r               <= 0;
-      ebreak_r              <= 0;
-      exu_send_valid_r      <= 0;
-      instruction_r         <= 0;
-    end else begin
-      if(next_state == COMPUTE) begin
-        if(exu_send_valid_r == 0) begin
-          exu_send_valid_r     <= 1;
-          src1_r               <= src1_i_w;
-          src2_r               <= src2_i_w;
-          aluOp_r              <= aluOp_i_w;
-          imm_r                <= imm_i_w;
-          pcOp_r               <= pcOp_i_w;
-          wdOp_r               <= wdOp_i_w;
-          csrwdOp_r            <= csrwdOp_i_w;
-          BOp_r                <= BOp_i_w;
-          ren_r                <= ren_i_w;
-          wen_r                <= wen_i_w;
-          wmask_r              <= wmask_i_w;
-          rmask_r              <= rmask_i_w;
-          memory_read_signed_r <= memory_read_signed_i_w;
-          reg_write_en_r       <= reg_write_en_i_w;
-          csreg_write_en_r     <= csreg_write_en_i_w;
-          ecall_r              <= ecall_i_w;
-          ebreak_r             <= ebreak_i_w;
-          pc_r                 <= pc_i_w;
-          pc_next_r            <= pc_next_i_w;
-          rd_r                 <= rd_i_w;
-          csr_rd_r             <= csr_rd_i_w;
-          rsb_r                <= rsb_i_w;
-          instruction_r        <= instruction_i_w;
-          if(buffer)
-            buffer             <= 0;
-        end
-      end else begin
-        if(exu_send_valid_r == 1) exu_send_valid_r <= 0;
-      end
+    if(rst) buffer <= 0;
+    else begin
+      if(buffer == 0)
+        if(exu_receive_valid && exu_send_valid)
+          buffer <= 1;
     end
   end
 
-  assign src1               = src1_r;
-  assign src2               = src2_r;
-  assign imm                = imm_r;
-  assign pcOp               = pcOp_r;
-  assign wdOp               = wdOp_r;
-  assign csrwdOp            = csrwdOp_r;
-  assign BOp                = BOp_r;
-  assign ren                = ren_r;
-  assign wen                = wen_r;
-  assign wmask              = wmask_r;
-  assign rmask              = rmask_r;
-  assign memory_read_signed = memory_read_signed_r;
-  assign reg_write_en       = reg_write_en_r;
-  assign csreg_write_en     = csreg_write_en_r;
-  assign ecall              = ecall_r;
-  assign pc                 = pc_r;
-  assign pc_next            = pc_next_r;
-  assign instruction        = instruction_r;
-  assign rsb                = rsb_r;
-  assign rd                 = rd_r;
-  assign csr_rd             = csr_rd_r;
-  assign exu_send_valid     = exu_send_valid_r;
-  assign ebreak             = ebreak_r;
+  reg  buffer_en;
+  always @(*) begin
+    if(buffer == 0 && exu_receive_valid && exu_send_valid)
+      buffer_en = 1;
+    else
+      buffer_en = 0;
+  end
+
+  reg  exu_to_lsu_en;
+  wire [4 :0] aluOp_w;
+  always @(*) begin
+    if(next_state == COMPUTE && exu_send_valid_r == 0)
+      exu_to_lsu_en = 1;
+    else 
+      exu_to_lsu_en = 0;
+  end
+
+  Reg #(32, 32'h0) regd23 (clk, rst,  src1_i_w,        src1_o,       exu_to_lsu_en);
+  Reg #(32, 32'h0) regd24 (clk, rst,  src2_i_w,        src2_o,       exu_to_lsu_en);
+  Reg #(5,  5 'h0) regd25 (clk, rst,  aluOp_i_w,       aluOp_w,      exu_to_lsu_en);
+  Reg #(32, 32'h0) regd26 (clk, rst,  imm_i_w,         imm_o,        exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd27 (clk, rst,  pcOp_i_w,        pcOp_o,       exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd28 (clk, rst,  wdOp_i_w,        wdOp_o,       exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd29 (clk, rst,  csrwdOp_i_w,     csrwdOp_o,    exu_to_lsu_en);
+  Reg #(3,  3 'h0) regd30 (clk, rst,  BOp_i_w,         BOp_o,        exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd31 (clk, rst,  ren_i_w,         ren_o,        exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd32 (clk, rst,  wen_i_w,         wen_o,        exu_to_lsu_en);
+  Reg #(8,  8 'h0) regd33 (clk, rst,  wmask_i_w,       wmask_o,      exu_to_lsu_en);
+  Reg #(32, 32'h0) regd34 (clk, rst,  rmask_i_w,       rmask_o,      exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd35 (clk, rst,  m_signed_i_w,    m_signed_o,   exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd36 (clk, rst,  reg_en_i_w,      reg_en_o,     exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd37 (clk, rst,  csreg_en_i_w,    csreg_en_o,   exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd38 (clk, rst,  ecall_i_w,       ecall_o,      exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd39 (clk, rst,  ebreak_i_w,      ebreak_o,     exu_to_lsu_en);
+  Reg #(32, 32'h0) regd40 (clk, rst,  pc_i_w,          pc_o,         exu_to_lsu_en);
+  Reg #(32, 32'h0) regd41 (clk, rst,  pc_next_i_w,     pc_next_o,    exu_to_lsu_en);
+  Reg #(32, 32'h0) regd42 (clk, rst,  instruction_i_w, instruction_o,exu_to_lsu_en);
+  Reg #(32, 32'h0) regd43 (clk, rst,  rsb_i_w,         rsb_o,        exu_to_lsu_en);
+  Reg #(5,  5 'h0) regd44 (clk, rst,  rd_i_w,          rd_o,         exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd45( clk, rst,  csr_rd_i_w,      csr_rd_o,     exu_to_lsu_en);
+
+  always @(posedge clk) begin
+    if(rst) begin
+
+    end else begin
+      if(next_state == COMPUTE) begin
+        if(exu_send_valid_r == 0) begin
+          exu_send_valid_r <= 1;
+          if(buffer) 
+            buffer         <= 0;
+        end
+      end else begin
+        if(exu_send_valid_r) exu_send_valid_r <= 0;
+      end
+    end
+  end
+  assign exu_send_valid = exu_send_valid_r;
+
 
   wire [31:0] result_arr [17:0];
   wire zero_arr [17:0];
   // IMM 
-  assign result_arr[0] = src2;
+  assign result_arr[0] = src2_o;
   assign zero_arr[0] = 0;
   // ADD
-  assign result_arr[1] = src1 + src2;
+  assign result_arr[1] = src1_o + src2_o;
   assign zero_arr[1] = result_arr[1] == 0;
   // SUB
-  assign result_arr[2] = src1 - src2;
+  assign result_arr[2] = src1_o - src2_o;
   assign zero_arr[2] = result_arr[2] == 0;
   // AND
-  assign result_arr[3] = src1 & src2;
+  assign result_arr[3] = src1_o & src2_o;
   assign zero_arr[3] = 0;
   // XOR
-  assign result_arr[4] = src1 ^ src2;
+  assign result_arr[4] = src1_o ^ src2_o;
   assign zero_arr[4] = 0;
   // OR
-  assign result_arr[5] = src1 | src2;
+  assign result_arr[5] = src1_o | src2_o;
   assign zero_arr[5] = 0;
   // SL
-  assign result_arr[6] = src1 << (src2 & 32'h1F);
+  assign result_arr[6] = src1_o << (src2_o & 32'h1F);
   assign zero_arr[6] = 0;
   // SR 
-  assign result_arr[7] = src1 >> (src2 & 32'h1F);
+  assign result_arr[7] = src1_o >> (src2_o & 32'h1F);
   assign zero_arr[7] = 0;
 
   // // DIV
@@ -305,16 +228,16 @@ module exu(
   assign zero_arr[8] = 0;
 
   // SSR 
-  assign result_arr[9] = $signed(src1) >>> (src2 & 32'h1F);
+  assign result_arr[9] = $signed(src1_o) >>> (src2_o & 32'h1F);
   assign zero_arr[9] = 0;
 
   // SLES
-  assign result_arr[10] = {31'h0, $signed(src1) < $signed(src2) };
+  assign result_arr[10] = {31'h0, $signed(src1_o) < $signed(src2_o) };
   assign zero_arr[10] = 0;
 
   // ULES
   wire [32:0] ules_temp;
-  assign ules_temp = {1'b0, src1} - {1'b0, src2};
+  assign ules_temp = {1'b0, src1_o} - {1'b0, src2_o};
   assign result_arr[11] = {31'h0, ules_temp[32]};
   assign zero_arr[11] = 0;
 
@@ -336,7 +259,7 @@ module exu(
   assign zero_arr[15] = 0;
 
   // SRC
-  assign result_arr[16] = src1;
+  assign result_arr[16] = src1_o;
   assign zero_arr[16] = 0;
 
   // MULHU
@@ -344,7 +267,7 @@ module exu(
   assign zero_arr[17] = 0;
 
 
-  MuxKeyWithDefault #(18, 5, 32) exu_m0 (alu_result, aluOp_r, 32'b0, {
+  MuxKeyWithDefault #(18, 5, 32) exu_m0 (exu_result_o, aluOp_w, 32'b0, {
     `YSYX_23060059_IMM,  result_arr[0],
     `YSYX_23060059_ADD,  result_arr[1],
     `YSYX_23060059_SUB,  result_arr[2],
@@ -365,7 +288,7 @@ module exu(
     `YSYS_23060059_MULHU,  result_arr[17]
   });
 
-  MuxKeyWithDefault #(18, 5, 1) exu_m1 (zero, aluOp_r, 0, {
+  MuxKeyWithDefault #(18, 5, 1) exu_m1 (zero_o, aluOp_w, 0, {
     `YSYX_23060059_IMM,  zero_arr[0],
     `YSYX_23060059_ADD,  zero_arr[1],
     `YSYX_23060059_SUB,  zero_arr[2],
@@ -390,7 +313,7 @@ module exu(
   // 第2bit指示next state
   // 第3bit代表处于exu的指令是否要写通用寄存器
   // 第4bit代表处于exu的指令是否要写csr寄存器
-  assign exu_state_o = {csreg_write_en_i_w, reg_write_en_i_w, next_state, state};
+  assign exu_state_o = {csreg_en_i_w, reg_en_i_w, next_state, state};
 
   wire  [31:0]  src1_i_w;
   wire  [31:0]  src2_i_w;
@@ -404,9 +327,9 @@ module exu(
   wire          wen_i_w;
   wire  [7 :0]  wmask_i_w;
   wire  [31:0]  rmask_i_w;
-  wire          memory_read_signed_i_w;
-  wire          reg_write_en_i_w;
-  wire          csreg_write_en_i_w;
+  wire          m_signed_i_w;
+  wire          reg_en_i_w;
+  wire          csreg_en_i_w;
   wire          ecall_i_w;
   wire          ebreak_i_w;
   wire  [31:0]  pc_i_w;
@@ -416,30 +339,30 @@ module exu(
   wire  [4 :0]  rd_i_w;
   wire  [1 :0]  csr_rd_i_w;
 
-  assign exu_send_ready = !buffer;
-  assign src1_i_w    = buffer ? src1_b : src1_input;
-  assign src2_i_w    = buffer ? src2_b : src2_input;
-  assign aluOp_i_w   = buffer ? aluOp_b: aluOp_input;
-  assign imm_i_w     = buffer ? imm_b  : imm_input;
-  assign pcOp_i_w    = buffer ? pcOp_b : pcOp_input;
-  assign wdOp_i_w    = buffer ? wdOp_b : wdOp_input;
-  assign csrwdOp_i_w = buffer ? csrwdOp_b : csrwdOp_input;  
-  assign BOp_i_w     = buffer ? BOp_b  : BOp_input;
-  assign ren_i_w     = buffer ? ren_b  : ren_input;
-  assign wen_i_w     = buffer ? wen_b  : wen_input;
-  assign wmask_i_w   = buffer ? wmask_b : wmask_input;
-  assign rmask_i_w   = buffer ? rmask_b : rmask_input;
-  assign memory_read_signed_i_w = buffer ? memory_read_signed_b : memory_read_signed_input;
-  assign csreg_write_en_i_w = buffer ? csreg_write_en_b : csreg_write_en_input;
-  assign reg_write_en_i_w = buffer ? reg_write_en_b : reg_write_en_input;
-  assign ecall_i_w   = buffer ? ecall_b : ecall_input;
-  assign ebreak_i_w  = buffer ? ebreak_b : ebreak_input;
-  assign pc_i_w      = buffer ? pc_b : pc_input;
-  assign pc_next_i_w = buffer ? pc_next_b : pc_next_input;
-  assign instruction_i_w = buffer ? instruction_b : instruction_input;
-  assign rsb_i_w     = buffer ? rsb_b : rsb_input;
-  assign rd_i_w      = buffer ? rd_b  : rd_input;
-  assign csr_rd_i_w  = buffer ? csr_rd_b : csr_rd_input;
+  assign exu_send_ready  = !buffer;
+  assign src1_i_w        = buffer ? src1_b        : src1_i;
+  assign src2_i_w        = buffer ? src2_b        : src2_i;
+  assign aluOp_i_w       = buffer ? aluOp_b       : aluOp_i;
+  assign imm_i_w         = buffer ? imm_b         : imm_i;
+  assign pcOp_i_w        = buffer ? pcOp_b        : pcOp_i;
+  assign wdOp_i_w        = buffer ? wdOp_b        : wdOp_i;
+  assign csrwdOp_i_w     = buffer ? csrwdOp_b     : csrwdOp_i;  
+  assign BOp_i_w         = buffer ? BOp_b         : BOp_i;
+  assign ren_i_w         = buffer ? ren_b         : ren_i;
+  assign wen_i_w         = buffer ? wen_b         : wen_i;
+  assign wmask_i_w       = buffer ? wmask_b       : wmask_i;
+  assign rmask_i_w       = buffer ? rmask_b       : rmask_i;
+  assign m_signed_i_w    = buffer ? m_signed_b    : m_signed_i;
+  assign csreg_en_i_w    = buffer ? csreg_en_b    : csreg_en_i;
+  assign reg_en_i_w      = buffer ? reg_en_b      : reg_en_i;
+  assign ecall_i_w       = buffer ? ecall_b       : ecall_i;
+  assign ebreak_i_w      = buffer ? ebreak_b      : ebreak_i;
+  assign pc_i_w          = buffer ? pc_b          : pc_i;
+  assign pc_next_i_w     = buffer ? pc_next_b     : pc_next_i;
+  assign instruction_i_w = buffer ? instruction_b : instruction_i;
+  assign rsb_i_w         = buffer ? rsb_b         : rsb_i;
+  assign rd_i_w          = buffer ? rd_b          : rd_i;
+  assign csr_rd_i_w      = buffer ? csr_rd_b      : csr_rd_i;
 
 
 

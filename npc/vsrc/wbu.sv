@@ -10,8 +10,8 @@ module wbu(
     input   [31:0]  wd,
     input   [31:0]  csr_wd, 
     input           ebreak_i,
-    input           reg_write_en,
-    input           csreg_write_en,
+    input           reg_en,
+    input           csreg_en,
     input           ecall,
     input   [31:0]  pc_input,
     input   [31:0]  pc_next_input,
@@ -104,17 +104,17 @@ module wbu(
 
   generate
     for(i = 1; i < 32; i = i+1) begin
-      assign w_regarray_subsequent[i] = (reg_write_en == 1) ? ((rd == i) ? wd : w_regarray_previous[i]) : w_regarray_previous[i];
+      assign w_regarray_subsequent[i] = (reg_en == 1) ? ((rd == i) ? wd : w_regarray_previous[i]) : w_regarray_previous[i];
     end
   endgenerate
 
   generate
     for(i = 1; i < 4; i = i+1) begin
-      assign w_csrarray_subsequent[i] = (csreg_write_en == 1) ? ((csr_rd == i) ? csr_wd : w_csrarray_previous[i]) : w_csrarray_previous[i];
+      assign w_csrarray_subsequent[i] = (csreg_en == 1) ? ((csr_rd == i) ? csr_wd : w_csrarray_previous[i]) : w_csrarray_previous[i];
     end
   endgenerate
 
-  assign w_csrarray_subsequent[0] = (ecall == 1) ? (w_regarray_previous[15]) : ((csreg_write_en == 1) ? ((csr_rd == 0) ? csr_wd : w_csrarray_previous[0]) : w_csrarray_previous[0]);
+  assign w_csrarray_subsequent[0] = (ecall == 1) ? (w_regarray_previous[15]) : ((csreg_en == 1) ? ((csr_rd == 0) ? csr_wd : w_csrarray_previous[0]) : w_csrarray_previous[0]);
 
   assign w_regarray_subsequent[0] = 32'b0;
 
@@ -127,7 +127,7 @@ module wbu(
     if(!wbu_receive_valid) begin
       wbu_state_o_r = 0;
     end else 
-      wbu_state_o_r = {csreg_write_en, reg_write_en, 1'b1};
+      wbu_state_o_r = {csreg_en, reg_en, 1'b1};
   end 
   
   assign wbu_state_o = wbu_state_o_r;

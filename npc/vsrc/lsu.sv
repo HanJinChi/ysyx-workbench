@@ -4,7 +4,7 @@ module lsu (
   input    wire          lsu_receive_valid,
   input    wire          ren_input,
   input    wire          wen_input,
-  input    wire          memory_read_signed_input,
+  input    wire          m_signed_input,
   input    wire  [7 :0]  wmask_input,
   input    wire  [31:0]  rmask_input,
   input    wire  [31:0]  exu_result_input,
@@ -17,8 +17,8 @@ module lsu (
   input    wire          csrwdOp_input,
   input    wire  [4 :0]  rd_input,
   input    wire  [1 :0]  csr_rd_input,
-  input    wire          reg_write_en_input,
-  input    wire          csreg_write_en_input,
+  input    wire          reg_en_input,
+  input    wire          csreg_en_input,
   input    wire          ecall_input,
   input    wire          ebreak_input,
   input    wire          arready,
@@ -40,8 +40,8 @@ module lsu (
   output   wire  [31:0]  pc_next,
   output   wire  [1 :0]  csr_rd,
   output   wire  [1 :0]  csr_rd_lsu_to_idu,
-  output   wire          reg_write_en,
-  output   wire          csreg_write_en,
+  output   wire          reg_en,
+  output   wire          csreg_en,
   output   wire          ecall,
   output   wire          ebreak,
   output   wire  [31:0]  araddr,
@@ -102,7 +102,7 @@ module lsu (
     endcase
   end
 
-  reg          memory_read_signed;
+  reg          m_signed;
   reg  [31:0]  exu_result;
   reg  [31:0]  src2;
   reg  [31:0]  rsb;
@@ -119,8 +119,8 @@ module lsu (
   reg  [31:0]  instruction_r;
   reg  [31:0]  pc_next_r;
   reg  [1 :0]  csr_rd_r;
-  reg          reg_write_en_r;
-  reg          csreg_write_en_r;
+  reg          reg_en_r;
+  reg          csreg_en_r;
   reg          ecall_r;
   reg          ebreak_r;
   reg  [31:0]  araddr_r;
@@ -138,7 +138,7 @@ module lsu (
       state              <= 0;
       lsu_send_ready_r   <= 0;
       lsu_send_valid_r   <= 0;
-      memory_read_signed <= 0;
+      m_signed <= 0;
       exu_result         <= 0;
       rmask              <= 0;
       pc_r               <= 0;
@@ -147,8 +147,8 @@ module lsu (
       csrwdOp            <= 0;
       rd_r               <= 0;
       csr_rd_r           <= 0;
-      reg_write_en_r     <= 0;
-      csreg_write_en_r   <= 0;
+      reg_en_r     <= 0;
+      csreg_en_r   <= 0;
       ecall_r            <= 0;
       ebreak_r           <= 0;
       instruction_r      <= 0;
@@ -176,7 +176,7 @@ module lsu (
             pc_r                 <= pc_input;
             pc_next_r            <= pc_next_input;
             instruction_r        <= instruction_input;
-            memory_read_signed   <= memory_read_signed_input;
+            m_signed   <= m_signed_input;
             rmask                <= rmask_input;
             ecall_r              <= ecall_input;
             ebreak_r             <= ebreak_input;
@@ -186,8 +186,8 @@ module lsu (
             csrwdOp              <= csrwdOp_input;
             rd_r                 <= rd_input;
             csr_rd_r             <= csr_rd_input;
-            reg_write_en_r       <= reg_write_en_input;
-            csreg_write_en_r     <= csreg_write_en_input;
+            reg_en_r       <= reg_en_input;
+            csreg_en_r     <= csreg_en_input;
           end
           else
             lsu_send_ready_r <= 0;
@@ -207,8 +207,8 @@ module lsu (
             instruction_r       <= instruction_input;
             ecall_r             <= ecall_input;
             ebreak_r            <= ebreak_input;
-            reg_write_en_r      <= reg_write_en_input;
-            csreg_write_en_r    <= csreg_write_en_input;
+            reg_en_r      <= reg_en_input;
+            csreg_en_r    <= csreg_en_input;
           end
           else
             lsu_send_ready_r <= 0;
@@ -228,8 +228,8 @@ module lsu (
               instruction_r        <= instruction_input;
               ecall_r              <= ecall_input;
               ebreak_r             <= ebreak_input;
-              reg_write_en_r       <= reg_write_en_input;
-              csreg_write_en_r     <= csreg_write_en_input;
+              reg_en_r       <= reg_en_input;
+              csreg_en_r     <= csreg_en_input;
               src2                 <= src2_input;
               rsb                  <= rsb_input;
               wdOp                 <= wdOp_input;
@@ -251,8 +251,8 @@ module lsu (
   assign instruction    = instruction_r;
   assign pc_next        = pc_next_r;
   assign csr_rd         = csr_rd_r;
-  assign reg_write_en   = reg_write_en_r;
-  assign csreg_write_en = csreg_write_en_r;
+  assign reg_en   = reg_en_r;
+  assign csreg_en = csreg_en_r;
   assign ecall          = ecall_r;
   assign araddr         = araddr_r;
   assign arvalid        = arvalid_r;
@@ -276,8 +276,8 @@ module lsu (
   end 
  
   MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
-    32'h000000ff, memory_read_signed ? {{24{reg_read_data[7]}} , reg_read_data[7:0]}  : reg_read_data & rmask,
-    32'h0000ffff, memory_read_signed ? {{16{reg_read_data[15]}}, reg_read_data[15:0]} : reg_read_data & rmask,
+    32'h000000ff, m_signed ? {{24{reg_read_data[7]}} , reg_read_data[7:0]}  : reg_read_data & rmask,
+    32'h0000ffff, m_signed ? {{16{reg_read_data[15]}}, reg_read_data[15:0]} : reg_read_data & rmask,
     32'hffffffff, reg_read_data
   });
   // wd choose
