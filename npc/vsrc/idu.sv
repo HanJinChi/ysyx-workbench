@@ -17,7 +17,7 @@ module idu(
   input    wire  [31:0]  rsa,
   input    wire  [31:0]  rsb,
   input    wire  [31:0]  csra,
-  input    wire  [2 :0]  exu_state,
+  input    wire  [3 :0]  exu_state,
   input    wire  [31:0]  wd_exu,  // may be wd or csr_wd
   input    wire  [4 :0]  rd_lsu,
   input    wire  [1 :0]  csr_rd_lsu,
@@ -97,15 +97,12 @@ module idu(
   always@(*) begin
     case(state)
       IDLE:
-        if(idu_receive_valid)
+        if(idu_receive_valid || buffer)
           next_state = DECODE;
         else
           next_state = IDLE;
       DECODE:
         if(idu_send_valid && idu_receive_ready)
-          if(idu_receive_valid)
-            next_state = DECODE;
-          else
             next_state = IDLE;
         else
           next_state = DECODE;
@@ -123,20 +120,18 @@ module idu(
       pc_b           <=  0;
       buffer         <=  0;
     end else begin
-      if(next_state == DECODE) begin
-        if(buffer == 0) begin
-          if(idu_receive_valid && idu_send_valid) begin
-            instruction_b <= instruction_i;
-            pc_b          <= pc_i;
-            buffer        <= 1;
-          end
+      if(buffer == 0) begin
+        if(idu_receive_valid && idu_send_valid) begin
+          instruction_b <= instruction_i;
+          pc_b          <= pc_i;
+          buffer        <= 1;
         end
       end
     end
   end
   assign idu_send_ready = !buffer; // buffer长度为1时则不能再接受数据
-  assign instruction = idu_receive_valid ? instruction_i : (buffer ? instruction_b : instruction_i);
-  assign pc          = idu_receive_valid ? pc_i          : (buffer ? pc_b          : pc_i);
+  assign instruction = buffer ? instruction_b : instruction_i;
+  assign pc          = buffer ? pc_b : pc_i;
   
 
   always @(posedge clk) begin
@@ -168,67 +163,33 @@ module idu(
       pc_next_o_r              <= 0;
     end else begin
       if(next_state == DECODE) begin
-        if(buffer) begin
-          if(conflict) begin
-            assert(idu_send_valid_r == 1);
-            idu_send_valid_r         <= 0;
-            idu_send_to_ifu_valid_r  <= 0;
-          end else begin
-            if(idu_send_valid_r == 0) begin
-              idu_send_valid_r         <= 1;
-              idu_send_to_ifu_valid_r  <= 1;
-            end
-            instruction_o_r         <= instruction;
-            pc_o_r                  <= pc;
-            src1_o_r                <= src1_i_r;
-            src2_o_r                <= src2_i_r;
-            rd_o_r                  <= rd;
-            csr_rd_o_r              <= csr_rd;
-            imm_o_r                 <= imm;
-            pcOp_o_r                <= pcOp;
-            aluOp_o_r               <= aluOp;
-            wdOp_o_r                <= wdOp;
-            csrwdOp_o_r             <= csrwdOp;
-            BOp_o_r                 <= BOp;
-            ren_o_r                 <= ren;
-            wen_o_r                 <= wen;
-            wmask_o_r               <= wmask;
-            rmask_o_r               <= rmask;
-            memory_read_signed_o_r  <= memory_read_signed;
-            reg_write_en_o_r        <= reg_write_en;
-            csreg_write_en_o_r      <= csreg_write_en;
-            ecall_o_r               <= ecall;
-            ebreak_o_r              <= ebreak;
-            pc_next_o_r             <= pc_next;
-            buffer                  <= 0;
-          end
-        end else begin
-          if((idu_send_valid_r == 0) && !conflict) begin
-            idu_send_valid_r        <= 1;
-            idu_send_to_ifu_valid_r <= 1;
-            instruction_o_r         <= instruction;
-            pc_o_r                  <= pc;
-            src1_o_r                <= src1_i_r;
-            src2_o_r                <= src2_i_r;
-            rd_o_r                  <= rd;
-            csr_rd_o_r              <= csr_rd;
-            imm_o_r                 <= imm;
-            pcOp_o_r                <= pcOp;
-            aluOp_o_r               <= aluOp;
-            wdOp_o_r                <= wdOp;
-            csrwdOp_o_r             <= csrwdOp;
-            BOp_o_r                 <= BOp;
-            ren_o_r                 <= ren;
-            wen_o_r                 <= wen;
-            wmask_o_r               <= wmask;
-            rmask_o_r               <= rmask;
-            memory_read_signed_o_r  <= memory_read_signed;
-            reg_write_en_o_r        <= reg_write_en;
-            csreg_write_en_o_r      <= csreg_write_en;
-            ecall_o_r               <= ecall;
-            ebreak_o_r              <= ebreak;
-            pc_next_o_r             <= pc_next;
-          end
+        if((idu_send_valid_r == 0) && !conflict) begin
+          idu_send_valid_r        <= 1;
+          idu_send_to_ifu_valid_r <= 1;
+          instruction_o_r         <= instruction;
+          pc_o_r                  <= pc;
+          src1_o_r                <= src1_i_r;
+          src2_o_r                <= src2_i_r;
+          rd_o_r                  <= rd;
+          csr_rd_o_r              <= csr_rd;
+          imm_o_r                 <= imm;
+          pcOp_o_r                <= pcOp;
+          aluOp_o_r               <= aluOp;
+          wdOp_o_r                <= wdOp;
+          csrwdOp_o_r             <= csrwdOp;
+          BOp_o_r                 <= BOp;
+          ren_o_r                 <= ren;
+          wen_o_r                 <= wen;
+          wmask_o_r               <= wmask;
+          rmask_o_r               <= rmask;
+          memory_read_signed_o_r  <= memory_read_signed;
+          reg_write_en_o_r        <= reg_write_en;
+          csreg_write_en_o_r      <= csreg_write_en;
+          ecall_o_r               <= ecall;
+          ebreak_o_r              <= ebreak;
+          pc_next_o_r             <= pc_next;
+          if(buffer)
+            buffer                <= 0;
         end
       end else begin  // next_state == IDLE
         if(idu_send_valid_r) begin
@@ -532,7 +493,7 @@ module idu(
   reg  [31:0]   csra_i_a;
 
   always @(*) begin
-    if(exu_state[2] && (csr_rs == csr_rd_o)) begin
+    if(exu_state[0] && exu_state[3] && (csr_rs == csr_rd_o)) begin
       csra_i_a = wd_exu;
     end else if(wbu_state[2] && csr_rs == csr_rd_wbu) begin
       csra_i_a = csr_wd_wbu;
@@ -542,11 +503,11 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state[1] && (rs1 != 0) && (rs1 == rd_o) && src1Op == 0) begin
-      if(exu_state[2])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state = 3'b111,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
-        src1_i_r = wd_exu;
+    if(exu_state[0] && exu_state[2] && (rs1 != 0) && (rs1 == rd_o) && src1Op == 0) begin
+      if(exu_state[3])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state的第3bit和第4bit都为1,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
+        src1_i_r = src2_o;
       else
-        src1_i_r = src2_o; 
+        src1_i_r = wd_exu; 
     end else if(wbu_state[1] && (rs1 != 0) && (rs1 == rd_wbu) && src1Op == 0) begin
       src1_i_r = wd_wbu;
     end else begin
@@ -561,11 +522,11 @@ module idu(
   end
 
   always @(*) begin
-    if(exu_state[1] == 1 && (rs2 != 0) && (rs2 == rd_o) && (src2Op == 2'b00)) begin 
-      if(exu_state[2])
-        src2_i_r = wd_exu;
-      else
+    if(exu_state[0] && exu_state[2] && (rs2 != 0) && (rs2 == rd_o) && (src2Op == 2'b00)) begin 
+      if(exu_state[3])
         src2_i_r = src2_o;
+      else
+        src2_i_r = wd_exu;
     end else if(wbu_state[1] && (rs2 != 0) && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
       src2_i_r = wd_wbu;
     end else begin
@@ -625,8 +586,23 @@ module idu(
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
+  reg    lsu_conflict;
+  reg    exu_conflict;
   wire   conflict;
+  always @(*) begin // 第0bit代表state, 第1bit代表next_state
+    if(exu_state[0] == 0 && exu_state[1] == 1 && ((rs1 == rd_o)|| (rs2 == rd_o) || (csr_rs == csr_rd_o)))
+      exu_conflict = 1;
+    else
+      exu_conflict = 0;
+  end
 
-  assign conflict = (lsu_state == 0) ? 0 : ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu));
+  always @(*) begin
+    if(lsu_state && ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu)))
+      lsu_conflict = 1;
+    else
+      lsu_conflict = 0;
+  end
+
+  assign conflict = lsu_conflict | exu_conflict;
 
 endmodule

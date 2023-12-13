@@ -61,7 +61,7 @@ module top(
   wire   [4 :0]         aluOp;
   wire   [2 :0]         BOp;
   wire   [2 :0]         BOp_exu;
-  wire   [2 :0]         exu_state;
+  wire   [3 :0]         exu_state;
   wire                  lsu_state;
   wire   [2 :0]         wbu_state;
   wire                  Bjump;

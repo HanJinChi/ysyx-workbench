@@ -2,7 +2,7 @@ TOPNAME = top
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert --trace 
+				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0
 				
 WORK_DIR  = $(shell pwd)
 
@@ -20,7 +20,7 @@ ARGS += --xlog=$(BUILD_DIR)/exception-npc-log.txt
 FILELIST_MK = $(shell find -L ./csrc/src -name "filelist.mk")
 include $(FILELIST_MK)
 
-# Command to execute NEMU
+# Command to execute NPC
 IMG ?=
 NPC_EXEC := $(BIN) $(ARGS) $(IMG)
 
@@ -33,8 +33,8 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O2
-LDFLAGS += -lncurses -lreadline -ldl -lSDL2
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O2  
+LDFLAGS += -lncurses -lreadline -ldl -lSDL2 
 default: $(BIN)
 
 

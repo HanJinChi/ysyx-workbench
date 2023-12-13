@@ -215,6 +215,7 @@ module lsu (
         end else if(next_state == MEM_WRITE_B) begin
           awvalid_r <= 0;
           wvalid_r  <= 0; 
+          lsu_send_ready_r <= 0;
         end else begin  // MEM_NULL 
           if(lsu_send_valid_r == 0) begin
             lsu_send_valid_r <= 1;

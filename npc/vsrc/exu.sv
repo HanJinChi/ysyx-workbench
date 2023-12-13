@@ -52,7 +52,7 @@ module exu(
   output  wire   [1 :0]  csr_rd, 
   output  wire           exu_send_valid,
   output  wire           exu_send_ready,
-  output  wire   [2 :0]  exu_state_o
+  output  wire   [3 :0]  exu_state_o
 );
 
   reg          state, next_state;
@@ -386,18 +386,11 @@ module exu(
     `YSYS_23060059_MULHU, zero_arr[17]
   });
 
-  // 第1bit代表是否出于工作状态
-  // 第2bit代表处于exu的指令是否要写通用寄存器
-  // 第3bit代表处于exu的指令是否要写csr寄存器
-  reg  [2:0]  exu_state_o_r;
-  always@(*) begin
-    if(next_state == IDLE)
-      exu_state_o_r = 0;
-    else begin
-      exu_state_o_r = {csreg_write_en_input, reg_write_en_input, 1'b1};
-    end
-  end
-  assign exu_state_o = exu_state_o_r;
+  // 第1bit指示当前的状态
+  // 第2bit指示next state
+  // 第3bit代表处于exu的指令是否要写通用寄存器
+  // 第4bit代表处于exu的指令是否要写csr寄存器
+  assign exu_state_o = {csreg_write_en_i_w, reg_write_en_i_w, next_state, state};
 
   wire  [31:0]  src1_i_w;
   wire  [31:0]  src2_i_w;
