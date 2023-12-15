@@ -91,6 +91,7 @@ module top(
   wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
   wire   [31:0]         rsb;
+  wire   [31:0]         rsb_idu;
   wire   [31:0]         rsb_exu;
   wire   [31:0]         pc_ifu_to_idu;
   wire   [31:0]         pc_idu;
@@ -159,7 +160,7 @@ module top(
     .rst(rst),
     .pc_next(pc_next),
     .pc_next_idu(pc_next_idu),
-    .ifu_receive_valid(1),
+    .ifu_receive_valid(ifu_receive_valid),
     .ifu_send_valid(ifu_send_valid),
     .ifu_send_ready(ifu_send_ready),
     .ifu_receive_ready(idu_send_ready),
@@ -220,6 +221,7 @@ module top(
     .ebreak_o(ebreak),
     .pc_o(pc_idu),
     .pc_next_o(pc_next_idu),
+    .rsb_o(rsb_idu),
     .instruction_o(instruction_idu),
     .pc_write_enable(pc_write_enable),
     .idu_send_valid(idu_send_valid),
@@ -262,7 +264,7 @@ module top(
     .exu_receive_ready(lsu_send_ready),
     .src1_i(src1),
     .src2_i(src2),
-    .rsb_i(rsb),
+    .rsb_i(rsb_idu),
     .aluOp_i(aluOp),
     .imm_i(imm),
     .pcOp_i(pcOp),
@@ -316,39 +318,39 @@ module top(
     .clk(clk),
     .rst(rst),
     .lsu_receive_valid(exu_send_valid),
-    .ren_input(ren_exu),
-    .wen_input(wen_exu),
-    .m_signed_input(m_signed_exu),
-    .wmask_input(wmask_exu),
-    .rmask_input(rmask_exu),
-    .exu_result_input(exu_result),
-    .pc_input(pc_exu),
-    .pc_next_input(pc_next_exu),
-    .instruction_input(instruction_exu),
-    .src2_input(src2_exu),
-    .rsb_input(rsb_exu),
-    .wdOp_input(wdOp_exu),
-    .csrwdOp_input(csrwdOp_exu),
-    .rd_input(rd_exu),
-    .csr_rd_input(csr_rd_exu),
-    .reg_en_input(reg_en_exu),
-    .csreg_en_input(csreg_en_exu),
-    .ecall_input(ecall_exu),
-    .ebreak_input(ebreak_exu),
+    .ren_i(ren_exu),
+    .wen_i(wen_exu),
+    .m_signed_i(m_signed_exu),
+    .wmask_i(wmask_exu),
+    .rmask_i(rmask_exu),
+    .exu_result_i(exu_result),
+    .pc_i(pc_exu),
+    .pc_next_i(pc_next_exu),
+    .instruction_i(instruction_exu),
+    .src2_i(src2_exu),
+    .rsb_i(rsb_exu),
+    .wdOp_i(wdOp_exu),
+    .csrwdOp_i(csrwdOp_exu),
+    .rd_i(rd_exu),
+    .csr_rd_i(csr_rd_exu),
+    .reg_en_i(reg_en_exu),
+    .csreg_en_i(csreg_en_exu),
+    .ecall_i(ecall_exu),
+    .ebreak_i(ebreak_exu),
     .lsu_send_valid(lsu_send_valid),
-    .wd(wd),
-    .csr_wd(csr_wd),
-    .rd(rd_lsu),
-    .csr_rd(csr_rd_lsu),
+    .wd_o(wd),
+    .csr_wd_o(csr_wd),
+    .rd_o(rd_lsu),
+    .csr_rd_o(csr_rd_lsu),
     .rd_lsu_to_idu(rd_lsu_to_idu),
     .csr_rd_lsu_to_idu(csr_rd_lsu_to_idu),
-    .reg_en(reg_en_lsu),
-    .csreg_en(csreg_en_lsu),
-    .ecall(ecall_lsu),
-    .ebreak(ebreak_lsu),
-    .pc_next(pc_next_lsu),
-    .pc(pc_lsu),
-    .instruction(instruction_lsu),
+    .reg_en_o(reg_en_lsu),
+    .csreg_en_o(csreg_en_lsu),
+    .ecall_o(ecall_lsu),
+    .ebreak_o(ebreak_lsu),
+    .pc_next_o(pc_next_lsu),
+    .pc_o(pc_lsu),
+    .instruction_o(instruction_lsu),
     .lsu_send_ready(lsu_send_ready),
     .lsu_state(lsu_state),
     .arready(arreadyB),
@@ -423,7 +425,10 @@ module top(
     //   else
     //     pc_next = pc_next_r;
     if(ifu_send_valid)
-      pc_next = pc + 4;
+      if(pc_write_enable)
+        pc_next = pc_next_idu + 4;
+      else
+        pc_next = pc_next_r + 4;
     else if(pc_write_enable)
       pc_next = pc_next_idu;
     else

@@ -41,6 +41,7 @@ module idu(
   output   wire  [4 :0]  aluOp_o,
   output   wire  [31:0]  src1_o,
   output   wire  [31:0]  src2_o,
+  output   wire  [31:0]  rsb_o,
   output   wire  [1 :0]  wdOp_o,
   output   wire          csrwdOp_o,
   output   wire  [2 :0]  BOp_o,
@@ -90,6 +91,8 @@ module idu(
 
   reg  [31:0]  instruction_b;
   reg  [31:0]  pc_b;
+  reg  [31:0]  instruction_t;
+  reg  [31:0]  pc_t;
   reg          buffer;
   wire [31:0]  instruction;
   wire [31:0]  pc;
@@ -109,15 +112,25 @@ module idu(
     end
   end
   assign idu_send_ready = !buffer; // buffer长度为1时则不能再接受数据
-  assign instruction = buffer ? instruction_b : instruction_i;
-  assign pc          = buffer ? pc_b : pc_i;
+  assign instruction = buffer ? instruction_b : (idu_receive_valid ? instruction_i : instruction_t);
+  assign pc          = buffer ? pc_b : (idu_receive_valid ? pc_i : pc_t);
   
   always @(posedge clk) begin
     if(rst) begin
       idu_send_valid_r         <= 0;
-      idu_send_to_ifu_valid_r  <= 1;
+      idu_send_to_ifu_valid_r  <= 0;
+      instruction_t            <= 0;
+      pc_t                     <= 0;
     end else begin
       if(next_state == DECODE) begin
+        if(idu_receive_valid) begin
+          instruction_t <= instruction_i;
+          pc_t          <= pc_i;
+        end
+        else if(buffer) begin
+          instruction_t <= instruction_b;
+          pc_t          <= pc_b;
+        end
         if((idu_send_valid_r == 0) && !conflict) begin
           idu_send_valid_r        <= 1;
           idu_send_to_ifu_valid_r <= 1;
@@ -166,6 +179,95 @@ module idu(
   Reg #(1,  1 'h0) regd19(clk, rst, ecall,       ecall_o      , idu_to_exu_en);
   Reg #(1,  1 'h0) regd20(clk, rst, ebreak,      ebreak_o     , idu_to_exu_en);
   Reg #(32, 32'h0) regd21(clk, rst, pc_next,     pc_next_o    , idu_to_exu_en);
+  Reg #(32, 32'h0) regd22(clk, rst, rsb_i_r,     rsb_o        , idu_to_exu_en);
+
+  reg    lsu_conflict;
+  reg    exu_conflict;
+  wire   conflict;
+  always @(*) begin // 第0bit代表state, 第1bit代表next_state
+    if(exu_state[0] == 0 && exu_state[1] == 1 && ((rs1 == rd_o)|| (rs2 == rd_o) || (csr_rs == csr_rd_o)))
+      exu_conflict = 1;
+    else
+      exu_conflict = 0;
+  end
+
+  always @(*) begin
+    if(lsu_state && ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu)))
+      lsu_conflict = 1;
+    else
+      lsu_conflict = 0;
+  end
+
+  assign conflict = lsu_conflict | exu_conflict;
+
+  reg  [31:0]   src1_i_r;
+  reg  [31:0]   src2_i_r;
+  reg  [31:0]   rsb_i_r;
+  reg  [31:0]   csra_i_a;
+
+  always @(*) begin
+    if(exu_state[0] && exu_state[3] && (csr_rs == csr_rd_o)) begin
+      csra_i_a = wd_exu;
+    end else if(wbu_state[2] && csr_rs == csr_rd_wbu) begin
+      csra_i_a = csr_wd_wbu;
+    end else begin
+      csra_i_a = csra;
+    end
+  end
+
+  always @(*) begin
+    if(exu_state[0] && exu_state[2] && (rs1 != 0) && (rs1 == rd_o) && src1Op == 0) begin
+      if(exu_state[3])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state的第3bit和第4bit都为1,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
+        src1_i_r = src2_o;
+      else
+        src1_i_r = wd_exu; 
+    end else if(wbu_state[1] && (rs1 != 0) && (rs1 == rd_wbu) && src1Op == 0) begin
+      src1_i_r = wd_wbu;
+    end else begin
+      case(src1Op)
+        1'b0:
+          src1_i_r = rsa;
+        1'b1:
+          src1_i_r = pc;
+        default: begin end
+      endcase
+    end
+  end
+
+  always @(*) begin
+    if(exu_state[0] && exu_state[2] && (rs2 != 0) && (rs2 == rd_o) && (src2Op == 2'b00)) begin 
+      if(exu_state[3])
+        src2_i_r = src2_o;
+      else
+        src2_i_r = wd_exu;
+    end else if(wbu_state[1] && (rs2 != 0) && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
+      src2_i_r = wd_wbu;
+    end else begin
+      case(src2Op) 
+        2'b00:
+          src2_i_r = rsb;
+        2'b01:
+          src2_i_r = imm;
+        2'b10:
+          src2_i_r = csra;
+        default:
+          src2_i_r = rsb;
+      endcase
+    end
+  end
+
+  always @(*) begin
+    if(exu_state[0] && exu_state[2] && (rs2 != 0) && (rs2 == rd_o)) begin
+      if(exu_state[3])
+        rsb_i_r = src2_o;
+      else
+        rsb_i_r = wd_exu;
+    end else if(wbu_state[1] && (rs2 != 0) && (rs2 == rd_wbu)) begin
+      rsb_i_r = wd_wbu;
+    end else begin
+      rsb_i_r = rsb;
+    end
+  end
 
 
   wire  [2: 0]  instruction_type;
@@ -432,63 +534,6 @@ module idu(
   wire            src1Op;
   wire   [1 :0]   src2Op;
 
-  reg  [31:0]   src1_i_r;
-  reg  [31:0]   src2_i_r;
-  reg  [31:0]   csra_i_a;
-
-  always @(*) begin
-    if(exu_state[0] && exu_state[3] && (csr_rs == csr_rd_o)) begin
-      csra_i_a = wd_exu;
-    end else if(wbu_state[2] && csr_rs == csr_rd_wbu) begin
-      csra_i_a = csr_wd_wbu;
-    end else begin
-      csra_i_a = csra;
-    end
-  end
-
-  always @(*) begin
-    if(exu_state[0] && exu_state[2] && (rs1 != 0) && (rs1 == rd_o) && src1Op == 0) begin
-      if(exu_state[3])    // 比较特殊的情况为csrrs和csrrw指令，这时候 exu_state的第3bit和第4bit都为1,EXU输出的结果不是wd的结果而是csrwd的结果，exu的src2才是真正写入的结果
-        src1_i_r = src2_o;
-      else
-        src1_i_r = wd_exu; 
-    end else if(wbu_state[1] && (rs1 != 0) && (rs1 == rd_wbu) && src1Op == 0) begin
-      src1_i_r = wd_wbu;
-    end else begin
-      case(src1Op)
-        1'b0:
-          src1_i_r = rsa;
-        1'b1:
-          src1_i_r = pc;
-        default: begin end
-      endcase
-    end
-  end
-
-  always @(*) begin
-    if(exu_state[0] && exu_state[2] && (rs2 != 0) && (rs2 == rd_o) && (src2Op == 2'b00)) begin 
-      if(exu_state[3])
-        src2_i_r = src2_o;
-      else
-        src2_i_r = wd_exu;
-    end else if(wbu_state[1] && (rs2 != 0) && (rs2 == rd_wbu) && (src2Op == 2'b00)) begin
-      src2_i_r = wd_wbu;
-    end else begin
-      case(src2Op) 
-        2'b00:
-          src2_i_r = rsb;
-        2'b01:
-          src2_i_r = imm;
-        2'b10:
-          src2_i_r = csra;
-        default:
-          src2_i_r = rsb;
-      endcase
-    end
-  end
-
-
-  wire [31:0]  Bresult;
   wire [31:0]  result_arr[3:0];
   wire         zero_arr[2:0];
   // ULES
@@ -530,23 +575,5 @@ module idu(
 
   assign pc_write_enable = idu_send_valid && idu_receive_ready;
 
-  reg    lsu_conflict;
-  reg    exu_conflict;
-  wire   conflict;
-  always @(*) begin // 第0bit代表state, 第1bit代表next_state
-    if(exu_state[0] == 0 && exu_state[1] == 1 && ((rs1 == rd_o)|| (rs2 == rd_o) || (csr_rs == csr_rd_o)))
-      exu_conflict = 1;
-    else
-      exu_conflict = 0;
-  end
-
-  always @(*) begin
-    if(lsu_state && ((rs1 == rd_lsu) || (rs2 == rd_lsu) || (csr_rs == csr_rd_lsu)))
-      lsu_conflict = 1;
-    else
-      lsu_conflict = 0;
-  end
-
-  assign conflict = lsu_conflict | exu_conflict;
 
 endmodule

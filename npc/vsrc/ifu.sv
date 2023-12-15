@@ -2,8 +2,8 @@ module ifu(
     input    wire          clk,
     input    wire          rst,
     input    wire  [31:0]  pc_next,
-    input    wire  [31:0]  pc_next_idu,   // 来自idu的正确的pc_next
-    input    wire          ifu_receive_valid,
+    input    wire  [31:0]  pc_next_idu,       // 来自idu的正确的pc_next
+    input    wire          ifu_receive_valid, // 来自idu的valid
     input    wire          ifu_receive_ready,
     input    wire          arready,
     input    wire  [31:0]  rdata,
@@ -33,10 +33,7 @@ module ifu(
   always @(*) begin
     case(state)
       IDLE: begin
-        if(ifu_receive_valid)
-          next_state = READ_A;
-        else 
-          next_state = IDLE;
+        next_state = READ_A;
       end
       READ_A: begin
         if(arvalid && arready) 
@@ -52,10 +49,7 @@ module ifu(
       end
       READ_C: begin
         if(ifu_send_valid && ifu_receive_ready) begin
-          if(ifu_receive_valid)
-            next_state = READ_A;
-          else
-            next_state = IDLE;
+          next_state = READ_A;
         end
         else begin
           if(ifu_re_fetch)
@@ -74,6 +68,7 @@ module ifu(
   reg        ifu_send_ready_r;
   reg [31:0] instruction_r;
   reg [31:0] araddr_r;
+  reg        set_value;
   reg        arvalid_r;
   reg        rready_r;
   reg        ifu_re_fetch;
@@ -104,6 +99,7 @@ module ifu(
       ifu_send_valid_r     <= 0;
       ifu_re_fetch         <= 0;
       pc_ifu_to_idu_r      <= 0;
+      set_value            <= 0;
     end else begin
       if(next_state == READ_A) begin
         if(ifu_send_valid_r) 
@@ -114,19 +110,25 @@ module ifu(
           arvalid_r <= 1;
           araddr_r  <= pc_next;
         end
+        if(set_value) set_value <= 0;
         rresp_r <= 1;
       end else if(next_state == READ_B) begin
         arvalid_r <= 0;
       end else if(next_state == READ_C) begin
         if(ifu_send_valid_r == 0) begin
-          if(araddr_r == pc_next_idu || (araddr_r == addr_beginner)) begin // 相等代表没有跳转，预测正确
-            instruction_r    <= rdata;
-            ifu_send_valid_r <= 1;
-            rresp_r          <= rresp;
-            pc_ifu_to_idu_r  <= araddr_r;
+          if(pc_next_valid) begin
+            if(araddr_r == pc_next_idu_c || (araddr_r == addr_beginner)) begin // 相等代表没有跳转，预测正确
+              ifu_send_valid_r <= 1;
+              pc_ifu_to_idu_r  <= araddr_r;
+            end
+            else                         // 不相等代表预测错误，重新取值
+              ifu_re_fetch     <= 1;
           end
-          else                         // 不相等代表预测错误，重新取值
-            ifu_re_fetch     <= 1;
+        end
+        if(set_value == 0) begin
+          set_value      <= 1;
+          instruction_r  <= rdata;
+          rresp_r        <= rresp;
         end
       end else begin // next_state == IDLE
         if(ifu_send_valid_r) ifu_send_valid_r <= 0;
@@ -141,5 +143,46 @@ module ifu(
   assign arvalid        = arvalid_r;
   assign rready         = rready_r;
   assign pc_ifu_to_idu  = pc_ifu_to_idu_r;
+
+
+  reg  wstate, wnext_state;
+  parameter WIDLE = 0, WAINTING = 1;
+  reg  [31:0]   pc_next_idu_c;
+  reg           pc_next_valid;
+  always @(posedge clk) begin
+    if(rst) wstate <= WIDLE;
+    else    wstate <= wnext_state;
+  end
+
+  always @(*) begin
+    case(wstate)
+      WIDLE:
+        if(ifu_send_valid) 
+          wnext_state = WAINTING;
+        else
+          wnext_state = WIDLE;
+      WAINTING:
+        if(ifu_receive_valid)
+          wnext_state = WIDLE;
+        else
+          wnext_state = WAINTING;
+    endcase
+  end
+
+  always @(posedge clk) begin
+    if(rst) begin
+      pc_next_idu_c <= 0;
+      pc_next_valid <= 1;
+    end else begin
+      if(wnext_state == WAINTING) begin
+        if(ifu_send_valid) pc_next_valid <= 0;
+      end else  begin  // WIDLE
+        if(ifu_receive_valid) begin
+          pc_next_idu_c  <= pc_next_idu;
+          pc_next_valid  <= 1;
+        end
+      end
+    end
+  end
 
 endmodule
