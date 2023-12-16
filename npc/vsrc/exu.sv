@@ -180,7 +180,7 @@ module exu(
 
   always @(posedge clk) begin
     if(rst) begin
-
+      exu_send_valid_r <= 0;
     end else begin
       if(next_state == COMPUTE) begin
         if(exu_send_valid_r == 0) begin

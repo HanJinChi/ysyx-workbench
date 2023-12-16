@@ -67,9 +67,9 @@ module lsu (
     case(state)
       IDLE:
         if(lsu_receive_valid || buffer) begin
-          if(ren_i) 
+          if(ren_v) 
             next_state = MEM_READ_A;
-          else if(wen_i)
+          else if(wen_v)
             next_state = MEM_WRITE_A;
           else
             next_state = MEM_NULL;
@@ -143,6 +143,8 @@ module lsu (
   wire         reg_en_b;
   wire         csreg_en_b;
   wire  [7 :0] wmask_b;   
+  wire         ren_b;
+  wire         wen_b;
 
   Reg #(32, 32'h0) regd0 (clk, rst, exu_result_i,  exu_result_b,  buffer_en);
   Reg #(32, 32'h0) regd1 (clk, rst, pc_i,          pc_b,          buffer_en);
@@ -161,28 +163,20 @@ module lsu (
   Reg #(1,  1 'h0) regd14(clk, rst, reg_en_i,      reg_en_b,      buffer_en);
   Reg #(1,  1 'h0) regd15(clk, rst, csreg_en_i,    csreg_en_b,    buffer_en);
   Reg #(8,  8 'h0) regd16(clk, rst, wmask_i,       wmask_b,       buffer_en);
+  Reg #(1,  1 'h0) regd30(clk, rst, ren_i,         ren_b,         buffer_en);
+  Reg #(1,  1 'h0) regd31(clk, rst, wen_i,         wen_b,         buffer_en);
 
 
   reg          m_signed;
   reg  [31:0]  exu_result;
   reg  [31:0]  src2;
-  reg  [31:0]  rsb;
   reg  [1 :0]  wdOp;
   reg          csrwdOp;
   reg  [31:0]  rmask;
-  wire [31:0]  memory_read_wd;
-  reg  [31:0]  reg_read_data;
+  wire [31:0]  mread;
+  reg  [31:0]  reg_rdata;
 
   reg          lsu_send_valid_r;
-  reg  [4 :0]  rd_r;
-  reg  [31:0]  pc_r;
-  reg  [31:0]  instruction_r;
-  reg  [31:0]  pc_next_r;
-  reg  [1 :0]  csr_rd_r;
-  reg          reg_en_r;
-  reg          csreg_en_r;
-  reg          ecall_r;
-  reg          ebreak_r;
   reg  [31:0]  araddr_r;
   reg          arvalid_r;
   reg          rready_r;
@@ -199,19 +193,9 @@ module lsu (
       m_signed           <= 0;
       exu_result         <= 0;
       rmask              <= 0;
-      pc_r               <= 0;
       src2               <= 0;
       wdOp               <= 0;
       csrwdOp            <= 0;
-      rd_r               <= 0;
-      csr_rd_r           <= 0;
-      reg_en_r           <= 0;
-      csreg_en_r         <= 0;
-      ecall_r            <= 0;
-      ebreak_r           <= 0;
-      instruction_r      <= 0;
-      pc_next_r          <= 0;
-      rsb                <= 0;
       araddr_r           <= 0;
       arvalid_r          <= 0;
       wdata_r            <= 0;
@@ -229,21 +213,8 @@ module lsu (
           if(arvalid_r == 0) begin
             arvalid_r            <= 1;
             araddr_r             <= exu_result_v;
-            pc_r                 <= pc_v;
-            pc_next_r            <= pc_next_v;
-            instruction_r        <= instruction_v;
             m_signed             <= m_signed_v;
             rmask                <= rmask_v;
-            ecall_r              <= ecall_v;
-            ebreak_r             <= ebreak_v;
-            src2                 <= src2_v;
-            rsb                  <= rsb_v;
-            wdOp                 <= wdOp_v;
-            csrwdOp              <= csrwdOp_v;
-            rd_r                 <= rd_v;
-            csr_rd_r             <= csr_rd_v;
-            reg_en_r             <= reg_en_v;
-            csreg_en_r           <= csreg_en_v;
             if(buffer)
               buffer             <= 0;
           end
@@ -256,13 +227,6 @@ module lsu (
             wvalid_r            <= 1;
             wstrb_r             <= wmask_v;
             wdata_r             <= rsb_v;
-            pc_r                <= pc_v;
-            pc_next_r           <= pc_next_v;
-            instruction_r       <= instruction_v;
-            ecall_r             <= ecall_v;
-            ebreak_r            <= ebreak_v;
-            reg_en_r            <= reg_en_v;
-            csreg_en_r          <= csreg_en_v;
             if(buffer)
               buffer            <= 0;
           end
@@ -273,22 +237,8 @@ module lsu (
           if(lsu_send_valid_r == 0) begin
             lsu_send_valid_r <= 1;
             if(rvalid) begin
-              reg_read_data <= rdata;  // MEM_READ_B -> MEM_NULL
+              reg_rdata <= rdata;  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
-              pc_r                 <= pc_v;
-              pc_next_r            <= pc_next_v;
-              instruction_r        <= instruction_v;
-              ecall_r              <= ecall_v;
-              ebreak_r             <= ebreak_v;
-              reg_en_r             <= reg_en_v;
-              csreg_en_r           <= csreg_en_v;
-              src2                 <= src2_v;
-              rsb                  <= rsb_v;
-              wdOp                 <= wdOp_v;
-              csrwdOp              <= csrwdOp_v;
-              rd_r                 <= rd_v;
-              csr_rd_r             <= csr_rd_v;
-              exu_result           <= exu_result_v;
               if(buffer)
                 buffer             <= 0;
             end
@@ -300,15 +250,92 @@ module lsu (
 
   assign lsu_send_valid   = lsu_send_valid_r;
   assign lsu_send_ready   = !buffer;
-  assign rd_o             = rd_r;
-  assign pc_o             = pc_r;
-  assign instruction_o    = instruction_r;
-  assign pc_next_o        = pc_next_r;
-  assign csr_rd_o         = csr_rd_r;
-  assign reg_en_o         = reg_en_r;
-  assign csreg_en_o       = csreg_en_r;
-  assign ebreak_o         = ebreak_r;
-  assign ecall_o          = ecall_r;
+
+  reg lsu_to_wbu_en;
+  always @(*) begin
+    if(next_state == MEM_NULL && lsu_send_valid_r == 0) begin
+      lsu_to_wbu_en = 1;
+    end else
+      lsu_to_wbu_en = 0;
+  end
+
+  Reg #(32, 32'h0) regd17 (clk, rst, pc_v,          pc_o,          lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd18 (clk, rst, pc_next_v,     pc_next_o,     lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd19 (clk, rst, instruction_v, instruction_o, lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd20 (clk, rst, ecall_v,       ecall_o,       lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd21 (clk, rst, ebreak_v,      ebreak_o,      lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd22 (clk, rst, reg_en_v,      reg_en_o,      lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd23 (clk, rst, csreg_en_v,    csreg_en_o,    lsu_to_wbu_en);
+  Reg #(5,  5 'h0) regd27 (clk, rst, rd_v,          rd_o,          lsu_to_wbu_en);
+  Reg #(2,  2 'h0) regd28 (clk, rst, csr_rd_v,      csr_rd_o,      lsu_to_wbu_en);
+
+  Reg #(32, 32'h0) regd24 (clk, rst, src2_v,        src2,          lsu_to_wbu_en);
+  Reg #(2,  2 'h0) regd25 (clk, rst, wdOp_v,        wdOp,          lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd26 (clk, rst, csrwdOp_v,     csrwdOp,       lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd29 (clk, rst, exu_result_v,  exu_result,    lsu_to_wbu_en);
+
+  MuxKeyWithDefault #(3, 32, 32) rwd(mread, rmask, 32'h0, {
+    32'h000000ff, m_signed ? {{24{reg_rdata[7]}} , reg_rdata[7:0]}  : reg_rdata & rmask,
+    32'h0000ffff, m_signed ? {{16{reg_rdata[15]}}, reg_rdata[15:0]} : reg_rdata & rmask,
+    32'hffffffff, reg_rdata
+  });
+  // wd choose
+  MuxKeyWithDefault #(4, 2, 32) wdc (wd_o, wdOp, exu_result, {
+    2'b00, exu_result,
+    2'b01, mread,
+    2'b10, pc_o+4,
+    2'b11, src2
+  });
+
+  MuxKeyWithDefault #(2, 1, 32) csrwdc (csr_wd_o, csrwdOp, exu_result, {
+    1'b0, exu_result,
+    1'b1, pc_o
+  });
+
+
+  wire  [31:0] exu_result_v;
+  wire  [31:0] pc_v;
+  wire  [31:0] pc_next_v;
+  wire  [31:0] instruction_v;
+  wire         m_signed_v;
+  wire  [31:0] rmask_v;
+  wire         ecall_v;
+  wire         ebreak_v;
+  wire  [31:0] src2_v;
+  wire  [31:0] rsb_v;
+  wire  [1 :0] wdOp_v;
+  wire         csrwdOp_v;
+  wire  [4 :0] rd_v;
+  wire  [1 :0] csr_rd_v;
+  wire         reg_en_v;
+  wire         csreg_en_v;
+  wire  [7 :0] wmask_v;
+  wire         ren_v;
+  wire         wen_v;
+
+  assign exu_result_v  = buffer ? exu_result_b  : exu_result_i;
+  assign pc_v          = buffer ? pc_b          : pc_i;
+  assign pc_next_v     = buffer ? pc_next_b     : pc_next_i;
+  assign instruction_v = buffer ? instruction_b : instruction_i;
+  assign m_signed_v    = buffer ? m_signed_b    : m_signed_i;
+  assign rmask_v       = buffer ? rmask_b       : rmask_i;
+  assign ecall_v       = buffer ? ecall_b       : ecall_i;
+  assign ebreak_v      = buffer ? ebreak_b      : ebreak_i;
+  assign src2_v        = buffer ? src2_b        : src2_i;
+  assign rsb_v         = buffer ? rsb_b         : rsb_i;
+  assign wdOp_v        = buffer ? wdOp_b        : wdOp_i;
+  assign csrwdOp_v     = buffer ? csrwdOp_b     : csrwdOp_i;
+  assign rd_v          = buffer ? rd_b          : rd_i;
+  assign csr_rd_v      = buffer ? csr_rd_b      : csr_rd_i;
+  assign reg_en_v      = buffer ? reg_en_b      : reg_en_i;
+  assign csreg_en_v    = buffer ? csreg_en_b    : csreg_en_i;
+  assign wmask_v       = buffer ? wmask_b       : wmask_i;
+  assign ren_v         = buffer ? ren_b         : ren_i;
+  assign wen_v         = buffer ? wen_b         : wen_i; 
+
+
+  assign lsu_send_valid   = lsu_send_valid_r;
+  assign lsu_send_ready   = !buffer; // buffer
 
   assign araddr         = araddr_r;
   assign arvalid        = arvalid_r;
@@ -329,64 +356,10 @@ module lsu (
     if(rst) bready_r <= 0;
     else    bready_r <= 1;
   end 
- 
-  MuxKeyWithDefault #(3, 32, 32) rwd(memory_read_wd, rmask, 32'h0, {
-    32'h000000ff, m_signed ? {{24{reg_read_data[7]}} , reg_read_data[7:0]}  : reg_read_data & rmask,
-    32'h0000ffff, m_signed ? {{16{reg_read_data[15]}}, reg_read_data[15:0]} : reg_read_data & rmask,
-    32'hffffffff, reg_read_data
-  });
-  // wd choose
-  MuxKeyWithDefault #(4, 2, 32) wdc (wd_o, wdOp, exu_result, {
-    2'b00, exu_result,
-    2'b01, memory_read_wd,
-    2'b10, pc_o+4,
-    2'b11, src2
-  });
-
-  MuxKeyWithDefault #(2, 1, 32) csrwdc (csr_wd_o, csrwdOp, exu_result, {
-    1'b0, exu_result,
-    1'b1, pc_o
-  });
 
   assign  lsu_state = (next_state != IDLE);
-  assign  rd_lsu_to_idu = (state == IDLE) ? rd_i : rd_o;
-  assign  csr_rd_lsu_to_idu = (state == IDLE) ? csr_rd_i : csr_rd_o;
-
-  wire  [31:0] exu_result_v;
-  wire  [31:0] pc_v;
-  wire  [31:0] pc_next_v;
-  wire  [31:0] instruction_v;
-  wire         m_signed_v;
-  wire  [31:0] rmask_v;
-  wire         ecall_v;
-  wire         ebreak_v;
-  wire  [31:0] src2_v;
-  wire  [31:0] rsb_v;
-  wire  [1 :0] wdOp_v;
-  wire         csrwdOp_v;
-  wire  [4 :0] rd_v;
-  wire  [1 :0] csr_rd_v;
-  wire         reg_en_v;
-  wire         csreg_en_v;
-  wire  [7 :0] wmask_v;
-
-  assign exu_result_v  = buffer ? exu_result_b  : exu_result_i;
-  assign pc_v          = buffer ? pc_b          : pc_i;
-  assign pc_next_v     = buffer ? pc_next_b     : pc_next_i;
-  assign instruction_v = buffer ? instruction_b : instruction_i;
-  assign m_signed_v    = buffer ? m_signed_b    : m_signed_i;
-  assign rmask_v       = buffer ? rmask_b       : rmask_i;
-  assign ecall_v       = buffer ? ecall_b       : ecall_i;
-  assign ebreak_v      = buffer ? ebreak_b      : ebreak_i;
-  assign src2_v        = buffer ? src2_b        : src2_i;
-  assign rsb_v         = buffer ? rsb_b         : rsb_i;
-  assign wdOp_v        = buffer ? wdOp_b        : wdOp_i;
-  assign csrwdOp_v     = buffer ? csrwdOp_b     : csrwdOp_i;
-  assign rd_v          = buffer ? rd_b          : rd_i;
-  assign csr_rd_v      = buffer ? csr_rd_b      : csr_rd_i;
-  assign reg_en_v      = buffer ? reg_en_b      : reg_en_i;
-  assign csreg_en_v    = buffer ? csreg_en_b    : csreg_en_i;
-  assign wmask_v       = buffer ? wmask_b       : wmask_i; 
+  assign  rd_lsu_to_idu = (state == IDLE) ? rd_v : rd_o;
+  assign  csr_rd_lsu_to_idu = (state == IDLE) ? csr_rd_v : csr_rd_o;
 
 
 endmodule

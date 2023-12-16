@@ -103,7 +103,7 @@ module idu(
       buffer         <=  0;
     end else begin
       if(buffer == 0) begin
-        if(idu_receive_valid && idu_send_valid) begin
+        if(idu_receive_valid && (state != IDLE)) begin
           instruction_b <= instruction_i;
           pc_b          <= pc_i;
           buffer        <= 1;
@@ -112,8 +112,8 @@ module idu(
     end
   end
   assign idu_send_ready = !buffer; // buffer长度为1时则不能再接受数据
-  assign instruction = buffer ? instruction_b : (idu_receive_valid ? instruction_i : instruction_t);
-  assign pc          = buffer ? pc_b : (idu_receive_valid ? pc_i : pc_t);
+  assign instruction    = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
+  assign pc             = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
   
   always @(posedge clk) begin
     if(rst) begin
@@ -155,7 +155,7 @@ module idu(
   end
 
   assign idu_send_valid           = idu_send_valid_r;
-  assign idu_send_to_ifu_valid  = idu_send_to_ifu_valid_r;
+  assign idu_send_to_ifu_valid    = idu_send_to_ifu_valid_r;
 
   Reg #(32, 32'h0) regd0 (clk, rst, instruction, instruction_o, idu_to_exu_en);
   Reg #(32, 32'h0) regd1 (clk, rst, pc,          pc_o         , idu_to_exu_en);
@@ -573,7 +573,7 @@ module idu(
     2'b11, csra_i_a
   });
 
-  assign pc_write_enable = idu_send_valid && idu_receive_ready;
+  assign pc_write_enable = idu_send_valid;
 
 
 endmodule
