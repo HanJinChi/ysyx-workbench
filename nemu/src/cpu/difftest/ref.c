@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <difftest-def.h>
@@ -26,6 +27,8 @@ struct difftest_npc {
   word_t mstatus;
   word_t mtvec;
   vaddr_t pc;
+  vaddr_t memory_write_addr;
+  word_t  memory_write_context;
 };
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
@@ -44,6 +47,8 @@ __EXPORT void difftest_regcpy(void *dut, bool direction) {
     cpu.csr.mstatus = npc->mstatus;
     cpu.csr.mtvec = npc->mtvec;
     cpu.pc = npc->pc;
+    cpu.memory_write_addr = npc->memory_write_addr;
+    cpu.memory_write_context = npc->memory_write_context;
   }else{
     for(int i = 0; i < 32; i++){
       npc->gpr[i] = cpu.gpr[i];
@@ -53,6 +58,8 @@ __EXPORT void difftest_regcpy(void *dut, bool direction) {
     npc->mstatus = cpu.csr.mstatus;
     npc->mtvec = cpu.csr.mtvec;
     npc->pc = cpu.pc;
+    npc->memory_write_addr = cpu.memory_write_addr;
+    npc->memory_write_context = cpu.memory_write_context;
   }
 }
 

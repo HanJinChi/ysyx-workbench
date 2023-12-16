@@ -36,6 +36,13 @@ static word_t pmem_read(paddr_t addr, int len) {
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
+  cpu.memory_write_addr    = addr;
+  switch(len){
+    case 1: cpu.memory_write_context = data & 0xFF; break;
+    case 2: cpu.memory_write_context = data & 0xFFFF; break;
+    case 4: cpu.memory_write_context = data; break;
+    default: cpu.memory_write_context = data;
+  }
 }
 
 static void out_of_bound(paddr_t addr) {
