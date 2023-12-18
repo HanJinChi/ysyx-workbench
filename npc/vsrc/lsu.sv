@@ -44,6 +44,7 @@ module lsu (
   output   wire          csreg_en_o,
   output   wire          ecall_o,
   output   wire          ebreak_o,
+  output   wire          skip_d_o,
   output   wire  [31:0]  araddr,
   output   wire          arvalid,
   output   wire          rready,
@@ -167,14 +168,17 @@ module lsu (
   Reg #(1,  1 'h0) regd31(clk, rst, wen_i,         wen_b,         buffer_en);
 
 
-  reg          m_signed;
-  reg  [31:0]  exu_result;
-  reg  [31:0]  src2;
-  reg  [1 :0]  wdOp;
-  reg          csrwdOp;
-  reg  [31:0]  rmask;
-  wire [31:0]  mread;
-  reg  [31:0]  reg_rdata;
+  wire  [31:0]  exu_result;
+  wire  [31:0]  src2;
+  wire  [1 :0]  wdOp;
+  wire          csrwdOp;
+  wire  [31:0]  mread;
+  wire          ren;
+  wire          wen;
+
+  reg           m_signed;
+  reg  [31:0]   rmask;
+  reg  [31:0]   reg_rdata;
 
   reg          lsu_send_valid_r;
   reg  [31:0]  araddr_r;
@@ -191,11 +195,7 @@ module lsu (
     if(rst) begin
       lsu_send_valid_r   <= 0;
       m_signed           <= 0;
-      exu_result         <= 0;
       rmask              <= 0;
-      src2               <= 0;
-      wdOp               <= 0;
-      csrwdOp            <= 0;
       araddr_r           <= 0;
       arvalid_r          <= 0;
       wdata_r            <= 0;
@@ -273,6 +273,8 @@ module lsu (
   Reg #(2,  2 'h0) regd25 (clk, rst, wdOp_v,        wdOp,          lsu_to_wbu_en);
   Reg #(1,  1 'h0) regd26 (clk, rst, csrwdOp_v,     csrwdOp,       lsu_to_wbu_en);
   Reg #(32, 32'h0) regd29 (clk, rst, exu_result_v,  exu_result,    lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd32 (clk, rst, ren_v,         ren,           lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd33 (clk, rst, wen_v,         wen,           lsu_to_wbu_en);
 
   MuxKeyWithDefault #(3, 32, 32) rwd(mread, rmask, 32'h0, {
     32'h000000ff, m_signed ? {{24{reg_rdata[7]}} , reg_rdata[7:0]}  : reg_rdata & rmask,
@@ -292,6 +294,7 @@ module lsu (
     1'b1, pc_o
   });
 
+  assign skip_d_o = (exu_result == 32'ha00003f8) && (ren || wen);
 
   wire  [31:0] exu_result_v;
   wire  [31:0] pc_v;

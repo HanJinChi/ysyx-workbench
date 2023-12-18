@@ -265,6 +265,10 @@ void exec_once(){
   ins_count++;
   copy_cpu_state();
 
+  #ifdef CONFIG_DIFFTEST
+    if(top->skip_d == 1) difftest_skip_ref();
+  #endif
+
 
   #ifdef CONFIG_TRACE
     // if(ins_count % 100000 == 0){

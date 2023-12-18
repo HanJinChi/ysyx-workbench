@@ -17,6 +17,9 @@
 `define YSYX_23060059_SRC   5'b10000 
 `define YSYS_23060059_MULHU 5'b10001 // *, unsigned, mulhu
 
+`define YSYX_23060059_UART 32'ha00003f8
+
+
 
 // define ALU TYPE
 import "DPI-C" function void n_pmem_read(input int raddr, output int rdata);
@@ -27,7 +30,8 @@ module top(
     input                 rst,
     output reg  [31:0]    pc_next,
     output reg  [31:0]    pc,
-    output                ebreak_t
+    output                ebreak_t,
+    output                skip_d
 );
 
   wire                  endflag; 
@@ -350,6 +354,7 @@ module top(
     .ebreak_o(ebreak_lsu),
     .pc_next_o(pc_next_lsu),
     .pc_o(pc_lsu),
+    .skip_d_o(skip_d),
     .instruction_o(instruction_lsu),
     .lsu_send_ready(lsu_send_ready),
     .lsu_state(lsu_state),
@@ -381,14 +386,14 @@ module top(
     .arvalidB(arvalidB),
     .rreadyA(rreadyA),
     .rreadyB(rreadyB),
-    .arreadyA(arreadyA),
-    .arreadyB(arreadyB),
-    .rdataA(rdataA),
-    .rdataB(rdataB),
-    .rvalidA(rvalidA),
-    .rvalidB(rvalidB),
-    .rrespA(rrespA),
-    .rrespB(rrespB),
+    .arreadyA_o(arreadyA),
+    .arreadyB_o(arreadyB),
+    .rdataA_o(rdataA),
+    .rdataB_o(rdataB),
+    .rvalidA_o(rvalidA),
+    .rvalidB_o(rvalidB),
+    .rrespA_o(rrespA),
+    .rrespB_o(rrespB),
     .awaddrA(awaddrA),
     .awaddrB(awaddrB),
     .awvalidA(awvalidA),
@@ -401,14 +406,14 @@ module top(
     .wvalidB(wvalidB),
     .breadyA(breadyA),
     .breadyB(breadyB),
-    .awreadyA(awreadyA),
-    .awreadyB(awreadyB),
-    .wreadyA(wreadyA),
-    .wreadyB(wreadyB),
-    .bvalidA(bvalidA),
-    .bvalidB(bvalidB),
-    .brespA(brespA),
-    .brespB(brespB)
+    .awreadyA_o(awreadyA),
+    .awreadyB_o(awreadyB),
+    .wreadyA_o(wreadyA),
+    .wreadyB_o(wreadyB),
+    .bvalidA_o(bvalidA),
+    .bvalidB_o(bvalidB),
+    .brespA_o(brespA),
+    .brespB_o(brespB)
   );
 
   reg [31:0] set_pc;
