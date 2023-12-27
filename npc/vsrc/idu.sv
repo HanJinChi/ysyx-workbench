@@ -29,8 +29,8 @@ module idu(
   input    wire  [31:0]  csr_wd_wbu,
   input    wire          reg_en_wbu,
   input    wire          csreg_en_wbu,
-  input    wire          idu_receive_valid,
-  input    wire          idu_receive_ready,
+  input    wire          receive_valid,
+  input    wire          receive_ready,
   output   wire  [4 :0]  rs1,
   output   wire  [4 :0]  rs2,
   output   wire  [1 :0]  csr_rs, 
@@ -58,15 +58,15 @@ module idu(
   output   wire          pc_write_enable,
   output   wire  [31:0]  pc_o,
   output   wire  [31:0]  instruction_o,
-  output   wire          idu_send_to_ifu_valid,
-  output   wire          idu_send_valid,
-  output   wire          idu_send_ready
+  output   wire          send_to_ifu_valid,
+  output   wire          send_valid,
+  output   wire          send_ready
 );
 
   parameter   IDLE = 0, DECODE = 1;
   reg         state, next_state;
-  reg         idu_send_to_ifu_valid_r;
-  reg         idu_send_valid_r;
+  reg         send_to_ifu_valid_r;
+  reg         send_valid_r;
 
 
   always @(posedge clk) begin
@@ -77,12 +77,12 @@ module idu(
   always@(*) begin
     case(state)
       IDLE:
-        if(idu_receive_valid || buffer)
+        if(receive_valid || buffer)
           next_state = DECODE;
         else
           next_state = IDLE;
       DECODE:
-        if(idu_send_valid && idu_receive_ready)
+        if(send_valid && receive_ready)
             next_state = IDLE;
         else
           next_state = DECODE;
@@ -103,7 +103,7 @@ module idu(
       buffer         <=  0;
     end else begin
       if(buffer == 0) begin
-        if(idu_receive_valid && (state != IDLE)) begin
+        if(receive_valid && (state != IDLE)) begin
           instruction_b <= instruction_i;
           pc_b          <= pc_i;
           buffer        <= 1;
@@ -111,19 +111,19 @@ module idu(
       end
     end
   end
-  assign idu_send_ready = !buffer; // buffer长度为1时则不能再接受数据
+  assign send_ready = !buffer; // buffer长度为1时则不能再接受数据
   assign instruction    = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
   assign pc             = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
   
   always @(posedge clk) begin
     if(rst) begin
-      idu_send_valid_r         <= 0;
-      idu_send_to_ifu_valid_r  <= 0;
+      send_valid_r             <= 0;
+      send_to_ifu_valid_r      <= 0;
       instruction_t            <= 0;
       pc_t                     <= 0;
     end else begin
       if(next_state == DECODE) begin
-        if(idu_receive_valid) begin
+        if(receive_valid) begin
           instruction_t <= instruction_i;
           pc_t          <= pc_i;
         end
@@ -131,16 +131,16 @@ module idu(
           instruction_t <= instruction_b;
           pc_t          <= pc_b;
         end
-        if((idu_send_valid_r == 0) && !conflict) begin
-          idu_send_valid_r        <= 1;
-          idu_send_to_ifu_valid_r <= 1;
+        if((send_valid_r == 0) && !conflict) begin
+          send_valid_r        <= 1;
+          send_to_ifu_valid_r <= 1;
           if(buffer)
             buffer                <= 0;
         end
       end else begin  // next_state == IDLE
-        if(idu_send_valid_r) begin
-          idu_send_valid_r        <= 0;
-          idu_send_to_ifu_valid_r <= 0;
+        if(send_valid_r) begin
+          send_valid_r        <= 0;
+          send_to_ifu_valid_r <= 0;
         end
       end
     end
@@ -148,14 +148,14 @@ module idu(
 
   reg idu_to_exu_en;
   always @(*) begin
-    if(next_state == DECODE && (idu_send_valid_r == 0) && !conflict) 
+    if(next_state == DECODE && (send_valid_r == 0) && !conflict) 
       idu_to_exu_en = 1;
     else
       idu_to_exu_en = 0;
   end
 
-  assign idu_send_valid           = idu_send_valid_r;
-  assign idu_send_to_ifu_valid    = idu_send_to_ifu_valid_r;
+  assign send_valid           = send_valid_r;
+  assign send_to_ifu_valid    = send_to_ifu_valid_r;
 
   Reg #(32, 32'h0) regd0 (clk, rst, instruction, instruction_o, idu_to_exu_en);
   Reg #(32, 32'h0) regd1 (clk, rst, pc,          pc_o         , idu_to_exu_en);
@@ -573,7 +573,7 @@ module idu(
     2'b11, csra_i_a
   });
 
-  assign pc_write_enable = idu_send_valid;
+  assign pc_write_enable = send_valid;
 
 
 endmodule

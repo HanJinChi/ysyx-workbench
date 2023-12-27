@@ -255,7 +255,7 @@ void exec_once(){
     step_and_dump_wave();
     step_and_dump_wave();
     clock_count++;
-    if(top->rootp->top__DOT__ls__DOT__lsu_send_valid_r == 1) {
+    if(top->rootp->top__DOT__ls__DOT__send_valid_r == 1) {
       step_and_dump_wave();
       step_and_dump_wave();
       clock_count++;

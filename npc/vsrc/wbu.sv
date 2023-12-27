@@ -1,7 +1,7 @@
 module wbu(
     input           clk,
     input           rst,
-    input           wbu_receive_valid,
+    input           receive_valid,
     input   [4 :0]  rs1,
     input   [4 :0]  rs2,
     input   [1 :0]  csr_rs, // read csr reg
@@ -13,13 +13,13 @@ module wbu(
     input           reg_en,
     input           csreg_en,
     input           ecall,
-    input   [31:0]  pc_input,
-    input   [31:0]  pc_next_input,
-    input   [31:0]  instruction_input,
+    input   [31:0]  pc_i,
+    input   [31:0]  pc_next_i,
+    input   [31:0]  instruction_i,
     output  [31:0]  rsa,
     output  [31:0]  rsb,
     output  [31:0]  csra,
-    output  [2 :0]  wbu_state_o,
+    output  [2 :0]  state_o,
     output          ebreak_o
 );
 
@@ -27,7 +27,7 @@ module wbu(
   reg ebreak_o_r;
   always @(posedge clk) begin
     if(rst) ebreak_o_r <= 0;
-    else  if(wbu_receive_valid) ebreak_o_r <= ebreak_i;
+    else  if(receive_valid) ebreak_o_r <= ebreak_i;
   end
 
   assign ebreak_o = ebreak_o_r;
@@ -43,29 +43,29 @@ module wbu(
   wire [31:0] instruction_subsequent;
   wire [31:0] instruction_previous;
 
-  Reg #(32, 32'b0) regp0(clk, rst, instruction_subsequent, instruction, wbu_receive_valid);
+  Reg #(32, 32'b0) regp0(clk, rst, instruction_subsequent, instruction, receive_valid);
 
   assign instruction_previous = instruction;
-  assign instruction_subsequent = instruction_input;
+  assign instruction_subsequent = instruction_i;
 
   reg  [31:0] pc;
   wire [31:0] pc_subsequent;
   wire [31:0] pc_previous;
 
-  Reg #(32, 32'b0) regp1(clk, rst, pc_subsequent, pc, wbu_receive_valid);
+  Reg #(32, 32'b0) regp1(clk, rst, pc_subsequent, pc, receive_valid);
 
   assign pc_previous = pc;
-  assign pc_subsequent = pc_input;
+  assign pc_subsequent = pc_i;
 
 
   reg  [31:0] pc_next;
   wire [31:0] pc_next_subsequent;
   wire [31:0] pc_next_previous;
 
-  Reg #(32, 32'b0) regp(clk, rst, pc_next_subsequent, pc_next, wbu_receive_valid);
+  Reg #(32, 32'b0) regp(clk, rst, pc_next_subsequent, pc_next, receive_valid);
 
   assign pc_next_previous = pc_next;
-  assign pc_next_subsequent = pc_next_input;
+  assign pc_next_subsequent = pc_next_i;
 
   
   reg  [31:0] regarray [31:0];
@@ -80,13 +80,13 @@ module wbu(
   genvar i;
   generate
       for(i = 0; i < 32; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_regarray_subsequent[i], regarray[i], wbu_receive_valid);
+        Reg #(32, 32'b0) regx(clk, rst, w_regarray_subsequent[i], regarray[i], receive_valid);
       end
   endgenerate
 
   generate
       for(i = 0; i < 4; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], wbu_receive_valid);
+        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], receive_valid);
       end
   endgenerate
 
@@ -122,15 +122,15 @@ module wbu(
   assign rsb  = regarray[rs2   ] ;
   assign csra = csrarray[csr_rs] ;
 
-  reg [2:0] wbu_state_o_r;
+  reg [2:0] state_o_r;
   always @(*) begin
-    if(!wbu_receive_valid) begin
-      wbu_state_o_r = 0;
+    if(!receive_valid) begin
+      state_o_r = 0;
     end else 
-      wbu_state_o_r = {csreg_en, reg_en, 1'b1};
+      state_o_r = {csreg_en, reg_en, 1'b1};
   end 
   
-  assign wbu_state_o = wbu_state_o_r;
+  assign state_o = state_o_r;
 
 
 endmodule

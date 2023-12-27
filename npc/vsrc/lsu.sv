@@ -1,13 +1,13 @@
 module lsu (
   input    wire          clk,
   input    wire          rst,
-  input    wire          lsu_receive_valid,
+  input    wire          receive_valid,
   input    wire          ren_i,
   input    wire          wen_i,
   input    wire          m_signed_i,
   input    wire  [7 :0]  wmask_i,
   input    wire  [31:0]  rmask_i,
-  input    wire  [31:0]  exu_result_i,
+  input    wire  [31:0]  result_i,
   input    wire  [31:0]  pc_i,
   input    wire  [31:0]  pc_next_i,
   input    wire  [31:0]  instruction_i,
@@ -29,8 +29,8 @@ module lsu (
   input    wire          wready,
   input    wire          bvalid,
   input    wire  [1 :0]  bresp,
-  output   wire          lsu_send_valid,
-  output   wire          lsu_send_ready,
+  output   wire          send_valid,
+  output   wire          send_ready,
   output   wire  [31:0]  wd_o,
   output   wire  [31:0]  csr_wd_o,
   output   wire  [4 :0]  rd_o,
@@ -67,7 +67,7 @@ module lsu (
   always @(*) begin
     case(state)
       IDLE:
-        if(lsu_receive_valid || buffer) begin
+        if(receive_valid || buffer) begin
           if(ren_v) 
             next_state = MEM_READ_A;
           else if(wen_v)
@@ -96,7 +96,7 @@ module lsu (
         else
           next_state = MEM_WRITE_B;
       MEM_NULL:
-        if(lsu_send_valid)
+        if(send_valid)
           next_state = IDLE;
         else
           next_state = MEM_NULL;
@@ -112,7 +112,7 @@ module lsu (
       buffer <= 0;
     end else begin
       if(buffer == 0) begin
-        if(lsu_receive_valid && (state != IDLE)) begin
+        if(receive_valid && (state != IDLE)) begin
           buffer  <= 1;
         end
       end
@@ -120,7 +120,7 @@ module lsu (
   end
 
   always @(*) begin
-    if(buffer == 0 && lsu_receive_valid && (state != IDLE)) 
+    if(buffer == 0 && receive_valid && (state != IDLE)) 
       buffer_en = 1;
     else 
       buffer_en = 0; 
@@ -147,7 +147,7 @@ module lsu (
   wire         ren_b;
   wire         wen_b;
 
-  Reg #(32, 32'h0) regd0 (clk, rst, exu_result_i,  exu_result_b,  buffer_en);
+  Reg #(32, 32'h0) regd0 (clk, rst, result_i,  exu_result_b,  buffer_en);
   Reg #(32, 32'h0) regd1 (clk, rst, pc_i,          pc_b,          buffer_en);
   Reg #(32, 32'h0) regd2 (clk, rst, pc_next_i,     pc_next_b,     buffer_en);
   Reg #(32, 32'h0) regd3 (clk, rst, instruction_i, instruction_b, buffer_en);
@@ -180,7 +180,7 @@ module lsu (
   reg  [31:0]   rmask;
   reg  [31:0]   reg_rdata;
 
-  reg          lsu_send_valid_r;
+  reg          send_valid_r;
   reg  [31:0]  araddr_r;
   reg          arvalid_r;
   reg          rready_r;
@@ -193,7 +193,7 @@ module lsu (
 
   always @(posedge clk) begin
     if(rst) begin
-      lsu_send_valid_r   <= 0;
+      send_valid_r   <= 0;
       m_signed           <= 0;
       rmask              <= 0;
       araddr_r           <= 0;
@@ -205,8 +205,8 @@ module lsu (
       wvalid_r           <= 0;
     end else begin
       if(next_state == IDLE) begin
-        if(lsu_send_valid_r) begin
-          lsu_send_valid_r <= 0;
+        if(send_valid_r) begin
+          send_valid_r <= 0;
         end
       end else begin
         if(next_state == MEM_READ_A) begin
@@ -234,8 +234,8 @@ module lsu (
           awvalid_r <= 0;
           wvalid_r  <= 0; 
         end else begin  // MEM_NULL 
-          if(lsu_send_valid_r == 0) begin
-            lsu_send_valid_r <= 1;
+          if(send_valid_r == 0) begin
+            send_valid_r <= 1;
             if(rvalid) begin
               reg_rdata <= rdata;  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
@@ -248,12 +248,12 @@ module lsu (
     end
   end
 
-  assign lsu_send_valid   = lsu_send_valid_r;
-  assign lsu_send_ready   = !buffer;
+  assign send_valid   = send_valid_r;
+  assign send_ready   = !buffer;
 
   reg lsu_to_wbu_en;
   always @(*) begin
-    if(next_state == MEM_NULL && lsu_send_valid_r == 0) begin
+    if(next_state == MEM_NULL && send_valid_r == 0) begin
       lsu_to_wbu_en = 1;
     end else
       lsu_to_wbu_en = 0;
@@ -316,7 +316,7 @@ module lsu (
   wire         ren_v;
   wire         wen_v;
 
-  assign exu_result_v  = buffer ? exu_result_b  : exu_result_i;
+  assign exu_result_v  = buffer ? exu_result_b  : result_i;
   assign pc_v          = buffer ? pc_b          : pc_i;
   assign pc_next_v     = buffer ? pc_next_b     : pc_next_i;
   assign instruction_v = buffer ? instruction_b : instruction_i;
@@ -337,8 +337,8 @@ module lsu (
   assign wen_v         = buffer ? wen_b         : wen_i; 
 
 
-  assign lsu_send_valid   = lsu_send_valid_r;
-  assign lsu_send_ready   = !buffer; // buffer
+  assign send_valid   = send_valid_r;
+  assign send_ready   = !buffer; // buffer
 
   assign araddr         = araddr_r;
   assign arvalid        = arvalid_r;

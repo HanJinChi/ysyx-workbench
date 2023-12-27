@@ -1,8 +1,8 @@
 module exu(
   input   wire           clk,
   input   wire           rst,
-  input   wire           exu_receive_valid,
-  input   wire           exu_receive_ready,
+  input   wire           receive_valid,
+  input   wire           receive_ready,
   input   wire   [31:0]  src1_i,
   input   wire   [31:0]  src2_i,
   input   wire   [31:0]  rsb_i,
@@ -26,7 +26,7 @@ module exu(
   input   wire   [31:0]  instruction_i,
   input   wire   [4 :0]  rd_i,
   input   wire   [1 :0]  csr_rd_i,
-  output  wire   [31:0]  exu_result_o,
+  output  wire   [31:0]  result_o,
   output  wire           zero_o,
   output  wire   [31:0]  src1_o,
   output  wire   [31:0]  src2_o,
@@ -50,13 +50,13 @@ module exu(
   output  wire   [31:0]  rsb_o,
   output  wire   [4 :0]  rd_o,
   output  wire   [1 :0]  csr_rd_o, 
-  output  wire           exu_send_valid,
-  output  wire           exu_send_ready,
-  output  wire   [3 :0]  exu_state_o
+  output  wire           send_valid,
+  output  wire           send_ready,
+  output  wire   [3 :0]  state_o
 );
 
   reg          state, next_state;
-  reg          exu_send_valid_r;
+  reg          send_valid_r;
   parameter    IDLE = 0, COMPUTE = 1;
 
   always @(posedge clk) begin
@@ -67,12 +67,12 @@ module exu(
   always @(*) begin
     case(state)
       IDLE:
-        if(exu_receive_valid || buffer)
+        if(receive_valid || buffer)
           next_state = COMPUTE;
         else
           next_state = IDLE;
       COMPUTE:
-        if(exu_send_valid && exu_receive_ready)
+        if(send_valid && receive_ready)
           next_state = IDLE;
         else
           next_state = COMPUTE;
@@ -132,14 +132,14 @@ module exu(
     if(rst) buffer <= 0;
     else begin
       if(buffer == 0)
-        if(exu_receive_valid && exu_send_valid)
+        if(receive_valid && send_valid)
           buffer <= 1;
     end
   end
 
   reg  buffer_en;
   always @(*) begin
-    if(buffer == 0 && exu_receive_valid && exu_send_valid)
+    if(buffer == 0 && receive_valid && send_valid)
       buffer_en = 1;
     else
       buffer_en = 0;
@@ -148,7 +148,7 @@ module exu(
   reg  exu_to_lsu_en;
   wire [4 :0] aluOp_w;
   always @(*) begin
-    if(next_state == COMPUTE && exu_send_valid_r == 0)
+    if(next_state == COMPUTE && send_valid_r == 0)
       exu_to_lsu_en = 1;
     else 
       exu_to_lsu_en = 0;
@@ -180,20 +180,20 @@ module exu(
 
   always @(posedge clk) begin
     if(rst) begin
-      exu_send_valid_r <= 0;
+      send_valid_r <= 0;
     end else begin
       if(next_state == COMPUTE) begin
-        if(exu_send_valid_r == 0) begin
-          exu_send_valid_r <= 1;
+        if(send_valid_r == 0) begin
+          send_valid_r <= 1;
           if(buffer) 
             buffer         <= 0;
         end
       end else begin
-        if(exu_send_valid_r) exu_send_valid_r <= 0;
+        if(send_valid_r) send_valid_r <= 0;
       end
     end
   end
-  assign exu_send_valid = exu_send_valid_r;
+  assign send_valid = send_valid_r;
 
 
   wire [31:0] result_arr [17:0];
@@ -267,7 +267,7 @@ module exu(
   assign zero_arr[17] = 0;
 
 
-  MuxKeyWithDefault #(18, 5, 32) exu_m0 (exu_result_o, aluOp_w, 32'b0, {
+  MuxKeyWithDefault #(18, 5, 32) exu_m0 (result_o, aluOp_w, 32'b0, {
     `YSYX_23060059_IMM,  result_arr[0],
     `YSYX_23060059_ADD,  result_arr[1],
     `YSYX_23060059_SUB,  result_arr[2],
@@ -313,7 +313,7 @@ module exu(
   // 第2bit指示next state
   // 第3bit代表处于exu的指令是否要写通用寄存器
   // 第4bit代表处于exu的指令是否要写csr寄存器
-  assign exu_state_o = {csreg_en_i_w, reg_en_i_w, next_state, state};
+  assign state_o = {csreg_en_i_w, reg_en_i_w, next_state, state};
 
   wire  [31:0]  src1_i_w;
   wire  [31:0]  src2_i_w;
@@ -339,7 +339,7 @@ module exu(
   wire  [4 :0]  rd_i_w;
   wire  [1 :0]  csr_rd_i_w;
 
-  assign exu_send_ready  = !buffer;
+  assign send_ready  = !buffer;
   assign src1_i_w        = buffer ? src1_b        : src1_i;
   assign src2_i_w        = buffer ? src2_b        : src2_i;
   assign aluOp_i_w       = buffer ? aluOp_b       : aluOp_i;
