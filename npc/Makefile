@@ -3,13 +3,19 @@ TOPNAME = top
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0
+
+VERILATOR_INC_PATH = $(WORK_DIR)/vsrc
+VERILATOR_INCFLAGS = $(addprefix -I, $(VERILATOR_INC_PATH))
+
+VERILATOR_CFLAGS += $(VERILATOR_INCFLAGS)
+
 				
 WORK_DIR  = $(shell pwd)
 
 BUILD_DIR = $(WORK_DIR)/build
 OBJ_DIR = $(WORK_DIR)/build/obj_dir
 
-INC_PATH = $(WORK_DIR)/csrc/include 
+INC_PATH = $(WORK_DIR)/csrc/include
 
 BIN = $(BUILD_DIR)/$(TOPNAME)
 

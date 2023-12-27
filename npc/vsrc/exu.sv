@@ -285,7 +285,7 @@ module exu(
     `YSYX_23060059_DIVU, result_arr[14],
     `YSYX_23060059_REM,  result_arr[15],
     `YSYX_23060059_SRC,  result_arr[16],
-    `YSYS_23060059_MULHU,  result_arr[17]
+    `YSYX_23060059_MULHU,  result_arr[17]
   });
 
   MuxKeyWithDefault #(18, 5, 1) exu_m1 (zero_o, aluOp_w, 0, {
@@ -306,7 +306,7 @@ module exu(
     `YSYX_23060059_DIVU, zero_arr[14],
     `YSYX_23060059_REM,  zero_arr[15],
     `YSYX_23060059_SRC,  zero_arr[16],
-    `YSYS_23060059_MULHU, zero_arr[17]
+    `YSYX_23060059_MULHU, zero_arr[17]
   });
 
   // 第1bit指示当前的状态

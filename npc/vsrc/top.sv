@@ -1,24 +1,4 @@
-`define YSYX_23060059_IMM   5'b00000
-`define YSYX_23060059_ADD   5'b00001
-`define YSYX_23060059_SUB   5'b00010
-`define YSYX_23060059_AND   5'b00011
-`define YSYX_23060059_XOR   5'b00100
-`define YSYX_23060059_OR    5'b00101
-`define YSYX_23060059_SL    5'b00110 // <<, unsigned
-`define YSYX_23060059_SR    5'b00111 // >>, unsigned 
-`define YSYX_23060059_DIV   5'b01000 // >=, unsigned
-`define YSYX_23060059_SSR   5'b01001 // >>, signed
-`define YSYX_23060059_SLES  5'b01010 // <, signed
-`define YSYX_23060059_ULES  5'b01011 // <, unsigned
-`define YSYX_23060059_REMU  5'b01100 // %, unsigned
-`define YSYX_23060059_MUL   5'b01101 // *, unsigned 
-`define YSYX_23060059_DIVU  5'b01110 // /, unsigned
-`define YSYX_23060059_REM   5'b01111 
-`define YSYX_23060059_SRC   5'b10000 
-`define YSYS_23060059_MULHU 5'b10001 // *, unsigned, mulhu
-
-`define YSYX_23060059_UART 32'ha00003f8
-
+`include "defines.sv"
 
 
 // define ALU TYPE

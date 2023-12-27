@@ -86,7 +86,7 @@ module wbu(
 
   generate
       for(i = 0; i < 4; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_csrarray_subsequent[i], csrarray[i], receive_valid);
+        Reg #(32, 32'b0) regt(clk, rst, w_csrarray_subsequent[i], csrarray[i], receive_valid);
       end
   endgenerate
 

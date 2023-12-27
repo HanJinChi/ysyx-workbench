@@ -1,13 +1,4 @@
-
-// define instruction TYPE
-`define YSYX_23060059_TYPE_I 3'b000
-`define YSYX_23060059_TYPE_U 3'b001
-`define YSYX_23060059_TYPE_S 3'b010
-`define YSYX_23060059_TYPE_J 3'b011
-`define YSYX_23060059_TYPE_B 3'b100
-`define YSYX_23060059_TYPE_R 3'b101
-`define YSYX_23060059_TYPE_V 3'b110
-
+`include "defines.sv"
 
 module idu(
   input    wire          clk,
@@ -400,7 +391,7 @@ module idu(
     10'b0000001101, `YSYX_23060059_DIVU,
     10'b0000001110, `YSYX_23060059_REM,
     10'b0000001100, `YSYX_23060059_DIV,
-    10'b0000001011, `YSYS_23060059_MULHU
+    10'b0000001011, `YSYX_23060059_MULHU
   });
 
   // aluOpB 

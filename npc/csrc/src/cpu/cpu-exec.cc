@@ -67,10 +67,10 @@ void n_pmem_write(int waddr, int wdata, char wmask){
 }
 
 void copy_cpu_state(){
-  cpu.csr.mcause =  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4;
-  cpu.csr.mepc   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4;
-  cpu.csr.mstatus   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4;
-  cpu.csr.mtvec   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regx____pinNumber4;
+  cpu.csr.mcause =  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;
+  cpu.csr.mepc   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4;
+  cpu.csr.mstatus   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4;
+  cpu.csr.mtvec   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4;
   cpu.gpr[0] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4;
   cpu.gpr[1] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4;
   cpu.gpr[2] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4;
@@ -118,10 +118,10 @@ void set_cpu_state(){
   top->clk = 0;
   top->rst = 0;
   top->pc = cpu.pc;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regx____pinNumber4 = cpu.csr.mcause ;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regx____pinNumber4 = cpu.csr.mepc;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regx____pinNumber4 = cpu.csr.mstatus ;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regx____pinNumber4 = cpu.csr.mtvec;
+  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4 = cpu.csr.mcause ;
+  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4 = cpu.csr.mepc;
+  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4 = cpu.csr.mstatus ;
+  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4 = cpu.csr.mtvec;
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4 = cpu.gpr[0];
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4 = cpu.gpr[1];
   top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4 = cpu.gpr[2];
