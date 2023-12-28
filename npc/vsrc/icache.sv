@@ -1,35 +1,66 @@
 `include "defines.sv"
 
 // 4KB data array
-// nset       : 8
+// nset       : 32
 // nway       : 8
-// block size : 512bit , 64Byte
+// block size : 128bit, 16Byte
 // meta size  : 25bit, 23bit tag + 1 bit valid + 1bit dirty 
 
 module icache(
-  input    wire          clk,
-  input    wire          rst,
-  input    wire          arvalid,
-  input    wire  [31:0]  addr_i,
-  output   wire  [31:0]  data_o,
-  output   wire          rvalid
+  input    wire           clk,
+  input    wire           rst,
+  input    wire           arvalid,
+  input    wire  [31 :0]  addr_i,
+  output   wire  [31 :0]  data_o,
+  output   wire           rvalid,
+  // axi part
+  input    wire           axi_arready,
+  input    wire  [31 :0]  axi_rdata,
+  input    wire           axi_rvalid,
+  input    wire  [1  :0]  axi_rresp,
+  output   wire           axi_arvalid,
+  output   wire           axi_rready,
+  output   wire  [31 :0]  axi_araddr,
+
+  //
+  output   wire  [5  :0]  io_sram0_addr,
+  output   wire           io_sram0_cen,
+  output   wire           io_sram0_wen,
+  output   wire  [127:0]  io_sram0_wmask,
+  output   wire  [127:0]  io_sram0_wdata,
+  input    wire  [127:0]  io_sram0_rdata,
+
+  output   wire  [5  :0]  io_sram1_addr,
+  output   wire           io_sram1_cen,
+  output   wire           io_sram1_wen,
+  output   wire  [127:0]  io_sram1_wmask,
+  output   wire  [127:0]  io_sram1_wdata,
+  input    wire  [127:0]  io_sram1_rdata,
+
+  output   wire  [5  :0]  io_sram2_addr,
+  output   wire           io_sram2_cen,
+  output   wire           io_sram2_wen,
+  output   wire  [127:0]  io_sram2_wmask,
+  output   wire  [127:0]  io_sram2_wdata,
+  input    wire  [127:0]  io_sram2_rdata,
+
+  output   wire  [5  :0]  io_sram3_addr,
+  output   wire           io_sram3_cen,
+  output   wire           io_sram3_wen,
+  output   wire  [127:0]  io_sram3_wmask,
+  output   wire  [127:0]  io_sram3_wdata,
+  input    wire  [127:0]  io_sram3_rdata 
 );
 
-  localparam nset = 8;
+  localparam nset = 32;
   localparam nway = 8;
-  // icache data size = 8*8*64B = 4KB
-  wire  [63:0] data [511:0];  // data array
-  wire  [63:0] meta [511:0];  // meta array
+  // icache data size = 32*8*16B = 4KB
+
+  wire  [24:0] meta [255:0];  // meta array
 
   genvar i;
   generate
-      for(i = 0; i < 64; i = i+1) begin
-        Reg #(512,512'b0) u_reg_data(clk, rst, , data[i], );
-      end
-  endgenerate
-  
-  generate
-    for(i = 0; i < 64; i = i+1) begin
+    for(i = 0; i < 256; i = i+1) begin
       Reg #(25,25'b0) u_reg_meta(clk, rst, , meta[i], );
     end
   endgenerate
@@ -48,11 +79,9 @@ module icache(
       end
     end
   end
-  assign hit = &hit_array;
 
   reg  [2:0] state, next_state;
   localparam IDLE = 0, HIT = 1, MISS = 2;
-
 
   always @(posedge clk) begin
     if(rst) state <= IDLE;
@@ -72,8 +101,45 @@ module icache(
     endcase
   end
 
-//   always @(posedge) begin
+  wire [2:0]  rway;
+  reg  axi_arvalid_r;
+  reg  axi_rready_r;
+  always @(posedge clk) begin
+    if(rst) begin
+      axi_arvalid_r <= 0;
+      axi_rready_r  <= 0;
+    end else begin
+      if(next_state == MISS) begin
+        axi_arvalid_r <= 1;
+        axi_araddr    <= araddr_r;
+      end
+    end
+  end
 
-//   end
+  reg [2:0] way;
+  reg       invalid;
+  reg       access; 
+  always @(*) begin
+    way     = 0;
+    access  = 0;
+    invalid = 0;
+    if(next_state == MISS) begin
+      way = rway;
+      access = 0;
+      if(meta[idx*nset+rway][23]) invalid = 1;
+      else                        invalid = 0;
+    end
+  end
+
+
+  replacer u_replacer(
+    .clk          (clk     ),
+    .rst          (rst     ),
+    .idx          (idx     ),
+    .way          (way     ),
+    .access       (access  ),
+    .invalid      (invalid ),
+    .rway_o       (rway    )
+  );
 
 endmodule

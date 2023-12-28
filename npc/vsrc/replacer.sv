@@ -8,7 +8,7 @@ module replacer(
   output   wire   [2:0]  rway_o
 );
   // same to cache
-  localparam nset = 8;
+  localparam nset = 32;
   localparam nway = 8;
 
   reg [nway-1:0] free_map [nset-1:0]; // 0代表未使用, 1代表已使用

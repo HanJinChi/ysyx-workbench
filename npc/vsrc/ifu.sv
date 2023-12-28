@@ -3,7 +3,7 @@ module ifu(
     input    wire          rst,
     input    wire  [31:0]  pc_next,
     input    wire  [31:0]  pc_next_idu,       // 来自idu的正确的pc_next
-    input    wire          receive_valid, // 来自idu的valid
+    input    wire          receive_valid,     // 来自idu的valid
     input    wire          receive_ready,
     input    wire          arready,
     input    wire  [31:0]  rdata,
