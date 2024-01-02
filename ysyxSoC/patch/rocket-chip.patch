@@ -1,0 +1,64 @@
+diff --git a/build.sc b/build.sc
+index 3cda29ac..b7bd0ac7 100644
+--- a/build.sc
++++ b/build.sc
+@@ -10,8 +10,8 @@ object v {
+   val scala = "2.13.10"
+   // the first version in this Map is the mainly supported version which will be used to run tests
+   val chiselCrossVersions = Map(
+-    "3.6.0" -> (ivy"edu.berkeley.cs::chisel3:3.6.0", ivy"edu.berkeley.cs:::chisel3-plugin:3.6.0"),
+     "5.0.0" -> (ivy"org.chipsalliance::chisel:5.0.0", ivy"org.chipsalliance:::chisel-plugin:5.0.0"),
++    "3.6.0" -> (ivy"edu.berkeley.cs::chisel3:3.6.0", ivy"edu.berkeley.cs:::chisel3-plugin:3.6.0"),
+   )
+   val mainargs = ivy"com.lihaoyi::mainargs:0.5.0"
+   val json4sJackson = ivy"org.json4s::json4s-jackson:4.0.5"
+@@ -141,14 +141,14 @@ trait Emulator extends Cross.Module2[String, String] {
+       os.proc("firtool",
+         generator.chirrtl().path,
+         s"--annotation-file=${generator.chiselAnno().path}",
+-        "-disable-infer-rw",
++        //"-disable-infer-rw",
+         "--disable-annotation-unknown",
+         "-dedup",
+         "-O=debug",
+-        "--split-verilog",
++        //"--split-verilog",
+         "--preserve-values=named",
+         "--output-annotation-file=mfc.anno.json",
+-        s"-o=${T.dest}"
++        s"-o=${T.dest}/TestHarness.sv"
+       ).call(T.dest)
+       PathRef(T.dest)
+     }
+diff --git a/src/main/scala/amba/axi4/Parameters.scala b/src/main/scala/amba/axi4/Parameters.scala
+index b059fb19..bd1fa835 100644
+--- a/src/main/scala/amba/axi4/Parameters.scala
++++ b/src/main/scala/amba/axi4/Parameters.scala
+@@ -121,10 +121,10 @@ case class AXI4BundleParameters(
+   val lenBits   = AXI4Parameters.lenBits
+   val sizeBits  = AXI4Parameters.sizeBits
+   val burstBits = AXI4Parameters.burstBits
+-  val lockBits  = AXI4Parameters.lockBits
+-  val cacheBits = AXI4Parameters.cacheBits
+-  val protBits  = AXI4Parameters.protBits
+-  val qosBits   = AXI4Parameters.qosBits
++  val lockBits  = 0 //AXI4Parameters.lockBits
++  val cacheBits = 0 //AXI4Parameters.cacheBits
++  val protBits  = 0 //AXI4Parameters.protBits
++  val qosBits   = 0 //AXI4Parameters.qosBits
+   val respBits  = AXI4Parameters.respBits
+ 
+   def union(x: AXI4BundleParameters) =
+diff --git a/src/main/scala/system/TestHarness.scala b/src/main/scala/system/TestHarness.scala
+index a1e37dea..46128b11 100644
+--- a/src/main/scala/system/TestHarness.scala
++++ b/src/main/scala/system/TestHarness.scala
+@@ -8,7 +8,7 @@ import freechips.rocketchip.devices.debug.Debug
+ import freechips.rocketchip.diplomacy.LazyModule
+ import freechips.rocketchip.util.AsyncResetReg
+ 
+-class TestHarness()(implicit p: Parameters) extends Module {
++class TestHarness2()(implicit p: Parameters) extends Module {
+   val io = IO(new Bundle {
+     val success = Output(Bool())
+   })
