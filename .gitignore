@@ -8,6 +8,7 @@
 !/npc/*
 !Makefile
 !README.md
+!/ysyxSoC/*
 !.gitignore
 !init.sh
 /fceux-am
