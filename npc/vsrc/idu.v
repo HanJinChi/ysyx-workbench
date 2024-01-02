@@ -1,4 +1,4 @@
-`include "defines.sv"
+`include "defines.v"
 
 module idu(
   input    wire          clk,

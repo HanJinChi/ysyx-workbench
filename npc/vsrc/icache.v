@@ -1,4 +1,4 @@
-`include "defines.sv"
+`include "defines.v"
 
 // 4KB data array
 // nset       : 32
