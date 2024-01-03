@@ -2474,7 +2474,7 @@ module CPU(
   wire [63:0] masterNodeOut_rdata = auto_master_out_rdata;	// @[src/main/scala/diplomacy/Nodes.scala:1205:17]
   wire [1:0]  masterNodeOut_rresp = auto_master_out_rresp;	// @[src/main/scala/diplomacy/Nodes.scala:1205:17]
   wire        masterNodeOut_rlast = auto_master_out_rlast;	// @[src/main/scala/diplomacy/Nodes.scala:1205:17]
-  ysyx_00000000 cpu (	// @[src/main/scala/ysyxSoC/CPU.scala:38:21]
+  ysyx_23060059 cpu (	// @[src/main/scala/ysyxSoC/CPU.scala:38:21]
     .clock                   (clock),
     .reset                   (reset),
     .io_interrupt            (1'h0),	// @[src/main/scala/ysyxSoC/CPU.scala:35:23, :36:19, :38:21]

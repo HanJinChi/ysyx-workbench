@@ -29,7 +29,8 @@
 `define YSYX_23060059_TYPE_R      3'b101
 `define YSYX_23060059_TYPE_V      3'b110
 
-`define YSYX_23060059_UART        32'ha00003f8
+`define YSYX_23060059_CLINT_I     32'h0200_0000 
+`define YSYX_23060059_CLINT_X     32'h0200_ffff 
 
 // 
 `define YSYX_23060059_ADDR_WIDTH  32

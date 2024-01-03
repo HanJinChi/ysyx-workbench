@@ -1,17 +1,76 @@
 `include "defines.v"
 
-
 // define ALU TYPE
 import "DPI-C" function void n_pmem_read(input int raddr, output int rdata);
 import "DPI-C" function void n_pmem_write(input int waddr, input int wdata, input byte wmask);
 
-module top(
-    input                 clk,
-    input                 rst,
-    output reg  [31:0]    pc_next,
-    output reg  [31:0]    pc,
-    output                ebreak_t,
-    output                skip_d
+module ysyx_23060059(
+    input            clock,
+    input            reset,
+    input            io_interrupt,
+    input		         io_master_awready,	
+    output		       io_master_awvalid,	
+    output	[31:0]	 io_master_awaddr,	
+    output	[3 :0] 	 io_master_awid,
+    output	[7 :0]	 io_master_awlen,	
+    output	[2 :0]	 io_master_awsize,	
+    output	[1 :0]	 io_master_awburst,	
+    input		         io_master_wready,	
+    output		       io_master_wvalid,	
+    output	[63:0]	 io_master_wdata,
+    output	[7 :0]	 io_master_wstrb,	
+    output		       io_master_wlast,	
+    output		       io_master_bready,	
+    input		         io_master_bvalid,	
+    input	  [1 :0]	 io_master_bresp,
+    input	  [3 :0]	 io_master_bid,
+    input		         io_master_arready,	
+    output		       io_master_arvalid,	
+    output	[31:0]	 io_master_araddr,	
+    output	[3 :0]	 io_master_arid,
+    output	[7 :0]	 io_master_arlen,	
+    output	[2 :0]	 io_master_arsize,	
+    output	[1 :0]	 io_master_arburst,	
+    output		       io_master_rready,	
+    input		         io_master_rvalid,	
+    input	  [1 :0]	 io_master_rresp,
+    input	  [63:0]   io_master_rdata,	
+    input		         io_master_rlast,	
+    input 	[3 :0]	 io_master_rid,
+
+    output		       io_slave_awready,
+    input		         io_slave_awvalid,
+    input	  [31:0]	 io_slave_awaddr,
+    input	  [3 :0]	 io_slave_awid,
+    input	  [7 :0]	 io_slave_awlen,
+    input	  [2 :0]	 io_slave_awsize,
+    input	  [1 :0]	 io_slave_awburst,
+    output		       io_slave_wready,
+    input		         io_slave_wvalid,
+    input	  [63:0]	 io_slave_wdata,
+    input	  [7 :0]	 io_slave_wstrb,
+    input		         io_slave_wlast,
+    input		         io_slave_bready,
+    output		       io_slave_bvalid,
+    output	[1 :0]	 io_slave_bresp,
+    output	[3 :0]	 io_slave_bid,
+    output		       io_slave_arready,
+    input		         io_slave_arvalid,
+    input	  [31:0]	 io_slave_araddr,
+    input	  [3 :0]	 io_slave_arid,
+    input	  [7 :0]	 io_slave_arlen,
+    input	  [2 :0]	 io_slave_arsize,
+    input	  [1 :0]	 io_slave_arburst,
+    input		         io_slave_rready,
+    output		       io_slave_rvalid,
+    output	[1 :0]	 io_slave_rresp,
+    output	[63:0]	 io_slave_rdata,
+    output		       io_slave_rlast,
+    output	[3 :0]	 io_slave_rid
+    // output reg  [31:0]    pc_next,
+    // output reg  [31:0]    pc,
+    // output                ebreak_t,
+    // output                skip_d
 );
 
   wire                  endflag; 
@@ -107,8 +166,8 @@ module top(
   wire                  rreadyB;
   wire                  arreadyA;
   wire                  arreadyB;
-  wire   [31:0]         rdataA;
-  wire   [31:0]         rdataB;
+  wire   [63:0]         rdataA;
+  wire   [63:0]         rdataB;
   wire                  rvalidA;
   wire                  rvalidB;
   wire   [1 :0]         rrespA;
@@ -117,8 +176,8 @@ module top(
   wire   [31:0]         awaddrB;
   wire                  awvalidA;
   wire                  awvalidB;
-  wire   [31:0]         wdataA;
-  wire   [31:0]         wdataB;
+  wire   [63:0]         wdataA;
+  wire   [63:0]         wdataB;
   wire   [7 :0]         wstrbA;
   wire   [7 :0]         wstrbB;
   wire                  wvalidA;
@@ -133,15 +192,37 @@ module top(
   wire   [1 :0]         brespB;
   wire                  bvalidA;
   wire                  bvalidB;
+  wire   [3 :0]         awidA;
+  wire   [3 :0]         awidB;
+  wire   [7 :0]         awlenA;
+  wire   [7 :0]         awlenB;
+  wire   [2 :0]         awsizeA;
+  wire   [2 :0]         awsizeB;
+  wire   [1 :0]         awburstA;
+  wire   [1 :0]         awburstB;
+  wire                  wlastA;
+  wire                  wlastB;
+  wire   [3 :0]         bidA;
+  wire   [3 :0]         bidB;
+  wire   [3 :0]         aridA;
+  wire   [3 :0]         aridB;
+  wire   [7 :0]         arlenA;
+  wire   [7 :0]         arlenB;
+  wire   [2 :0]         arsizeA;
+  wire   [2 :0]         arsizeB;
+  wire   [1 :0]         arburstA;
+  wire   [1 :0]         arburstB;
+  wire                  rlastA;
+  wire                  rlastB;
+  wire   [3 :0]         ridA;
+  wire   [3 :0]         ridB;
 
-
-  Reg #(32, 32'h80000000) regd(clk, rst, pc_next_idu, pc,  pc_write_enable); // assign pc value
-
+  Reg #(32, 32'h80000000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
   // instruction fetch Unit
-  ifu ifufetch(
-    .clk                   (clk              ),
-    .rst                   (rst              ),
+  ysyx_23060059_ifu ifufetch(
+    .clock                 (clock            ),
+    .reset                 (reset            ),
     .pc_next               (pc_next          ),
     .pc_next_idu           (pc_next_idu      ),
     .receive_valid         (ifu_receive_valid),
@@ -151,18 +232,24 @@ module top(
     .pc_ifu_to_idu         (pc_ifu_to_idu    ),
     .instruction           (instruction      ),
     .arready               (arreadyA         ),
+    .araddr                (araddrA          ),
+    .arvalid               (arvalidA         ),
+    .arid                  (aridA            ),
+    .arlen                 (arlenA           ),
+    .arsize                (arsizeA          ),
+    .arburst               (arburstA         ),
     .rdata                 (rdataA           ),
     .rvalid                (rvalidA          ),
     .rresp                 (rrespA           ),
-    .araddr                (araddrA          ),
-    .arvalid               (arvalidA         ),
-    .rready                (rreadyA          )
+    .rready                (rreadyA          ),
+    .rlast                 (rlastA           ),
+    .rid                   (ridA             )
   );
 
   // instruction Decode Unit
-  idu id(
-    .clk                   (clk              ),
-    .rst                   (rst              ),
+  ysyx_23060059_idu id(
+    .clock                 (clock            ),
+    .reset                 (reset            ),
     .instruction_i         (instruction      ),
     .pc_i                  (pc_ifu_to_idu    ),
     .rsa                   (rsa              ),
@@ -215,9 +302,9 @@ module top(
   );
 
   // Reg Array Unit
-  wbu wb(
-    .clk                   (clk              ),
-    .rst                   (rst              ),
+  ysyx_23060059_wbu wb(
+    .clock                 (clock            ),
+    .reset                 (reset            ),
     .receive_valid         (lsu_send_valid   ),
     .rs1                   (rs1              ),
     .rs2                   (rs2              ),
@@ -241,9 +328,9 @@ module top(
   );
 
   // Exection Unit  
-  exu ex(
-    .clk                   (clk              ),
-    .rst                   (rst              ),
+  ysyx_23060059_exu ex(
+    .clock                 (clock            ),
+    .reset                 (reset            ),
     .receive_valid         (idu_send_valid   ),
     .receive_ready         (lsu_send_ready   ),
     .src1_i                (src1             ),
@@ -298,9 +385,9 @@ module top(
     .state_o               (exu_state        )  
   );
 
-  lsu ls(
-    .clk                   (clk              ),
-    .rst                   (rst              ),
+  ysyx_23060059_lsu ls(
+    .clock                 (clock            ),
+    .reset                 (reset            ),
     .receive_valid         (exu_send_valid   ),
     .ren_i                 (ren_exu          ),
     .wen_i                 (wen_exu          ),
@@ -338,28 +425,45 @@ module top(
     .instruction_o         (instruction_lsu  ),
     .send_ready            (lsu_send_ready   ),
     .lsu_state             (lsu_state        ),
+
     .arready               (arreadyB         ),
+    .araddr                (araddrB          ),
+    .arvalid               (arvalidB         ),
+    .arid                  (aridB            ),
+    .arlen                 (arlenB           ),
+    .arsize                (arsizeB          ),
+    .arburst               (arburstB         ),
+
     .rdata                 (rdataB           ),
     .rresp                 (rrespB           ),
     .rvalid                (rvalidB          ),
-    .awready               (awreadyB         ),
-    .wready                (wreadyB          ),
-    .bvalid                (bvalidB          ),
-    .bresp                 (brespB           ),
-    .araddr                (araddrB          ),
-    .arvalid               (arvalidB         ),
+    .rlast                 (rlastB           ),
+    .rid                   (ridB             ),
     .rready                (rreadyB          ),
+
+    .awready               (awreadyB         ),
     .awaddr                (awaddrB          ),
     .awvalid               (awvalidB         ),
-    .wvalid                (wvalidB          ),
-    .bready                (breadyB          ),
+    .awid                  (awidB            ),
+    .awlen                 (awlenB           ),
+    .awsize                (awsizeB          ),
+    .awburst               (awburstB         ),
+
+    .wready                (wreadyB          ),
     .wdata                 (wdataB           ),
-    .wstrb                 (wstrbB           )
+    .wstrb                 (wstrbB           ),
+    .wvalid                (wvalidB          ),
+    .wlast                 (wlastB           ),
+    
+    .bvalid                (bvalidB          ),
+    .bresp                 (brespB           ),
+    .bready                (breadyB          ),
+    .bid                   (bidB             )
   );
 
-  arbiter arb(
-    .clk                    (clk             ),
-    .rst                    (rst             ),
+  ysyx_23060059_arbiter arb(
+    .clock                  (clock           ),
+    .reset                  (reset           ),
     .araddrA                (araddrA         ),
     .araddrB                (araddrB         ),
     .arvalidA               (arvalidA        ),
@@ -396,8 +500,11 @@ module top(
     .brespB_o               (brespB          )
   );
 
-  reg [31:0] set_pc;
-
+  reg  [31:0]  set_pc;
+  reg  [31:0]  pc_next;
+  wire [31:0]  pc;
+  wire         skip_d;
+  wire         ebreak_t;
   // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
 
   always @(*) begin
@@ -425,8 +532,8 @@ module top(
   end
 
   reg [31:0] pc_next_r;
-  always @(posedge clk) begin
-    if(rst) pc_next_r <= 0;
+  always @(posedge clock) begin
+    if(reset) pc_next_r <= 0;
     else
       pc_next_r <= pc_next;
   end

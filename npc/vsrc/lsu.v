@@ -1,6 +1,6 @@
-module lsu (
-  input    wire          clk,
-  input    wire          rst,
+module ysyx_23060059_lsu (
+  input    wire          clock,
+  input    wire          reset,
   input    wire          receive_valid,
   input    wire          ren_i,
   input    wire          wen_i,
@@ -21,14 +21,6 @@ module lsu (
   input    wire          csreg_en_i,
   input    wire          ecall_i,
   input    wire          ebreak_i,
-  input    wire          arready,
-  input    wire  [31:0]  rdata,
-  input    wire  [1 :0]  rresp,
-  input    wire          rvalid,
-  input    wire          awready,
-  input    wire          wready,
-  input    wire          bvalid,
-  input    wire  [1 :0]  bresp,
   output   wire          send_valid,
   output   wire          send_ready,
   output   wire  [31:0]  wd_o,
@@ -45,22 +37,61 @@ module lsu (
   output   wire          ecall_o,
   output   wire          ebreak_o,
   output   wire          skip_d_o,
+
+  // lsu <-> axi, ar channel
+  input    wire          arready,
   output   wire  [31:0]  araddr,
   output   wire          arvalid,
+  output   wire  [3 :0]  arid,
+  output   wire  [7 :0]  arlen,
+  output   wire  [2 :0]  arsize,
+  output   wire  [1 :0]  arburst,
+  // lsu <-> axi, r channel
+  input    wire          rvalid,
+  input    wire  [1 :0]  rresp,
+  input    wire  [63:0]  rdata,
+  input    wire          rlast,
+  input    wire  [3 :0]  rid,
   output   wire          rready,
+  // lsu <-> axi, aw channel
+  input    wire          awready,
   output   wire  [31:0]  awaddr,
   output   wire          awvalid,
+  output   wire  [3 :0]  awid,
+  output   wire  [7 :0]  awlen,
+  output   wire  [2 :0]  awsize,
+  output   wire  [1 :0]  awburst,
+  // lsu <-> axi, w channel
+  input    wire          wready,
   output   wire          wvalid,
-  output   wire          bready,
-  output   wire  [31:0]  wdata,
+  output   wire  [63:0]  wdata,
   output   wire  [7 :0]  wstrb,
+  output   wire          wlast,
+  // lsu <-> axi, b channel
+  input    wire          bvalid,
+  input    wire  [1 :0]  bresp,
+  input    wire  [3 :0]  bid,
+  output   wire          bready,
+
   output   wire          lsu_state
 );
+  // r
+  assign arid    = 4'b0;
+  assign arlen   = 8'b0;
+  assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
+  assign arburst = 2'b01;  // INCR
+  // w
+  assign awid    = 4'b0;
+  assign awlen   = 8'b0;
+  assign awsize  = 3'b010;
+  assign awburst = 2'b01;
+
+
   reg [2:0]  state, next_state;
   parameter  IDLE = 0, MEM_READ_A = 1, MEM_READ_B = 2, MEM_WRITE_A = 3, MEM_WRITE_B = 4, MEM_NULL = 5;
 
-  always @(posedge clk) begin
-    if(rst) state <= IDLE;
+  always @(posedge clock) begin
+    if(reset) state <= IDLE;
     else    state <= next_state;
   end
 
@@ -107,8 +138,8 @@ module lsu (
   reg buffer_en;
   reg buffer;
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       buffer <= 0;
     end else begin
       if(buffer == 0) begin
@@ -147,25 +178,25 @@ module lsu (
   wire         ren_b;
   wire         wen_b;
 
-  Reg #(32, 32'h0) regd0 (clk, rst, result_i,  exu_result_b,  buffer_en);
-  Reg #(32, 32'h0) regd1 (clk, rst, pc_i,          pc_b,          buffer_en);
-  Reg #(32, 32'h0) regd2 (clk, rst, pc_next_i,     pc_next_b,     buffer_en);
-  Reg #(32, 32'h0) regd3 (clk, rst, instruction_i, instruction_b, buffer_en);
-  Reg #(1,  1 'h0) regd4 (clk, rst, m_signed_i,    m_signed_b,    buffer_en);
-  Reg #(32, 32'h0) regd5 (clk, rst, rmask_i,       rmask_b,       buffer_en);
-  Reg #(1,  1 'h0) regd6 (clk, rst, ecall_i,       ecall_b,       buffer_en);
-  Reg #(1,  1 'h0) regd7 (clk, rst, ebreak_i,      ebreak_b,      buffer_en);
-  Reg #(32, 32'h0) regd8 (clk, rst, src2_i,        src2_b,        buffer_en);
-  Reg #(32, 32'h0) regd9 (clk, rst, rsb_i,         rsb_b,         buffer_en);
-  Reg #(2,  2 'h0) regd10(clk, rst, wdOp_i,        wdOp_b,        buffer_en);
-  Reg #(1,  1 'h0) regd11(clk, rst, csrwdOp_i,     csrwdOp_b,     buffer_en);
-  Reg #(5,  5 'h0) regd12(clk, rst, rd_i,          rd_b,          buffer_en);
-  Reg #(2,  2 'h0) regd13(clk, rst, csr_rd_i,      csr_rd_b,      buffer_en);
-  Reg #(1,  1 'h0) regd14(clk, rst, reg_en_i,      reg_en_b,      buffer_en);
-  Reg #(1,  1 'h0) regd15(clk, rst, csreg_en_i,    csreg_en_b,    buffer_en);
-  Reg #(8,  8 'h0) regd16(clk, rst, wmask_i,       wmask_b,       buffer_en);
-  Reg #(1,  1 'h0) regd30(clk, rst, ren_i,         ren_b,         buffer_en);
-  Reg #(1,  1 'h0) regd31(clk, rst, wen_i,         wen_b,         buffer_en);
+  Reg #(32, 32'h0) regd0 (clock, reset, result_i,  exu_result_b,  buffer_en);
+  Reg #(32, 32'h0) regd1 (clock, reset, pc_i,          pc_b,          buffer_en);
+  Reg #(32, 32'h0) regd2 (clock, reset, pc_next_i,     pc_next_b,     buffer_en);
+  Reg #(32, 32'h0) regd3 (clock, reset, instruction_i, instruction_b, buffer_en);
+  Reg #(1,  1 'h0) regd4 (clock, reset, m_signed_i,    m_signed_b,    buffer_en);
+  Reg #(32, 32'h0) regd5 (clock, reset, rmask_i,       rmask_b,       buffer_en);
+  Reg #(1,  1 'h0) regd6 (clock, reset, ecall_i,       ecall_b,       buffer_en);
+  Reg #(1,  1 'h0) regd7 (clock, reset, ebreak_i,      ebreak_b,      buffer_en);
+  Reg #(32, 32'h0) regd8 (clock, reset, src2_i,        src2_b,        buffer_en);
+  Reg #(32, 32'h0) regd9 (clock, reset, rsb_i,         rsb_b,         buffer_en);
+  Reg #(2,  2 'h0) regd10(clock, reset, wdOp_i,        wdOp_b,        buffer_en);
+  Reg #(1,  1 'h0) regd11(clock, reset, csrwdOp_i,     csrwdOp_b,     buffer_en);
+  Reg #(5,  5 'h0) regd12(clock, reset, rd_i,          rd_b,          buffer_en);
+  Reg #(2,  2 'h0) regd13(clock, reset, csr_rd_i,      csr_rd_b,      buffer_en);
+  Reg #(1,  1 'h0) regd14(clock, reset, reg_en_i,      reg_en_b,      buffer_en);
+  Reg #(1,  1 'h0) regd15(clock, reset, csreg_en_i,    csreg_en_b,    buffer_en);
+  Reg #(8,  8 'h0) regd16(clock, reset, wmask_i,       wmask_b,       buffer_en);
+  Reg #(1,  1 'h0) regd30(clock, reset, ren_i,         ren_b,         buffer_en);
+  Reg #(1,  1 'h0) regd31(clock, reset, wen_i,         wen_b,         buffer_en);
 
 
   wire  [31:0]  exu_result;
@@ -191,8 +222,8 @@ module lsu (
   reg  [31:0]  wdata_r;
   reg  [7 :0]  wstrb_r;    
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       send_valid_r   <= 0;
       m_signed           <= 0;
       rmask              <= 0;
@@ -237,7 +268,7 @@ module lsu (
           if(send_valid_r == 0) begin
             send_valid_r <= 1;
             if(rvalid) begin
-              reg_rdata <= rdata;  // MEM_READ_B -> MEM_NULL
+              reg_rdata <= rdata[31:0];  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
               if(buffer)
                 buffer             <= 0;
@@ -259,22 +290,22 @@ module lsu (
       lsu_to_wbu_en = 0;
   end
 
-  Reg #(32, 32'h0) regd17 (clk, rst, pc_v,          pc_o,          lsu_to_wbu_en);
-  Reg #(32, 32'h0) regd18 (clk, rst, pc_next_v,     pc_next_o,     lsu_to_wbu_en);
-  Reg #(32, 32'h0) regd19 (clk, rst, instruction_v, instruction_o, lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd20 (clk, rst, ecall_v,       ecall_o,       lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd21 (clk, rst, ebreak_v,      ebreak_o,      lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd22 (clk, rst, reg_en_v,      reg_en_o,      lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd23 (clk, rst, csreg_en_v,    csreg_en_o,    lsu_to_wbu_en);
-  Reg #(5,  5 'h0) regd27 (clk, rst, rd_v,          rd_o,          lsu_to_wbu_en);
-  Reg #(2,  2 'h0) regd28 (clk, rst, csr_rd_v,      csr_rd_o,      lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd17 (clock, reset, pc_v,          pc_o,          lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd18 (clock, reset, pc_next_v,     pc_next_o,     lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd19 (clock, reset, instruction_v, instruction_o, lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd20 (clock, reset, ecall_v,       ecall_o,       lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd21 (clock, reset, ebreak_v,      ebreak_o,      lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd22 (clock, reset, reg_en_v,      reg_en_o,      lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd23 (clock, reset, csreg_en_v,    csreg_en_o,    lsu_to_wbu_en);
+  Reg #(5,  5 'h0) regd27 (clock, reset, rd_v,          rd_o,          lsu_to_wbu_en);
+  Reg #(2,  2 'h0) regd28 (clock, reset, csr_rd_v,      csr_rd_o,      lsu_to_wbu_en);
 
-  Reg #(32, 32'h0) regd24 (clk, rst, src2_v,        src2,          lsu_to_wbu_en);
-  Reg #(2,  2 'h0) regd25 (clk, rst, wdOp_v,        wdOp,          lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd26 (clk, rst, csrwdOp_v,     csrwdOp,       lsu_to_wbu_en);
-  Reg #(32, 32'h0) regd29 (clk, rst, exu_result_v,  exu_result,    lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd32 (clk, rst, ren_v,         ren,           lsu_to_wbu_en);
-  Reg #(1,  1 'h0) regd33 (clk, rst, wen_v,         wen,           lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd24 (clock, reset, src2_v,        src2,          lsu_to_wbu_en);
+  Reg #(2,  2 'h0) regd25 (clock, reset, wdOp_v,        wdOp,          lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd26 (clock, reset, csrwdOp_v,     csrwdOp,       lsu_to_wbu_en);
+  Reg #(32, 32'h0) regd29 (clock, reset, exu_result_v,  exu_result,    lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd32 (clock, reset, ren_v,         ren,           lsu_to_wbu_en);
+  Reg #(1,  1 'h0) regd33 (clock, reset, wen_v,         wen,           lsu_to_wbu_en);
 
   MuxKeyWithDefault #(3, 32, 32) rwd(mread, rmask, 32'h0, {
     32'h000000ff, m_signed ? {{24{reg_rdata[7]}} , reg_rdata[7:0]}  : reg_rdata & rmask,
@@ -347,16 +378,17 @@ module lsu (
   assign awvalid        = awvalid_r;
   assign wvalid         = wvalid_r;
   assign bready         = bready_r;
-  assign wdata          = wdata_r;
   assign wstrb          = wstrb_r;
+  assign wdata          = {32'b0, wdata_r};
 
-  always @(posedge clk) begin
-    if(rst) rready_r <= 0;
+
+  always @(posedge clock) begin
+    if(reset) rready_r <= 0;
     else    rready_r <= 1;
   end
 
-  always @(posedge clk) begin
-    if(rst) bready_r <= 0;
+  always @(posedge clock) begin
+    if(reset) bready_r <= 0;
     else    bready_r <= 1;
   end 
 

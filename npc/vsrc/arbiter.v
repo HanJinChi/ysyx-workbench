@@ -1,37 +1,64 @@
 
-module arbiter(
-  input    wire          clk,
-  input    wire          rst,
+module ysyx_23060059_arbiter(
+  input    wire          clock,
+  input    wire          reset,
+  // ar channel
   input    wire  [31:0]  araddrA,
   input    wire  [31:0]  araddrB,
   input    wire          arvalidA,
   input    wire          arvalidB,
-  input    wire          rreadyA,
-  input    wire          rreadyB,
-  input    wire  [31:0]  awaddrA,
-  input    wire  [31:0]  awaddrB,
-  input    wire          awvalidA,
-  input    wire          awvalidB,
-  input    wire  [31:0]  wdataA,
-  input    wire  [31:0]  wdataB,
-  input    wire  [7 :0]  wstrbA,
-  input    wire  [7 :0]  wstrbB,
-  input    wire          wvalidA,
-  input    wire          wvalidB,
-  input    wire          breadyA,
-  input    wire          breadyB,
+  input    wire  [3 :0]  aridA,
+  input    wire  [3 :0]  aridB,
+  input    wire  [7 :0]  arlenA,
+  input    wire  [7 :0]  arlenB,
+  input    wire  [2 :0]  arsizeA,
+  input    wire  [2 :0]  arsizeB,
+  input    wire  [1 :0]  arburstA,
+  input    wire  [1 :0]  arburstB,
   output   wire          arreadyA_o,
   output   wire          arreadyB_o,
-  output   wire  [31:0]  rdataA_o,
-  output   wire  [31:0]  rdataB_o,
+  // r channel
+  input    wire          rreadyA,
+  input    wire          rreadyB,
+  output   wire  [63:0]  rdataA_o,
+  output   wire  [63:0]  rdataB_o,
   output   wire          rvalidA_o,
   output   wire          rvalidB_o,
   output   wire  [1 :0]  rrespA_o,
   output   wire  [1 :0]  rrespB_o,
+  output   wire  [3 :0]  ridA_o,
+  output   wire  [3 :0]  ridB_o,
+  output   wire          rlastA_o,
+  output   wire          rlastB_o,
+  // aw channel 
+  input    wire  [31:0]  awaddrA,
+  input    wire  [31:0]  awaddrB,
+  input    wire          awvalidA,
+  input    wire          awvalidB,
+  input    wire  [3 :0]  awidA,
+  input    wire  [3 :0]  awidB,
+  input    wire  [7 :0]  awlenA,
+  input    wire  [7 :0]  awlenB,
+  input    wire  [2 :0]  awsizeA,
+  input    wire  [2 :0]  awsizeB,
+  input    wire  [1 :0]  awburstA,
+  input    wire  [1 :0]  awburstB
   output   wire          awreadyA_o,
   output   wire          awreadyB_o,
+  // w channel
+  input    wire  [63:0]  wdataA,
+  input    wire  [63:0]  wdataB,
+  input    wire  [7 :0]  wstrbA,
+  input    wire  [7 :0]  wstrbB,
+  input    wire          wvalidA,
+  input    wire          wvalidB,
+  input    wire          wlastA,
+  input    wire          wlastB,
   output   wire          wreadyA_o,
   output   wire          wreadyB_o,
+  // b channel
+  input    wire          breadyA,
+  input    wire          breadyB,
   output   wire          bvalidA_o,
   output   wire          bvalidB_o,
   output   wire  [1 :0]  brespA_o, 
@@ -42,8 +69,8 @@ module arbiter(
   reg   [1 :0]  ar_next_state;
   reg   [1 :0]  araddrMux;
 
-  always @(posedge clk) begin
-    if(rst) ar_state <= 0;
+  always @(posedge clock) begin
+    if(reset) ar_state <= 0;
     else    ar_state <= ar_next_state; 
   end
 
@@ -75,8 +102,8 @@ module arbiter(
   end
 
   reg   [1 :0]  araddrMux_s;  // for save
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       araddrMux_s  <= 0;
     end else begin
       if(ar_next_state == MEM_R_A) begin
@@ -108,12 +135,12 @@ module arbiter(
   reg           rreadySA,  rreadySB;
 
   reg           arreadyA_o_r, arreadyB_o_r;
-  reg   [31:0]  rdataA_o_r, rdataB_o_r;
+  reg   [63:0]  rdataA_o_r, rdataB_o_r;
   reg   [1 :0]  rrespA_o_r, rrespB_o_r;
   reg           rvalidA_o_r, rvalidB_o_r;
 
   wire          arreadySA, arreadySB;
-  wire  [31:0]  rdataSA,   rdataSB;
+  wire  [63:0]  rdataSA,   rdataSB;
   wire  [1 :0]  rrespSA,   rrespSB;
   wire          rvalidSA,  rvalidSB;
 
@@ -215,8 +242,8 @@ module arbiter(
   reg   [1 :0]  aw_state;
   reg   [1 :0]  aw_next_state;
 
-  always @(posedge clk) begin
-    if(rst) aw_state <= 0;
+  always @(posedge clock) begin
+    if(reset) aw_state <= 0;
     else    aw_state <= aw_next_state; 
   end
 
@@ -249,8 +276,8 @@ module arbiter(
 
 
   reg   [1 :0]  wMux_s;  // for save
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       wMux_s  <= 0;
     end else begin
       if(aw_next_state == MEM_W_A) begin
@@ -279,7 +306,7 @@ module arbiter(
 
   reg          awvalidSA,    awvalidSB;
   reg  [31:0]  awaddrSA,     awaddrSB;
-  reg  [31:0]  wdataSA,      wdataSB;
+  reg  [63:0]  wdataSA,      wdataSB;
   reg  [7 :0]  wstrbSA,      wstrbSB;
   reg          wvalidSA,     wvalidSB;
   reg          breadySA,     breadySB;
@@ -398,52 +425,5 @@ module arbiter(
     end
     endcase
   end 
-
-  axi_uart au(
-    .aclk(clk),
-    .areset(rst),
-    .araddr(araddrSA),
-    .arvalid(arvalidSA),
-    .arready(arreadySA),
-    .rready(rreadySA),
-    .rdata(rdataSA),
-    .rvalid(rvalidSA),
-    .rresp(rrespSA),
-    .awaddr(awaddrSA),
-    .awvalid(awvalidSA),
-    .wdata(wdataSA),
-    .wstrb(wstrbSA),
-    .wvalid(wvalidSA),
-    .bready(breadySA),
-    .awready(awreadySA),
-    .wready(wreadySA),
-    .bvalid(bvalidSA),
-    .bresp(brespSA)
-  );
-
-  axi_sram as(
-    .aclk(clk),
-    .areset(rst),
-    .araddr(araddrSB),
-    .arvalid(arvalidSB),
-    .arready(arreadySB),
-    .rready(rreadySB),
-    .rdata(rdataSB),
-    .rvalid(rvalidSB),
-    .rresp(rrespSB),
-    .awaddr(awaddrSB),
-    .awvalid(awvalidSB),
-    .wdata(wdataSB),
-    .wstrb(wstrbSB),
-    .wvalid(wvalidSB),
-    .bready(breadySB),
-    .awready(awreadySB),
-    .wready(wreadySB),
-    .bvalid(bvalidSB),
-    .bresp(brespSB)
-  );
-
-
-
 
 endmodule

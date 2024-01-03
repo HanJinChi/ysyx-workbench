@@ -1,10 +1,13 @@
-TOPNAME = top
+TOPNAME = ysyxSoCFull
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0
+				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0 --timescale "1ns/1ns"
 
 VERILATOR_INC_PATH = $(WORK_DIR)/vsrc
+VERILATOR_INC_PATH += $(WORK_DIR)/../ysyxSoC/perip/uart16550/rtl
+VERILATOR_INC_PATH += $(WORK_DIR)/../ysyxSoC/perip/spi/rtl
+
 VERILATOR_INCFLAGS = $(addprefix -I, $(VERILATOR_INC_PATH))
 
 VERILATOR_CFLAGS += $(VERILATOR_INCFLAGS)
@@ -35,6 +38,8 @@ run-env: $(BIN)
 $(shell mkdir -p $(BUILD_DIR))
 
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
+VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
+VSRCS += $(shell find $(abspath ../ysyxSoC/generated) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 

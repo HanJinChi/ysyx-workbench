@@ -5,7 +5,7 @@
 #include <common.h>
 
 extern CPU_state cpu;
-extern Vtop* top;
+extern VysyxSoCFull* top;
 
 static uint8_t pmem[MSIZE] = {};
 
@@ -46,8 +46,8 @@ word_t paddr_read(paddr_t addr, int len) {
   if (in_pmem(addr)) {
     word_t data = pmem_read(addr, len);
   #ifdef CONFIG_MTRACE
-    if(top->rootp->top__DOT__arb__DOT__araddrMux == 1){ // 取值
-     memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n",top->rootp->top__DOT__arb__DOT__araddr, addr, len, data);
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrMux == 1){ // 取值
+     memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n",top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrSA, addr, len, data); // bug
     }else{
       memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", cpu.pc, addr, len, data);
     }

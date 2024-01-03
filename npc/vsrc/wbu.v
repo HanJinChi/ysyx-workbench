@@ -1,6 +1,6 @@
-module wbu(
-    input           clk,
-    input           rst,
+module ysyx_23060059_wbu(
+    input           clock,
+    input           reset,
     input           receive_valid,
     input   [4 :0]  rs1,
     input   [4 :0]  rs2,
@@ -25,8 +25,8 @@ module wbu(
 
 
   reg ebreak_o_r;
-  always @(posedge clk) begin
-    if(rst) ebreak_o_r <= 0;
+  always @(posedge clock) begin
+    if(reset) ebreak_o_r <= 0;
     else  if(receive_valid) ebreak_o_r <= ebreak_i;
   end
 
@@ -34,8 +34,8 @@ module wbu(
 
 
   reg  ecall_r;
-  always @(posedge clk) begin
-    if(rst) ecall_r <= 0;
+  always @(posedge clock) begin
+    if(reset) ecall_r <= 0;
     else    ecall_r <= ecall;
   end
 
@@ -43,7 +43,7 @@ module wbu(
   wire [31:0] instruction_subsequent;
   wire [31:0] instruction_previous;
 
-  Reg #(32, 32'b0) regp0(clk, rst, instruction_subsequent, instruction, receive_valid);
+  Reg #(32, 32'b0) regp0(clock, reset, instruction_subsequent, instruction, receive_valid);
 
   assign instruction_previous = instruction;
   assign instruction_subsequent = instruction_i;
@@ -52,7 +52,7 @@ module wbu(
   wire [31:0] pc_subsequent;
   wire [31:0] pc_previous;
 
-  Reg #(32, 32'b0) regp1(clk, rst, pc_subsequent, pc, receive_valid);
+  Reg #(32, 32'b0) regp1(clock, reset, pc_subsequent, pc, receive_valid);
 
   assign pc_previous = pc;
   assign pc_subsequent = pc_i;
@@ -62,7 +62,7 @@ module wbu(
   wire [31:0] pc_next_subsequent;
   wire [31:0] pc_next_previous;
 
-  Reg #(32, 32'b0) regp(clk, rst, pc_next_subsequent, pc_next, receive_valid);
+  Reg #(32, 32'b0) regp(clock, reset, pc_next_subsequent, pc_next, receive_valid);
 
   assign pc_next_previous = pc_next;
   assign pc_next_subsequent = pc_next_i;
@@ -80,13 +80,13 @@ module wbu(
   genvar i;
   generate
       for(i = 0; i < 32; i = i+1) begin
-        Reg #(32, 32'b0) regx(clk, rst, w_regarray_subsequent[i], regarray[i], receive_valid);
+        Reg #(32, 32'b0) regx(clock, reset, w_regarray_subsequent[i], regarray[i], receive_valid);
       end
   endgenerate
 
   generate
       for(i = 0; i < 4; i = i+1) begin
-        Reg #(32, 32'b0) regt(clk, rst, w_csrarray_subsequent[i], csrarray[i], receive_valid);
+        Reg #(32, 32'b0) regt(clock, reset, w_csrarray_subsequent[i], csrarray[i], receive_valid);
       end
   endgenerate
 

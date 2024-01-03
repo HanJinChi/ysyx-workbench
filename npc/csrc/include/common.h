@@ -10,10 +10,9 @@
 #include <define.h>
 #include "verilated.h"
 #include "verilated_vcd_c.h"
-#include <Vtop.h>
-#include <Vtop___024root.h>
-#include <Vtop__Syms.h>
-
+#include <VysyxSoCFull.h>
+#include <VysyxSoCFull___024root.h>
+#include <VysyxSoCFull__Syms.h>
 #include <assert.h>
 
 #define MBASE 0x80000000

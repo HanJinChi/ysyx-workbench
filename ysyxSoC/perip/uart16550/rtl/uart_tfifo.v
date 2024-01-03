@@ -144,7 +144,7 @@
 
 `include "uart_defines.v"
 
-module uart_tfifo (clk,
+module uart_tfifo (clk, 
     wb_rst_i, data_in, data_out,
 // Control signals
     push, // push strobe, active high
@@ -185,42 +185,43 @@ reg    [fifo_counter_w-1:0] count  = 'h0;
 reg                         overrun;
 wire [fifo_pointer_w-1:0] top_plus_1 = top + 1'b1;
 
-raminfr #(fifo_pointer_w,fifo_width,fifo_depth) tfifo
-        (   .clk (clk),
-            .we  (push),
-            .a   (top),
-            .dpra(bottom),
-            .di  (data_in),
+raminfr #(fifo_pointer_w,fifo_width,fifo_depth) tfifo  
+        (   .clk (clk), 
+            .we  (push), 
+            .a   (top), 
+            .dpra(bottom), 
+            .di  (data_in), 
             .dpo (data_out)
-        );
+        ); 
 
 
 always @(posedge clk or posedge wb_rst_i) // synchronous FIFO
 begin
     if (wb_rst_i) begin
-        top    <= #1 'b0;
-        bottom <= #1 'b0;
-        count  <= #1 'b0;
+        top    <=  'b0;
+        bottom <=  'b0;
+        count  <=  'b0;
     end else if (fifo_reset) begin
-        top    <= #1 'b0;
-        bottom <= #1 'b0;
-        count  <= #1 'b0;
+        top    <=  'b0;
+        bottom <=  'b0;
+        count  <=  'b0;
     end else begin
-        if (push) $write("%c", data_in);
         case ({push, pop})
         2'b10 : if (count<fifo_depth)  // overrun condition
             begin
-                top   <= #1 top_plus_1;
-                count <= #1 count + 1'b1;
+                $write("%c", data_in);
+                top   <=  top_plus_1;
+                count <=  count + 1'b1;
             end
         2'b01 : if(count>0)
             begin
-                bottom <= #1 bottom + 1'b1;
-                count  <= #1 count - 1'b1;
+                bottom <=  bottom + 1'b1;
+                count  <=  count - 1'b1;
             end
         2'b11 : begin
-                bottom <= #1 bottom + 1'b1;
-                top    <= #1 top_plus_1;
+                $write("%c", data_in);
+                bottom <=  bottom + 1'b1;
+                top    <=  top_plus_1;
                 end
         default: ;
         endcase
@@ -230,13 +231,13 @@ end   // always
 always @(posedge clk or posedge wb_rst_i) // synchronous FIFO
 begin
   if (wb_rst_i)
-    overrun   <= #1 1'b0;
+    overrun   <=  1'b0;
   else
-  if(fifo_reset | reset_status)
-    overrun   <= #1 1'b0;
+  if(fifo_reset | reset_status) 
+    overrun   <=  1'b0;
   else
   if(push & (count==fifo_depth))
-    overrun   <= #1 1'b1;
+    overrun   <=  1'b1;
 end   // always
 
 endmodule

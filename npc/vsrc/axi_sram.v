@@ -1,5 +1,5 @@
 module axi_sram  #(SRAM_READ_CYCLE = 1)(
-    input    wire          aclk,
+    input    wire          aclock,
     input    wire          areset,
     input    wire  [31:0]  araddr,  // 要读的地址
     input    wire          arvalid, 
@@ -21,7 +21,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 );
 
   reg  arready_r;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin  //  高电平复位有效
       arready_r <= 0;  
     end
@@ -33,7 +33,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   parameter IDLE_R = 0, MEM_READ = 1;
   reg sram_read_state, sram_read_next_state;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
       sram_read_state <= IDLE_R;
     end else begin
@@ -69,7 +69,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   reg  [1 :0] rresp_r;
   reg  [31:0] rdata_r;
 
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
       rvalid_r        <= 0;
       rdata_r         <= 0;
@@ -95,7 +95,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
 
   reg  awready_r;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin  
       awready_r <= 0;  
     end
@@ -106,7 +106,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   assign awready = awready_r;
 
   reg  wready_r;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin  
       wready_r <= 0;  
     end
@@ -118,7 +118,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
 
   parameter IDLE_W = 0, MEM_WRITE = 1;
   reg sram_write_state, sram_write_next_state;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
       sram_write_state <= IDLE_W;
     end else begin
@@ -159,7 +159,7 @@ module axi_sram  #(SRAM_READ_CYCLE = 1)(
   reg [1 :0] bresp_r;
   reg [31:0] awaddr_r;
 
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
       bvalid_r   <= 0;
       bresp_r    <= 1;

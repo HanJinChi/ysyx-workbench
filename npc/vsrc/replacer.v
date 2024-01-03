@@ -1,6 +1,6 @@
-module replacer(
-  input    wire          clk,
-  input    wire          rst,
+module ysyx_23060059_replacer(
+  input    wire          clock,
+  input    wire          reset,
   input    wire   [2:0]  idx,
   input    wire   [2:0]  way,
   input    wire          access,
@@ -14,8 +14,8 @@ module replacer(
   reg [nway-1:0] free_map [nset-1:0]; // 0代表未使用, 1代表已使用
   reg [4:0]      used_map [nset-1:0][nway-1:0]; // 记录每个way的使用次数
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       for(int i = 0; i < nset; i++)
         free_map[i] <= 0;
     end else begin
@@ -28,8 +28,8 @@ module replacer(
     end
   end
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       for(int i = 0; i < nset; i++)
         for(int j = 0; j < nway; j++)
           used_map[i][j] <= 0;

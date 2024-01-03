@@ -1,6 +1,6 @@
-module exu(
-  input   wire           clk,
-  input   wire           rst,
+module ysyx_23060059_exu(
+  input   wire           clock,
+  input   wire           reset,
   input   wire           receive_valid,
   input   wire           receive_ready,
   input   wire   [31:0]  src1_i,
@@ -59,8 +59,8 @@ module exu(
   reg          send_valid_r;
   parameter    IDLE = 0, COMPUTE = 1;
 
-  always @(posedge clk) begin
-    if(rst)  state <= IDLE;
+  always @(posedge clock) begin
+    if(reset)  state <= IDLE;
     else     state <= next_state;
   end
 
@@ -103,33 +103,33 @@ module exu(
   wire  [4 :0]  rd_b;
   wire  [1 :0]  csr_rd_b;
 
-  Reg #(32, 32'h0) regd0 (clk, rst, src1_i,        src1_b,       buffer_en);
-  Reg #(32, 32'h0) regd1 (clk, rst, src2_i,        src2_b,       buffer_en);
-  Reg #(5,  5 'h0) regd2 (clk, rst, aluOp_i,       aluOp_b,      buffer_en);
-  Reg #(32, 32'h0) regd3 (clk, rst, imm_i,         imm_b,        buffer_en);
-  Reg #(2,  2 'h0) regd4 (clk, rst, pcOp_i,        pcOp_b,       buffer_en);
-  Reg #(2,  2 'h0) regd5 (clk, rst, wdOp_i,        wdOp_b,       buffer_en);
-  Reg #(1,  1 'h0) regd6 (clk, rst, csrwdOp_i,     csrwdOp_b,    buffer_en);
-  Reg #(3,  3 'h0) regd7 (clk, rst, BOp_i,         BOp_b,        buffer_en);
-  Reg #(1,  1 'h0) regd8 (clk, rst, ren_i,         ren_b,        buffer_en);
-  Reg #(1,  1 'h0) regd9 (clk, rst, wen_i,         wen_b,        buffer_en);
-  Reg #(8,  8 'h0) regd10(clk, rst, wmask_i,       wmask_b,      buffer_en);
-  Reg #(32, 32'h0) regd11(clk, rst, rmask_i,       rmask_b,      buffer_en);
-  Reg #(1,  1 'h0) regd12(clk, rst, m_signed_i,    m_signed_b,   buffer_en);
-  Reg #(1,  1 'h0) regd13(clk, rst, reg_en_i,      reg_en_b,     buffer_en);
-  Reg #(1,  1 'h0) regd14(clk, rst, csreg_en_i,    csreg_en_b,   buffer_en);
-  Reg #(1,  1 'h0) regd15(clk, rst, ecall_i,       ecall_b,      buffer_en);
-  Reg #(1,  1 'h0) regd16(clk, rst, ebreak_i,      ebreak_b,     buffer_en);
-  Reg #(32, 32'h0) regd17(clk, rst, pc_i,          pc_b,         buffer_en);
-  Reg #(32, 32'h0) regd18(clk, rst, pc_next_i,     pc_next_b,    buffer_en);
-  Reg #(32, 32'h0) regd19(clk, rst, instruction_i, instruction_b,buffer_en);
-  Reg #(32, 32'h0) regd20(clk, rst, rsb_i,         rsb_b,        buffer_en);
-  Reg #(5,  5 'h0) regd21(clk, rst, rd_i,          rd_b,         buffer_en);
-  Reg #(2,  2 'h0) regd22(clk, rst, csr_rd_i,      csr_rd_b,     buffer_en);
+  Reg #(32, 32'h0) regd0 (clock, reset, src1_i,        src1_b,       buffer_en);
+  Reg #(32, 32'h0) regd1 (clock, reset, src2_i,        src2_b,       buffer_en);
+  Reg #(5,  5 'h0) regd2 (clock, reset, aluOp_i,       aluOp_b,      buffer_en);
+  Reg #(32, 32'h0) regd3 (clock, reset, imm_i,         imm_b,        buffer_en);
+  Reg #(2,  2 'h0) regd4 (clock, reset, pcOp_i,        pcOp_b,       buffer_en);
+  Reg #(2,  2 'h0) regd5 (clock, reset, wdOp_i,        wdOp_b,       buffer_en);
+  Reg #(1,  1 'h0) regd6 (clock, reset, csrwdOp_i,     csrwdOp_b,    buffer_en);
+  Reg #(3,  3 'h0) regd7 (clock, reset, BOp_i,         BOp_b,        buffer_en);
+  Reg #(1,  1 'h0) regd8 (clock, reset, ren_i,         ren_b,        buffer_en);
+  Reg #(1,  1 'h0) regd9 (clock, reset, wen_i,         wen_b,        buffer_en);
+  Reg #(8,  8 'h0) regd10(clock, reset, wmask_i,       wmask_b,      buffer_en);
+  Reg #(32, 32'h0) regd11(clock, reset, rmask_i,       rmask_b,      buffer_en);
+  Reg #(1,  1 'h0) regd12(clock, reset, m_signed_i,    m_signed_b,   buffer_en);
+  Reg #(1,  1 'h0) regd13(clock, reset, reg_en_i,      reg_en_b,     buffer_en);
+  Reg #(1,  1 'h0) regd14(clock, reset, csreg_en_i,    csreg_en_b,   buffer_en);
+  Reg #(1,  1 'h0) regd15(clock, reset, ecall_i,       ecall_b,      buffer_en);
+  Reg #(1,  1 'h0) regd16(clock, reset, ebreak_i,      ebreak_b,     buffer_en);
+  Reg #(32, 32'h0) regd17(clock, reset, pc_i,          pc_b,         buffer_en);
+  Reg #(32, 32'h0) regd18(clock, reset, pc_next_i,     pc_next_b,    buffer_en);
+  Reg #(32, 32'h0) regd19(clock, reset, instruction_i, instruction_b,buffer_en);
+  Reg #(32, 32'h0) regd20(clock, reset, rsb_i,         rsb_b,        buffer_en);
+  Reg #(5,  5 'h0) regd21(clock, reset, rd_i,          rd_b,         buffer_en);
+  Reg #(2,  2 'h0) regd22(clock, reset, csr_rd_i,      csr_rd_b,     buffer_en);
 
   reg  buffer;
-  always @(posedge clk) begin
-    if(rst) buffer <= 0;
+  always @(posedge clock) begin
+    if(reset) buffer <= 0;
     else begin
       if(buffer == 0)
         if(receive_valid && send_valid)
@@ -154,32 +154,32 @@ module exu(
       exu_to_lsu_en = 0;
   end
 
-  Reg #(32, 32'h0) regd23 (clk, rst,  src1_i_w,        src1_o,       exu_to_lsu_en);
-  Reg #(32, 32'h0) regd24 (clk, rst,  src2_i_w,        src2_o,       exu_to_lsu_en);
-  Reg #(5,  5 'h0) regd25 (clk, rst,  aluOp_i_w,       aluOp_w,      exu_to_lsu_en);
-  Reg #(32, 32'h0) regd26 (clk, rst,  imm_i_w,         imm_o,        exu_to_lsu_en);
-  Reg #(2,  2 'h0) regd27 (clk, rst,  pcOp_i_w,        pcOp_o,       exu_to_lsu_en);
-  Reg #(2,  2 'h0) regd28 (clk, rst,  wdOp_i_w,        wdOp_o,       exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd29 (clk, rst,  csrwdOp_i_w,     csrwdOp_o,    exu_to_lsu_en);
-  Reg #(3,  3 'h0) regd30 (clk, rst,  BOp_i_w,         BOp_o,        exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd31 (clk, rst,  ren_i_w,         ren_o,        exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd32 (clk, rst,  wen_i_w,         wen_o,        exu_to_lsu_en);
-  Reg #(8,  8 'h0) regd33 (clk, rst,  wmask_i_w,       wmask_o,      exu_to_lsu_en);
-  Reg #(32, 32'h0) regd34 (clk, rst,  rmask_i_w,       rmask_o,      exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd35 (clk, rst,  m_signed_i_w,    m_signed_o,   exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd36 (clk, rst,  reg_en_i_w,      reg_en_o,     exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd37 (clk, rst,  csreg_en_i_w,    csreg_en_o,   exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd38 (clk, rst,  ecall_i_w,       ecall_o,      exu_to_lsu_en);
-  Reg #(1,  1 'h0) regd39 (clk, rst,  ebreak_i_w,      ebreak_o,     exu_to_lsu_en);
-  Reg #(32, 32'h0) regd40 (clk, rst,  pc_i_w,          pc_o,         exu_to_lsu_en);
-  Reg #(32, 32'h0) regd41 (clk, rst,  pc_next_i_w,     pc_next_o,    exu_to_lsu_en);
-  Reg #(32, 32'h0) regd42 (clk, rst,  instruction_i_w, instruction_o,exu_to_lsu_en);
-  Reg #(32, 32'h0) regd43 (clk, rst,  rsb_i_w,         rsb_o,        exu_to_lsu_en);
-  Reg #(5,  5 'h0) regd44 (clk, rst,  rd_i_w,          rd_o,         exu_to_lsu_en);
-  Reg #(2,  2 'h0) regd45( clk, rst,  csr_rd_i_w,      csr_rd_o,     exu_to_lsu_en);
+  Reg #(32, 32'h0) regd23 (clock, reset,  src1_i_w,        src1_o,       exu_to_lsu_en);
+  Reg #(32, 32'h0) regd24 (clock, reset,  src2_i_w,        src2_o,       exu_to_lsu_en);
+  Reg #(5,  5 'h0) regd25 (clock, reset,  aluOp_i_w,       aluOp_w,      exu_to_lsu_en);
+  Reg #(32, 32'h0) regd26 (clock, reset,  imm_i_w,         imm_o,        exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd27 (clock, reset,  pcOp_i_w,        pcOp_o,       exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd28 (clock, reset,  wdOp_i_w,        wdOp_o,       exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd29 (clock, reset,  csrwdOp_i_w,     csrwdOp_o,    exu_to_lsu_en);
+  Reg #(3,  3 'h0) regd30 (clock, reset,  BOp_i_w,         BOp_o,        exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd31 (clock, reset,  ren_i_w,         ren_o,        exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd32 (clock, reset,  wen_i_w,         wen_o,        exu_to_lsu_en);
+  Reg #(8,  8 'h0) regd33 (clock, reset,  wmask_i_w,       wmask_o,      exu_to_lsu_en);
+  Reg #(32, 32'h0) regd34 (clock, reset,  rmask_i_w,       rmask_o,      exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd35 (clock, reset,  m_signed_i_w,    m_signed_o,   exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd36 (clock, reset,  reg_en_i_w,      reg_en_o,     exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd37 (clock, reset,  csreg_en_i_w,    csreg_en_o,   exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd38 (clock, reset,  ecall_i_w,       ecall_o,      exu_to_lsu_en);
+  Reg #(1,  1 'h0) regd39 (clock, reset,  ebreak_i_w,      ebreak_o,     exu_to_lsu_en);
+  Reg #(32, 32'h0) regd40 (clock, reset,  pc_i_w,          pc_o,         exu_to_lsu_en);
+  Reg #(32, 32'h0) regd41 (clock, reset,  pc_next_i_w,     pc_next_o,    exu_to_lsu_en);
+  Reg #(32, 32'h0) regd42 (clock, reset,  instruction_i_w, instruction_o,exu_to_lsu_en);
+  Reg #(32, 32'h0) regd43 (clock, reset,  rsb_i_w,         rsb_o,        exu_to_lsu_en);
+  Reg #(5,  5 'h0) regd44 (clock, reset,  rd_i_w,          rd_o,         exu_to_lsu_en);
+  Reg #(2,  2 'h0) regd45( clock, reset,  csr_rd_i_w,      csr_rd_o,     exu_to_lsu_en);
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       send_valid_r <= 0;
     end else begin
       if(next_state == COMPUTE) begin

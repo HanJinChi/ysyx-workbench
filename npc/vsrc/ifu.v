@@ -1,21 +1,30 @@
-module ifu(
-    input    wire          clk,
-    input    wire          rst,
+module ysyx_23060059_ifu(
+    input    wire          clock,
+    input    wire          reset,
     input    wire  [31:0]  pc_next,
     input    wire  [31:0]  pc_next_idu,       // 来自idu的正确的pc_next
     input    wire          receive_valid,     // 来自idu的valid
     input    wire          receive_ready,
+    // ifu <-> axi, ar channel
     input    wire          arready,
-    input    wire  [31:0]  rdata,
+    output   wire  [31:0]  araddr,
+    output   wire          arvalid,
+    output   wire  [3 :0]  arid,
+    output   wire  [7 :0]  arlen,
+    output   wire  [2 :0]  arsize,
+    output   wire  [1 :0]  arburst,
+    // ifu <->axi, r channel
+    input    wire  [63:0]  rdata,
     input    wire          rvalid,
     input    wire  [1 :0]  rresp,
+    input    wire          rlast,
+    input    wire  [3 :0]  rid,
+    output   wire          rready,
+    // ifu <-> idu
     output   wire          send_valid,
     output   wire          send_ready,
     output   wire  [31:0]  instruction,
-    output   wire  [31:0]  pc_ifu_to_idu,
-    output   wire  [31:0]  araddr,
-    output   wire          arvalid,
-    output   wire          rready
+    output   wire  [31:0]  pc_ifu_to_idu
 );
   // A阶段:  发送需要读的地址到内存
   // B阶段:  接受读的数据
@@ -23,8 +32,8 @@ module ifu(
   parameter IDLE = 0, READ_A = 1, READ_B = 2, READ_C = 3;
   reg [1:0] state, next_state;
 
-  always @(posedge clk) begin
-    if(rst) 
+  always @(posedge clock) begin
+    if(reset) 
       state <= IDLE;
     else 
       state <= next_state;
@@ -75,13 +84,13 @@ module ifu(
   reg [31:0] pc_ifu_to_idu_r;
   reg [31:0] addr_beginner; // 最开始取值的addr
 
-  always@(posedge clk) begin
-    if(rst) rready_r <= 0;
+  always@(posedge clock) begin
+    if(reset) rready_r <= 0;
     else    rready_r <= 1;
   end
 
-  always@(posedge clk) begin
-    if(rst) addr_beginner <= 0;
+  always@(posedge clock) begin
+    if(reset) addr_beginner <= 0;
     else if(next_state == READ_A) begin
       if(addr_beginner == 0)
         addr_beginner <= pc_next;
@@ -89,8 +98,8 @@ module ifu(
   end
  
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       arvalid_r            <= 0;
       araddr_r             <= 0;
       send_ready_r         <= 0;
@@ -127,7 +136,7 @@ module ifu(
         end
         if(set_value == 0) begin
           set_value      <= 1;
-          instruction_r  <= rdata;
+          instruction_r  <= rdata[31:0];
           rresp_r        <= rresp;
         end
       end else begin // next_state == IDLE
@@ -149,8 +158,8 @@ module ifu(
   parameter WIDLE = 0, WAINTING = 1;
   reg  [31:0]   pc_next_idu_c;
   reg           pc_next_valid;
-  always @(posedge clk) begin
-    if(rst) wstate <= WIDLE;
+  always @(posedge clock) begin
+    if(reset) wstate <= WIDLE;
     else    wstate <= wnext_state;
   end
 
@@ -169,8 +178,8 @@ module ifu(
     endcase
   end
 
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       pc_next_idu_c <= 0;
       pc_next_valid <= 1;
     end else begin
@@ -184,5 +193,10 @@ module ifu(
       end
     end
   end
+
+  assign arid    = 4'b0;
+  assign arlen   = 8'b0;
+  assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
+  assign arburst = 2'b01; 
 
 endmodule

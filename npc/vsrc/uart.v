@@ -1,5 +1,5 @@
 module axi_uart(
-    input    wire          aclk,
+    input    wire          aclock,
     input    wire          areset,
     input    wire  [31:0]  araddr,
     input    wire          arvalid,
@@ -24,7 +24,7 @@ module axi_uart(
   assign rdata   = 0;
   assign rvalid  = 0;
 
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
 
     end else begin
@@ -39,7 +39,7 @@ module axi_uart(
   parameter IDLE = 0, UART_WRITE = 1;
   reg state, next_state;
 
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) state <= IDLE;
     else       state <= next_state;
   end
@@ -68,7 +68,7 @@ module axi_uart(
   end
 
   reg  awready_r;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin  
       awready_r <= 0;  
     end
@@ -79,7 +79,7 @@ module axi_uart(
   assign awready = awready_r;
 
   reg  wready_r;
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin  
       wready_r <= 0;  
     end
@@ -95,7 +95,7 @@ module axi_uart(
   reg [1 :0] bresp_r;
   reg [31:0] awaddr_r;
 
-  always @(posedge aclk) begin
+  always @(posedge aclock) begin
     if(areset) begin
       bvalid_r   <= 0;
       bresp_r    <= 1;

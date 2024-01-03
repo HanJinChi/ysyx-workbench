@@ -6,9 +6,9 @@
 // block size : 128bit, 16Byte
 // meta size  : 25bit, 23bit tag + 1 bit valid + 1bit dirty 
 
-module icache(
-  input    wire           clk,
-  input    wire           rst,
+module ysyx_23060059_icache(
+  input    wire           clock,
+  input    wire           reset,
   input    wire           arvalid,
   input    wire  [31 :0]  addr_i,
   output   wire  [31 :0]  data_o,
@@ -61,7 +61,7 @@ module icache(
   genvar i;
   generate
     for(i = 0; i < 256; i = i+1) begin
-      Reg #(25,25'b0) u_reg_meta(clk, rst, , meta[i], );
+      Reg #(25,25'b0) u_reg_meta(clock, reset, , meta[i], );
     end
   endgenerate
 
@@ -83,8 +83,8 @@ module icache(
   reg  [2:0] state, next_state;
   localparam IDLE = 0, HIT = 1, MISS = 2;
 
-  always @(posedge clk) begin
-    if(rst) state <= IDLE;
+  always @(posedge clock) begin
+    if(reset) state <= IDLE;
     else    state <= next_state;
   end
 
@@ -104,8 +104,8 @@ module icache(
   wire [2:0]  rway;
   reg  axi_arvalid_r;
   reg  axi_rready_r;
-  always @(posedge clk) begin
-    if(rst) begin
+  always @(posedge clock) begin
+    if(reset) begin
       axi_arvalid_r <= 0;
       axi_rready_r  <= 0;
     end else begin
@@ -132,9 +132,9 @@ module icache(
   end
 
 
-  replacer u_replacer(
-    .clk          (clk     ),
-    .rst          (rst     ),
+  ysyx_23060059_replacer u_replacer(
+    .clock          (clock     ),
+    .reset          (reset     ),
     .idx          (idx     ),
     .way          (way     ),
     .access       (access  ),

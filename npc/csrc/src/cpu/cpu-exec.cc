@@ -4,12 +4,12 @@
 #include <memory/paddr.h>
 #include <isa.h>
 #include "svdpi.h"
-#include "Vtop__Dpi.h"
+#include "VysyxSoCFull__Dpi.h"
 #include "utils.h"
 
 VerilatedContext* contextp = NULL;
 VerilatedVcdC* tfp = NULL;
-Vtop* top;
+VysyxSoCFull* top;
 CPU_state cpu = {};
 static Decode s;
 
@@ -37,6 +37,8 @@ void set_decode_inst(int pc, int inst){
   s.inst = inst;
 }
 
+extern "C" void flash_read(int addr, int *data) { assert(0); }
+extern "C" void mrom_read(int addr, int* data) { assert(0); }
 
 void n_pmem_read(int raddr, int *rdata){
   *rdata = paddr_read(raddr, 4);
@@ -63,103 +65,102 @@ void n_pmem_write(int waddr, int wdata, char wmask){
   default:
     break;
   }
-  
 }
 
 void copy_cpu_state(){
-  cpu.csr.mcause =  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;
-  cpu.csr.mepc   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4;
-  cpu.csr.mstatus   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4;
-  cpu.csr.mtvec   = top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4;
-  cpu.gpr[0] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4;
-  cpu.gpr[1] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4;
-  cpu.gpr[2] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4;
-  cpu.gpr[3] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__3__KET____DOT__regx____pinNumber4;
-  cpu.gpr[4] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__4__KET____DOT__regx____pinNumber4;
-  cpu.gpr[5] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__5__KET____DOT__regx____pinNumber4;
-  cpu.gpr[6] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__6__KET____DOT__regx____pinNumber4;
-  cpu.gpr[7] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__7__KET____DOT__regx____pinNumber4;
-  cpu.gpr[8] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__8__KET____DOT__regx____pinNumber4;
-  cpu.gpr[9] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__9__KET____DOT__regx____pinNumber4;
-  cpu.gpr[10] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__10__KET____DOT__regx____pinNumber4;
-  cpu.gpr[11] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__11__KET____DOT__regx____pinNumber4;
-  cpu.gpr[12] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__12__KET____DOT__regx____pinNumber4;
-  cpu.gpr[13] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__13__KET____DOT__regx____pinNumber4;
-  cpu.gpr[14] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__14__KET____DOT__regx____pinNumber4;
-  cpu.gpr[15] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__15__KET____DOT__regx____pinNumber4;
-  cpu.gpr[16] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__16__KET____DOT__regx____pinNumber4;
-  cpu.gpr[17] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__17__KET____DOT__regx____pinNumber4;
-  cpu.gpr[18] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__18__KET____DOT__regx____pinNumber4;
-  cpu.gpr[19] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__19__KET____DOT__regx____pinNumber4;
-  cpu.gpr[20] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__20__KET____DOT__regx____pinNumber4;
-  cpu.gpr[21] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__21__KET____DOT__regx____pinNumber4;
-  cpu.gpr[22] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__22__KET____DOT__regx____pinNumber4;
-  cpu.gpr[23] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__23__KET____DOT__regx____pinNumber4;
-  cpu.gpr[24] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__24__KET____DOT__regx____pinNumber4;
-  cpu.gpr[25] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__25__KET____DOT__regx____pinNumber4;
-  cpu.gpr[26] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__26__KET____DOT__regx____pinNumber4;
-  cpu.gpr[27] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__27__KET____DOT__regx____pinNumber4;
-  cpu.gpr[28] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__28__KET____DOT__regx____pinNumber4;
-  cpu.gpr[29] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4;
-  cpu.gpr[30] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4;
-  cpu.gpr[31] = top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4;
-  cpu.pc      = top->rootp->top__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
+  cpu.csr.mcause =  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;
+  cpu.csr.mepc   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4;
+  cpu.csr.mstatus   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4;
+  cpu.csr.mtvec   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4;
+  cpu.gpr[0] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4;
+  cpu.gpr[1] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4;
+  cpu.gpr[2] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4;
+  cpu.gpr[3] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__3__KET____DOT__regx____pinNumber4;
+  cpu.gpr[4] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__4__KET____DOT__regx____pinNumber4;
+  cpu.gpr[5] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__5__KET____DOT__regx____pinNumber4;
+  cpu.gpr[6] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__6__KET____DOT__regx____pinNumber4;
+  cpu.gpr[7] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__7__KET____DOT__regx____pinNumber4;
+  cpu.gpr[8] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__8__KET____DOT__regx____pinNumber4;
+  cpu.gpr[9] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__9__KET____DOT__regx____pinNumber4;
+  cpu.gpr[10] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__10__KET____DOT__regx____pinNumber4;
+  cpu.gpr[11] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__11__KET____DOT__regx____pinNumber4;
+  cpu.gpr[12] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__12__KET____DOT__regx____pinNumber4;
+  cpu.gpr[13] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__13__KET____DOT__regx____pinNumber4;
+  cpu.gpr[14] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__14__KET____DOT__regx____pinNumber4;
+  cpu.gpr[15] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__15__KET____DOT__regx____pinNumber4;
+  cpu.gpr[16] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__16__KET____DOT__regx____pinNumber4;
+  cpu.gpr[17] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__17__KET____DOT__regx____pinNumber4;
+  cpu.gpr[18] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__18__KET____DOT__regx____pinNumber4;
+  cpu.gpr[19] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__19__KET____DOT__regx____pinNumber4;
+  cpu.gpr[20] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__20__KET____DOT__regx____pinNumber4;
+  cpu.gpr[21] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__21__KET____DOT__regx____pinNumber4;
+  cpu.gpr[22] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__22__KET____DOT__regx____pinNumber4;
+  cpu.gpr[23] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__23__KET____DOT__regx____pinNumber4;
+  cpu.gpr[24] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__24__KET____DOT__regx____pinNumber4;
+  cpu.gpr[25] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__25__KET____DOT__regx____pinNumber4;
+  cpu.gpr[26] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__26__KET____DOT__regx____pinNumber4;
+  cpu.gpr[27] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__27__KET____DOT__regx____pinNumber4;
+  cpu.gpr[28] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__28__KET____DOT__regx____pinNumber4;
+  cpu.gpr[29] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4;
+  cpu.gpr[30] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4;
+  cpu.gpr[31] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4;
+  cpu.pc      = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc_next;  // cpu.pc代表执行完一条指令后,下一条应该执行哪条指令
 }
 
 void set_cpu_state(){
-  top->clk = 1;
-  top->rst = 1;
-  top->rootp->top__DOT__set_pc = cpu.pc;
+  top->clock = 1;
+  top->reset = 1;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__set_pc = cpu.pc;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-  top->clk = 0;
-  top->rst = 0;
-  top->pc = cpu.pc;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4 = cpu.csr.mcause ;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4 = cpu.csr.mepc;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4 = cpu.csr.mstatus ;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4 = cpu.csr.mtvec;
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4 = cpu.gpr[0];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4 = cpu.gpr[1];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4 = cpu.gpr[2];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__3__KET____DOT__regx____pinNumber4 = cpu.gpr[3];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__4__KET____DOT__regx____pinNumber4 = cpu.gpr[4];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__5__KET____DOT__regx____pinNumber4 = cpu.gpr[5];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__6__KET____DOT__regx____pinNumber4 = cpu.gpr[6];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__7__KET____DOT__regx____pinNumber4 = cpu.gpr[7];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__8__KET____DOT__regx____pinNumber4 = cpu.gpr[8];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__9__KET____DOT__regx____pinNumber4 = cpu.gpr[9];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__10__KET____DOT__regx____pinNumber4 = cpu.gpr[10];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__11__KET____DOT__regx____pinNumber4 = cpu.gpr[11];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__12__KET____DOT__regx____pinNumber4 = cpu.gpr[12];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__13__KET____DOT__regx____pinNumber4 = cpu.gpr[13];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__14__KET____DOT__regx____pinNumber4 = cpu.gpr[14];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__15__KET____DOT__regx____pinNumber4 = cpu.gpr[15];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__16__KET____DOT__regx____pinNumber4 = cpu.gpr[16];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__17__KET____DOT__regx____pinNumber4 = cpu.gpr[17];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__18__KET____DOT__regx____pinNumber4 = cpu.gpr[18];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__19__KET____DOT__regx____pinNumber4 = cpu.gpr[19];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__20__KET____DOT__regx____pinNumber4 = cpu.gpr[20];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__21__KET____DOT__regx____pinNumber4 = cpu.gpr[21];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__22__KET____DOT__regx____pinNumber4 = cpu.gpr[22];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__23__KET____DOT__regx____pinNumber4 = cpu.gpr[23];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__24__KET____DOT__regx____pinNumber4 = cpu.gpr[24];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__25__KET____DOT__regx____pinNumber4 = cpu.gpr[25];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__26__KET____DOT__regx____pinNumber4 = cpu.gpr[26];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__27__KET____DOT__regx____pinNumber4 = cpu.gpr[27];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__28__KET____DOT__regx____pinNumber4 = cpu.gpr[28];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4 = cpu.gpr[29];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4 = cpu.gpr[30];
-  top->rootp->top__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = cpu.gpr[31];
+  top->clock = 0;
+  top->reset = 0;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc = cpu.pc;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4 = cpu.csr.mcause ;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__1__KET____DOT__regt____pinNumber4 = cpu.csr.mepc;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__2__KET____DOT__regt____pinNumber4 = cpu.csr.mstatus ;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__3__KET____DOT__regt____pinNumber4 = cpu.csr.mtvec;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__0__KET____DOT__regx____pinNumber4 = cpu.gpr[0];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__1__KET____DOT__regx____pinNumber4 = cpu.gpr[1];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__2__KET____DOT__regx____pinNumber4 = cpu.gpr[2];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__3__KET____DOT__regx____pinNumber4 = cpu.gpr[3];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__4__KET____DOT__regx____pinNumber4 = cpu.gpr[4];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__5__KET____DOT__regx____pinNumber4 = cpu.gpr[5];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__6__KET____DOT__regx____pinNumber4 = cpu.gpr[6];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__7__KET____DOT__regx____pinNumber4 = cpu.gpr[7];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__8__KET____DOT__regx____pinNumber4 = cpu.gpr[8];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__9__KET____DOT__regx____pinNumber4 = cpu.gpr[9];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__10__KET____DOT__regx____pinNumber4 = cpu.gpr[10];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__11__KET____DOT__regx____pinNumber4 = cpu.gpr[11];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__12__KET____DOT__regx____pinNumber4 = cpu.gpr[12];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__13__KET____DOT__regx____pinNumber4 = cpu.gpr[13];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__14__KET____DOT__regx____pinNumber4 = cpu.gpr[14];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__15__KET____DOT__regx____pinNumber4 = cpu.gpr[15];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__16__KET____DOT__regx____pinNumber4 = cpu.gpr[16];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__17__KET____DOT__regx____pinNumber4 = cpu.gpr[17];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__18__KET____DOT__regx____pinNumber4 = cpu.gpr[18];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__19__KET____DOT__regx____pinNumber4 = cpu.gpr[19];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__20__KET____DOT__regx____pinNumber4 = cpu.gpr[20];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__21__KET____DOT__regx____pinNumber4 = cpu.gpr[21];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__22__KET____DOT__regx____pinNumber4 = cpu.gpr[22];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__23__KET____DOT__regx____pinNumber4 = cpu.gpr[23];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__24__KET____DOT__regx____pinNumber4 = cpu.gpr[24];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__25__KET____DOT__regx____pinNumber4 = cpu.gpr[25];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__26__KET____DOT__regx____pinNumber4 = cpu.gpr[26];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__27__KET____DOT__regx____pinNumber4 = cpu.gpr[27];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__28__KET____DOT__regx____pinNumber4 = cpu.gpr[28];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__29__KET____DOT__regx____pinNumber4 = cpu.gpr[29];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__30__KET____DOT__regx____pinNumber4 = cpu.gpr[30];
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk1__BRA__31__KET____DOT__regx____pinNumber4 = cpu.gpr[31];
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-  top->rootp->top__DOT__set_pc = 0;
+  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__set_pc = 0;
 }
 
 void trace_and_difftest(){
@@ -199,7 +200,7 @@ void trace_and_difftest(){
 void init_cpu(){
   contextp = new VerilatedContext;
   tfp = new VerilatedVcdC;
-  top = new Vtop;
+  top = new VysyxSoCFull;
 #ifdef CONFIG_VCD_TRACE
   contextp->traceEverOn(true);
   contextp->time(0);
@@ -208,22 +209,22 @@ void init_cpu(){
   top->trace(tfp, 0);
   tfp->open("dump.vcd");
 #endif
-  top->rst = 1;
-  top->clk = 0;
+  top->reset = 1;
+  top->clock = 0;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-  top->clk = 1;
+  top->clock = 1;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
 
-  top->rst = 0;
-  top->clk = 0;
+  top->reset = 0;
+  top->clock = 0;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
@@ -239,8 +240,8 @@ void cpu_exit(){
 }
 
 void step_and_dump_wave(){ // 执行一次函数是半个周期
-  top->clk = !top->clk;
-//   printf("top reg is %0x8x\n", top->rootp->__Vtrigrprev__TOP__top__ra__genblk1__BRA__31__KET____DOT__regx____PVT__clk);
+  top->clock = !top->clock;
+//   printf("ysyx_23060059 reg is %0x8x\n", top->rootp->__Vtrigrprev__ysyx_23060059__ysyx_23060059__ra__genblk1__BRA__31__KET____DOT__regx____PVT__clock);
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
@@ -255,7 +256,7 @@ void exec_once(){
     step_and_dump_wave();
     step_and_dump_wave();
     clock_count++;
-    if(top->rootp->top__DOT__ls__DOT__send_valid_r == 1) {
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__send_valid_r == 1) {
       step_and_dump_wave();
       step_and_dump_wave();
       clock_count++;
@@ -266,24 +267,15 @@ void exec_once(){
   copy_cpu_state();
 
   #ifdef CONFIG_DIFFTEST
-    if(top->skip_d == 1) difftest_skip_ref();
+    // if(top->skip_d == 1) difftest_skip_ref();
   #endif
 
 
-  #ifdef CONFIG_TRACE
-    // if(ins_count % 100000 == 0){
-    //   #ifdef CONFIG_VCD_TRACE
-    //     tfp->close();
-    //     tfp->open("dump.vcd");
-    //   #endif
-    //     reopen_all_log();
-    // }
-  #endif
 
   #ifdef CONFIG_TRACE
-    s.pc   = top->rootp->top__DOT__wb__DOT__pc;
-    s.dnpc = top->rootp->top__DOT__wb__DOT__pc_next;
-    s.inst = top->rootp->top__DOT__wb__DOT__instruction;
+    s.pc   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc;
+    s.dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc_next;
+    s.inst = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__instruction;
 
     char *p = s.logbuf;
     p += snprintf(p, sizeof(s.logbuf), FMT_WORD ":", s.pc);
@@ -301,14 +293,14 @@ void exec_once(){
   #endif
 
   #ifdef CONFIG_XTRACE
-    if(top->rootp->top__DOT__wb__DOT__ecall_r == 1){
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__ecall_r == 1){
       exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", s.pc, cpu.gpr[15]);
     }
   #endif
-  end = top->ebreak_t;
+  end = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ebreak;
 
   if(end){
-    NPCTRAP(top->rootp->top__DOT__wb__DOT__pc, cpu.gpr[0]);
+    NPCTRAP(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc, cpu.gpr[0]);
   } 
 }
 
