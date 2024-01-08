@@ -19,6 +19,8 @@
 #define MSIZE 0x8000000
 #define PC_RESET_OFFSET 0x0
 
+#define MROM_BASE 0x20000000
+#define MROM_SIZE 0x10000
 
 typedef uint32_t word_t;
 typedef int32_t  sword_t;

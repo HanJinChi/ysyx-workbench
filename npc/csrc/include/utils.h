@@ -40,7 +40,7 @@ uint64_t get_time();
 
 
 
-#define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+#define log_write(...)  \
   do { \
     extern FILE* log_fp; \
     extern bool log_enable(); \
@@ -49,9 +49,8 @@ uint64_t get_time();
       fflush(log_fp); \
     } \
   } while (0) \
-)
 
-#define memory_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+#define memory_log_write(...)  \
   do { \
     extern FILE* memory_log_fp; \
     extern bool memory_log_enable(); \
@@ -60,9 +59,9 @@ uint64_t get_time();
       fflush(memory_log_fp); \
     } \
   } while (0) \
-)
 
-#define function_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+
+#define function_log_write(...)  \
   do { \
     extern FILE* function_log_fp; \
     extern bool function_log_enable(); \
@@ -71,9 +70,8 @@ uint64_t get_time();
       fflush(function_log_fp); \
     } \
   } while (0) \
-)
 
-#define device_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+#define device_log_write(...) \
   do { \
     extern FILE* device_log_fp; \
     extern bool device_log_enable(); \
@@ -82,9 +80,8 @@ uint64_t get_time();
       fflush(device_log_fp); \
     } \
   } while (0) \
-)
 
-#define exception_log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
+#define exception_log_write(...) \
   do { \
     extern FILE* exception_log_fp; \
     extern bool exception_log_enable(); \
@@ -93,7 +90,6 @@ uint64_t get_time();
       fflush(exception_log_fp); \
     } \
   } while (0) \
-)
 
 #define _Log(...) \
   do { \

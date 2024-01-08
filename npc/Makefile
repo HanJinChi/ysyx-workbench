@@ -2,7 +2,7 @@ TOPNAME = ysyxSoCFull
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0 --timescale "1ns/1ns"
+				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0 --timescale "1ns/1ns" --autoflush 
 
 VERILATOR_INC_PATH = $(WORK_DIR)/vsrc
 VERILATOR_INC_PATH += $(WORK_DIR)/../ysyxSoC/perip/uart16550/rtl
@@ -22,7 +22,7 @@ INC_PATH = $(WORK_DIR)/csrc/include
 
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
-ARGS += --log=$(BUILD_DIR)/npclog.txt --mlog=$(BUILD_DIR)/memory-npc-log.txt --flog=$(BUILD_DIR)/function-npc-log.txt --vlog=$(BUILD_DIR)/device-npc-log.txt -d $(NPC_HOME)/riscv32-nemu-interpreter-so
+ARGS += --log=$(BUILD_DIR)/npclog.txt --mlog=$(BUILD_DIR)/memory-npc-log.txt --flog=$(BUILD_DIR)/function-npc-log.txt --vlog=$(BUILD_DIR)/device-npc-log.txt -d $(NPC_HOME)/riscv32-nemu-interpreter-so --elf=$(NPC_HOME)/char-test.bin
 ARGS += --xlog=$(BUILD_DIR)/exception-npc-log.txt
 
 # Include all filelist.mk to merge file lists
@@ -44,7 +44,7 @@ CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*
 
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O2  
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""  -O0 -g  
 LDFLAGS += -lncurses -lreadline -ldl -lSDL2 
 default: $(BIN)
 

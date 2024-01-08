@@ -38,17 +38,21 @@ void set_decode_inst(int pc, int inst){
 }
 
 extern "C" void flash_read(int addr, int *data) { assert(0); }
-extern "C" void mrom_read(int addr, int* data) { assert(0); }
+extern "C" void mrom_read(int addr, int* data)  { 
+  addr = addr & ~0x3u;
+  *data = paddr_read(addr, 4); 
+}
 
 void n_pmem_read(int raddr, int *rdata){
+  raddr = raddr & ~0x3u;
   *rdata = paddr_read(raddr, 4);
 }
 
 void n_pmem_write(int waddr, int wdata, char wmask){
   int i = 0;
+  waddr = waddr & ~0x3u;
   uint8_t wdata_bytes[sizeof(int)];
   memcpy(wdata_bytes, &wdata, sizeof(int));
-
   switch (wmask)
   {
   case 0:
@@ -66,6 +70,8 @@ void n_pmem_write(int waddr, int wdata, char wmask){
     break;
   }
 }
+
+
 
 void copy_cpu_state(){
   cpu.csr.mcause =  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;
@@ -230,7 +236,11 @@ void init_cpu(){
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-  cpu.pc = 0x80000000;
+  cpu.pc = 0x20000000;
+  for(int i = 0; i < 10; i++){
+    step_and_dump_wave();
+    step_and_dump_wave();
+  }
 }
 
 void cpu_exit(){

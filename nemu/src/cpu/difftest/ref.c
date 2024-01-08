@@ -33,7 +33,7 @@ struct difftest_npc {
 
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
   assert(direction == DIFFTEST_TO_REF);
-  memcpy(guest_to_host(addr), buf, n);
+  memcpy(mrom_guest_to_host(addr), buf, n);
 }
 
 __EXPORT void difftest_regcpy(void *dut, bool direction) {

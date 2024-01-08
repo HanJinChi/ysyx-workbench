@@ -81,7 +81,7 @@ module ysyx_23060059_lsu (
   assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
   assign arburst = 2'b01;  // INCR
   // w
-  assign awid    = 4'b0;
+  assign awid    = awid_r;
   assign awlen   = 8'b0;
   assign awsize  = 3'b010;
   assign awburst = 2'b01;
@@ -92,7 +92,7 @@ module ysyx_23060059_lsu (
 
   always @(posedge clock) begin
     if(reset) state <= IDLE;
-    else    state <= next_state;
+    else      state <= next_state;
   end
 
   always @(*) begin
@@ -105,16 +105,22 @@ module ysyx_23060059_lsu (
             next_state = MEM_WRITE_A;
           else
             next_state = MEM_NULL;
-        end
+        end else
+          next_state = IDLE;
       MEM_READ_A:
         if(arvalid && arready) 
           next_state = MEM_READ_B;
         else 
           next_state = MEM_READ_A;
       MEM_READ_B:
-        if(rvalid && rready && (rresp == 0))
-          next_state = MEM_NULL;
-        else 
+        if(rvalid && rready)
+          if(rresp == 0)
+            next_state = MEM_NULL;
+          else begin
+            $display("rresp !=0, error !");
+            assert(0);
+          end
+        else
           next_state = MEM_READ_B;
       MEM_WRITE_A:
         if(awvalid && awready)
@@ -122,8 +128,13 @@ module ysyx_23060059_lsu (
         else
           next_state = MEM_WRITE_A;
       MEM_WRITE_B:
-        if(bvalid && bready && (bresp == 0))
-          next_state = MEM_NULL;
+        if(bvalid && bready)
+          if(bresp == 0)
+            next_state = MEM_NULL;
+          else begin
+            $display("bresp !=0, error!\n");
+            assert(0);
+          end
         else
           next_state = MEM_WRITE_B;
       MEM_NULL:
@@ -209,7 +220,7 @@ module ysyx_23060059_lsu (
 
   reg           m_signed;
   reg  [31:0]   rmask;
-  reg  [31:0]   reg_rdata;
+  reg  [63:0]   rdata_r;
 
   reg          send_valid_r;
   reg  [31:0]  araddr_r;
@@ -219,8 +230,10 @@ module ysyx_23060059_lsu (
   reg          awvalid_r;
   reg          wvalid_r;
   reg          bready_r;
-  reg  [31:0]  wdata_r;
-  reg  [7 :0]  wstrb_r;    
+  reg  [63:0]  wdata_r;
+  reg  [7 :0]  wstrb_r;
+  reg  [3 :0]  awid_r;  
+  reg  [31:0]  pc_r;  
 
   always @(posedge clock) begin
     if(reset) begin
@@ -234,6 +247,8 @@ module ysyx_23060059_lsu (
       awaddr_r           <= 0;
       awvalid_r          <= 0;
       wvalid_r           <= 0;
+      awid_r             <= 0;
+      pc_r               <= 0;
     end else begin
       if(next_state == IDLE) begin
         if(send_valid_r) begin
@@ -246,6 +261,7 @@ module ysyx_23060059_lsu (
             araddr_r             <= exu_result_v;
             m_signed             <= m_signed_v;
             rmask                <= rmask_v;
+            pc_r                 <= pc_v;
             if(buffer)
               buffer             <= 0;
           end
@@ -256,8 +272,9 @@ module ysyx_23060059_lsu (
             awvalid_r           <= 1;
             awaddr_r            <= exu_result_v; 
             wvalid_r            <= 1;
-            wstrb_r             <= wmask_v;
-            wdata_r             <= rsb_v;
+            wstrb_r             <= wstrb_v;
+            wdata_r             <= wdata_v;
+            awid_r              <= awid_r + 1;
             if(buffer)
               buffer            <= 0;
           end
@@ -268,7 +285,7 @@ module ysyx_23060059_lsu (
           if(send_valid_r == 0) begin
             send_valid_r <= 1;
             if(rvalid) begin
-              reg_rdata <= rdata[31:0];  // MEM_READ_B -> MEM_NULL
+              rdata_r <= rdata;  // MEM_READ_B -> MEM_NULL
             end else if(!bvalid) begin  // IDLE -> MEM_NULL
               if(buffer)
                 buffer             <= 0;
@@ -307,11 +324,52 @@ module ysyx_23060059_lsu (
   Reg #(1,  1 'h0) regd32 (clock, reset, ren_v,         ren,           lsu_to_wbu_en);
   Reg #(1,  1 'h0) regd33 (clock, reset, wen_v,         wen,           lsu_to_wbu_en);
 
+  reg  [63:0] rdata_8;
+  reg  [63:0] rdata_16;
+  reg  [63:0] rdata_32;
+
+
+  always @(*) begin
+    rdata_8 = 0;
+    rdata_16 = 0;
+    if(araddr_r >= 32'h20000000 && araddr_r <= 32'h20000fff) begin
+      rdata_8  = rdata_r >> (araddr_r[1:0]*8);
+      rdata_16 = rdata_r >> (araddr_r[1]*16);
+      rdata_32 = {32'h0, rdata_r[31:0]};
+    end else begin
+      rdata_8  = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1:0]*8);
+      rdata_16 = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1]*16);
+      rdata_32 = rdata_r >> (araddr_r[2]*32);
+    end
+  end
+
   MuxKeyWithDefault #(3, 32, 32) rwd(mread, rmask, 32'h0, {
-    32'h000000ff, m_signed ? {{24{reg_rdata[7]}} , reg_rdata[7:0]}  : reg_rdata & rmask,
-    32'h0000ffff, m_signed ? {{16{reg_rdata[15]}}, reg_rdata[15:0]} : reg_rdata & rmask,
-    32'hffffffff, reg_rdata
+    32'h000000ff, m_signed ? {{24{rdata_8[7]}} , rdata_8[7:0]}  : rdata_8[31:0] & rmask,
+    32'h0000ffff, m_signed ? {{16{rdata_16[15]}}, rdata_16[15:0]} : rdata_16[31:0] & rmask,
+    32'hffffffff, rdata_32[31:0]
   });
+
+  wire [31:0] awaddr_v;
+  reg  [7 :0] wstrb_v;
+  reg  [63:0] wdata_v;
+  assign awaddr_v = exu_result_v;
+  always @(*) begin
+    wstrb_v = 0;
+    wdata_v = 0;
+    if(wmask_v == 8'b00000001) begin
+      wstrb_v = wmask_v << awaddr_v[2:0];
+      wdata_v = {32'b0,rsb_v} << (awaddr_v[2:0]*8);
+    end
+    else if(wmask_v == 8'b00000011) begin
+      wstrb_v = wmask_v << (awaddr_v[2:1]*2);
+      wdata_v = {32'b0,rsb_v}   << (awaddr_v[2:1]*16);
+    end
+    else if(wmask_v == 8'b00001111) begin
+      wstrb_v = wmask_v << (awaddr_v[2]*4);
+      wdata_v = {32'b0,rsb_v}   << (awaddr_v[2]*32);
+    end
+  end
+
   // wd choose
   MuxKeyWithDefault #(4, 2, 32) wdc (wd_o, wdOp, exu_result, {
     2'b00, exu_result,
@@ -379,7 +437,8 @@ module ysyx_23060059_lsu (
   assign wvalid         = wvalid_r;
   assign bready         = bready_r;
   assign wstrb          = wstrb_r;
-  assign wdata          = {32'b0, wdata_r};
+  assign wdata          = wdata_r;
+  assign wlast          = 1;
 
 
   always @(posedge clock) begin

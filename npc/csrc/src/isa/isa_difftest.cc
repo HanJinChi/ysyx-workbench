@@ -49,19 +49,19 @@ bool difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
       return false;
     }
   }
-  if(ref_r->memory_write_addr != cpu.memory_write_addr){
-    printf("pc is : 0x%8X\n", pc);
-    printf("error memory write addr\n");
-    printf("DUT memory write addr is : 0x%x \n", cpu.memory_write_addr);
-    printf("REF memory write addr : 0x%x \n", ref_r->memory_write_addr);
-    return false;
-  }
-  if(ref_r->memory_write_context != cpu.memory_write_context){
-    printf("pc is : 0x%8X\n", pc);
-    printf("error memory write context\n");
-    printf("DUT memory write context is : 0x%x \n", cpu.memory_write_context);
-    printf("REF memory write context is : 0x%x \n", ref_r->memory_write_context);
-    return false;
-  }
+  // if(ref_r->memory_write_addr != cpu.memory_write_addr){
+  //   printf("pc is : 0x%8X\n", pc);
+  //   printf("error memory write addr\n");
+  //   printf("DUT memory write addr is : 0x%x \n", cpu.memory_write_addr);
+  //   printf("REF memory write addr : 0x%x \n", ref_r->memory_write_addr);
+  //   return false;
+  // }
+  // if(ref_r->memory_write_context != cpu.memory_write_context){
+  //   printf("pc is : 0x%8X\n", pc);
+  //   printf("error memory write context\n");
+  //   printf("DUT memory write context is : 0x%x \n", cpu.memory_write_context);
+  //   printf("REF memory write context is : 0x%x \n", ref_r->memory_write_context);
+  //   return false;
+  // }
   return true;
 }

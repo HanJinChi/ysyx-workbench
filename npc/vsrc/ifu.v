@@ -51,8 +51,13 @@ module ysyx_23060059_ifu(
           next_state = READ_A;
       end
       READ_B: begin
-        if(rvalid && rready && (rresp == 0)) 
-          next_state = READ_C;
+        if(rvalid && rready)
+          if(rresp == 0) 
+            next_state = READ_C;
+          else begin
+            $display("rresp !=0 , error!");
+            assert(0);
+          end
         else 
           next_state = READ_B;
       end

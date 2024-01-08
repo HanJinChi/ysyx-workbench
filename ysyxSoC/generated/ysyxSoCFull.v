@@ -166,6 +166,34 @@ module mem_combMem(	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
     end // initial
   `endif // ENABLE_INITIAL_MEM_
   assign R0_data = _GEN ? Memory[_GEN_0] : 64'bx;	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // reg [63:0] Memory[0:15];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // reg        _GEN;	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // reg [3:0]  _GEN_0;	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // always @(posedge R0_clk) begin	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   _GEN <= R0_en;	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   _GEN_0 <= R0_addr[3:0];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // end // always @(posedge)
+  // always @(posedge W0_clk) begin	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[0])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h0 +: 8] <= W0_data[7:0];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[1])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h8 +: 8] <= W0_data[15:8];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[2])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h10 +: 8] <= W0_data[23:16];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[3])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h18 +: 8] <= W0_data[31:24];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[4])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h20 +: 8] <= W0_data[39:32];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[5])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h28 +: 8] <= W0_data[47:40];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[6])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h30 +: 8] <= W0_data[55:48];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //   if (W0_en & W0_mask[7])	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  //     Memory[Waddr][32'h38 +: 8] <= W0_data[63:56];	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // end // always @(posedge)
+  // assign R0_data = _GEN ? Memory[_GEN_0] : 64'bx;	// @[src/main/scala/util/DescribedSRAM.scala:17:26]
+  // wire [3:0] Waddr;
+  // assign Waddr = W0_addr[3:0];
 endmodule
 
 module Queue2_UInt3(

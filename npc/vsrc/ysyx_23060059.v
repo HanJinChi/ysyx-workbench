@@ -217,7 +217,7 @@ module ysyx_23060059(
   wire   [3 :0]         ridA;
   wire   [3 :0]         ridB;
 
-  Reg #(32, 32'h80000000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
+  Reg #(32, 32'h2000_0000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
   // instruction fetch Unit
   ysyx_23060059_ifu ifufetch(
@@ -468,6 +468,18 @@ module ysyx_23060059(
     .araddrB                (araddrB         ),
     .arvalidA               (arvalidA        ),
     .arvalidB               (arvalidB        ),
+    .aridA                  (aridA           ),
+    .aridB                  (aridB           ),
+    .arlenA                 (arlenA          ),
+    .arlenB                 (arlenB          ),
+    .arsizeA                (arsizeA         ),
+    .arsizeB                (arsizeB         ),
+    .arburstA               (arburstA        ),
+    .arburstB               (arburstB        ),
+    .ridA_o                 (ridA            ),
+    .ridB_o                 (ridB            ),
+    .rlastA_o               (rlastA          ),
+    .rlastB_o               (rlastB          ),
     .rreadyA                (rreadyA         ),
     .rreadyB                (rreadyB         ),
     .arreadyA_o             (arreadyA        ),
@@ -482,6 +494,16 @@ module ysyx_23060059(
     .awaddrB                (awaddrB         ),
     .awvalidA               (awvalidA        ),
     .awvalidB               (awvalidB        ),
+    .awidA                  (awidA           ),
+    .awidB                  (awidB           ),
+    .awlenA                 (awlenA          ),
+    .awlenB                 (awlenB          ),
+    .awsizeA                (awsizeA         ),
+    .awsizeB                (awsizeB         ),
+    .awburstA               (awburstA        ),
+    .awburstB               (awburstB        ),
+    .wlastA                 (wlastA          ),
+    .wlastB                 (wlastB          ), 
     .wdataA                 (wdataA          ),
     .wdataB                 (wdataB          ),
     .wstrbA                 (wstrbA          ),
@@ -497,7 +519,36 @@ module ysyx_23060059(
     .bvalidA_o              (bvalidA         ),
     .bvalidB_o              (bvalidB         ),
     .brespA_o               (brespA          ),
-    .brespB_o               (brespB          )
+    .brespB_o               (brespB          ),
+
+    .arready                (io_master_arready),
+    .araddr                 (io_master_araddr ),
+    .arvalid                (io_master_arvalid),
+    .arid                   (io_master_arid   ),
+    .arlen                  (io_master_arlen  ),
+    .arsize                 (io_master_arsize ),
+    .arburst                (io_master_arburst),
+    .rdata                  (io_master_rdata  ),
+    .rvalid                 (io_master_rvalid ),
+    .rresp                  (io_master_rresp  ),
+    .rid                    (io_master_rid    ),
+    .rlast                  (io_master_rlast  ),
+    .rready                 (io_master_rready ),
+    .awready                (io_master_awready),
+    .awvalid                (io_master_awvalid),
+    .awid                   (io_master_awid   ),
+    .awlen                  (io_master_awlen  ),
+    .awsize                 (io_master_awsize ),
+    .awburst                (io_master_awburst),
+    .awaddr                 (io_master_awaddr ),
+    .wdata                  (io_master_wdata  ),
+    .wstrb                  (io_master_wstrb  ),
+    .wvalid                 (io_master_wvalid ),
+    .wlast                  (io_master_wlast  ),
+    .wready                 (io_master_wready ),
+    .bvalid                 (io_master_bvalid ),
+    .bresp                  (io_master_bresp  ),
+    .bready                 (io_master_bready )
   );
 
   reg  [31:0]  set_pc;
@@ -527,7 +578,7 @@ module ysyx_23060059(
       if(set_pc != 0) begin
         pc_next = set_pc;
       end else 
-        if(pc == 32'h80000000) pc_next = 32'h80000000;
+        if(pc == 32'h2000_0000) pc_next = 32'h2000_0000;
         else                   pc_next = pc_next_r;
   end
 

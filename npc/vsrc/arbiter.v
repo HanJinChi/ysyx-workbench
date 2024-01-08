@@ -2,6 +2,7 @@
 module ysyx_23060059_arbiter(
   input    wire          clock,
   input    wire          reset,
+  // ifu and lsu <-> arbiter
   // ar channel
   input    wire  [31:0]  araddrA,
   input    wire  [31:0]  araddrB,
@@ -42,7 +43,7 @@ module ysyx_23060059_arbiter(
   input    wire  [2 :0]  awsizeA,
   input    wire  [2 :0]  awsizeB,
   input    wire  [1 :0]  awburstA,
-  input    wire  [1 :0]  awburstB
+  input    wire  [1 :0]  awburstB,
   output   wire          awreadyA_o,
   output   wire          awreadyB_o,
   // w channel
@@ -62,7 +63,41 @@ module ysyx_23060059_arbiter(
   output   wire          bvalidA_o,
   output   wire          bvalidB_o,
   output   wire  [1 :0]  brespA_o, 
-  output   wire  [1 :0]  brespB_o
+  output   wire  [1 :0]  brespB_o,
+  // arbiter <-> xbar(axi)
+  // ar
+  input    wire          arready,
+  output   wire  [31:0]  araddr,
+  output   wire          arvalid,
+  output   wire  [3 :0]  arid,
+  output   wire  [7 :0]  arlen,
+  output   wire  [2 :0]  arsize,
+  output   wire  [1 :0]  arburst,
+  // r
+  input    wire  [63:0]  rdata,
+  input    wire          rvalid,
+  input    wire  [1 :0]  rresp,
+  input    wire  [3 :0]  rid,
+  input    wire          rlast,
+  output   wire          rready,
+  // aw
+  input    wire          awready,
+  output   wire          awvalid,
+  output   wire  [3 :0]  awid,
+  output   wire  [7 :0]  awlen,
+  output   wire  [2 :0]  awsize,
+  output   wire  [1 :0]  awburst,
+  output   wire  [31:0]  awaddr,
+  // w
+  output   wire  [63:0]  wdata,
+  output   wire  [7 :0]  wstrb,
+  output   wire          wvalid,
+  output   wire          wlast,
+  input    wire          wready,
+  // b 
+  input    wire          bvalid,
+  input    wire  [1 :0]  bresp,
+  output   wire          bready
 );
   parameter IDLE = 0, MEM_R_A = 1, MEM_R_B = 2;
   reg   [1 :0]  ar_state;
@@ -71,171 +106,123 @@ module ysyx_23060059_arbiter(
 
   always @(posedge clock) begin
     if(reset) ar_state <= 0;
-    else    ar_state <= ar_next_state; 
+    else      ar_state <= ar_next_state; 
   end
 
   always@(*) begin
     case(ar_state)
       IDLE:
-        if(arvalidA)
-          if(araddrA == `YSYX_23060059_UART && arreadySA)
-            ar_next_state = MEM_R_A;
-          else if(arreadySB)
-            ar_next_state = MEM_R_A;
-          else
-            ar_next_state = IDLE;
-        else if(arvalidB)
-          if(araddrB == `YSYX_23060059_UART && arreadySA)
-            ar_next_state = MEM_R_A;
-          else if(arreadySB)
-            ar_next_state = MEM_R_A;
-          else
-            ar_next_state = IDLE;
+        if((arvalidA || arvalidB ) && arready)
+          ar_next_state = MEM_R_A;
         else
           ar_next_state = IDLE;
       MEM_R_A:
-        if((rvalidA_o && rreadyA) || (rvalidB_o && rreadyB))
+        if(rvalid && rready)
           ar_next_state = IDLE;
         else
           ar_next_state = MEM_R_A;
     endcase
   end
 
-  reg   [1 :0]  araddrMux_s;  // for save
+  reg   [1 :0]  araddrMux_r;  
   always @(posedge clock) begin
     if(reset) begin
-      araddrMux_s  <= 0;
+      araddrMux_r  <= 0;
     end else begin
-      if(ar_next_state == MEM_R_A) begin
-        araddrMux_s  <= araddrMux; 
-      end else begin
-        araddrMux_s  <= 0;
-      end
+      if(ar_next_state == IDLE)
+        araddrMux_r <= 0;
+      else
+        araddrMux_r <= araddrMux;
     end
   end
 
   // araddr
   always @(*) begin
-    if(ar_next_state == MEM_R_A) begin
-      if(arvalidA) begin
+    if(ar_state == IDLE) begin
+      if(arvalidA) 
         araddrMux = 2'b01;
-      end else if(arvalidB) begin
+      else if(arvalidB) 
         araddrMux = 2'b10;
-      end else begin
-        araddrMux = araddrMux_s;  // waiting response
+      else begin
+        araddrMux = araddrMux_r;  // waiting response
       end
     end else begin
-      araddrMux = araddrMux_s;
+      araddrMux = araddrMux_r;
     end
   end
+ 
 
   // slave
-  reg           arvalidSA, arvalidSB;
-  reg   [31:0]  araddrSA,  araddrSB;
-  reg           rreadySA,  rreadySB;
+  reg           arvalid_r;
+  reg   [31:0]  araddr_r;
+  reg           rready_r;
 
-  reg           arreadyA_o_r, arreadyB_o_r;
-  reg   [63:0]  rdataA_o_r, rdataB_o_r;
-  reg   [1 :0]  rrespA_o_r, rrespB_o_r;
-  reg           rvalidA_o_r, rvalidB_o_r;
-
-  wire          arreadySA, arreadySB;
-  wire  [63:0]  rdataSA,   rdataSB;
-  wire  [1 :0]  rrespSA,   rrespSB;
-  wire          rvalidSA,  rvalidSB;
+  reg           arreadyA_r, arreadyB_r;
+  reg   [63:0]  rdataA_r, rdataB_r;
+  reg   [1 :0]  rrespA_r, rrespB_r;
+  reg           rvalidA_r, rvalidB_r;
 
   always @(*) begin
-    arvalidSA    = 0; arvalidSB    = 0;
-    araddrSA     = 0; araddrSB     = 0;
-    rreadySA     = 0; rreadySB     = 0;
-    arreadyA_o_r = 0; arreadyB_o_r = 0;
-    rdataA_o_r   = 0; rdataB_o_r   = 0;
-    rrespA_o_r   = 0; rrespB_o_r   = 0;
-    // rvalidA_o_r  = 0; rvalidB_o_r  = 0;
+    arvalid_r    = 0;
+    araddr_r     = 0;
+    rready_r     = 0; 
+    arreadyA_r   = 0; arreadyB_r = 0;
+    rdataA_r     = 0; rdataB_r   = 0;
+    rrespA_r     = 0; rrespB_r   = 0;
+    rvalidA_r    = 0; rvalidB_r  = 0;
     case (araddrMux)
       2'b01: begin
-        if(araddrA == `YSYX_23060059_UART) begin
-          // input 
-          arvalidSA    = arvalidA;
-          araddrSA     = araddrA;
-          rreadySA     = rreadyA;
-          // output
-          arreadyA_o_r = arreadySA;
-          rdataA_o_r   = rdataSA;
-          rrespA_o_r   = rrespSA;
-          // rvalidA_o_r = rvalidSA;     
-        end else begin  // MEMORY READ
-          // input 
-          arvalidSB    = arvalidA;
-          araddrSB     = araddrA;
-          rreadySB     = rreadyA;
-          // output
-          arreadyA_o_r = arreadySB;
-          rdataA_o_r   = rdataSB;
-          rrespA_o_r   = rrespSB;
-          // rvalidA_o_r = rvalidSB; 
-        end
+        arvalid_r    = arvalidA;
+        araddr_r     = araddrA;
+        rready_r     = rreadyA;
+        arreadyA_r   = arready;
+        rdataA_r     = rdata;
+        rrespA_r     = rresp;
+
+        arreadyB_r   = 0;
+        rdataB_r     = 0;
+        rrespB_r     = 0;
+
+        rvalidA_r    = rvalid;
+        rvalidB_r    = 0;
       end
       2'b10: begin
-        if(araddrB == `YSYX_23060059_UART) begin
-          arvalidSA    = arvalidB;
-          araddrSA     = araddrB;
-          rreadySA     = rreadyB;
+        arvalid_r    = arvalidB;
+        araddr_r     = araddrB;
+        rready_r     = rreadyB;
+        arreadyB_r   = arready;
+        rdataB_r     = rdata;
+        rrespB_r     = rresp;
 
-          arreadyB_o_r = arreadySA;
-          rdataB_o_r   = rdataSA;
-          rrespB_o_r   = rrespSA;
-          // rvalidB_o_r = rvalidSA;
-        end else begin
-          arvalidSB   = arvalidB;
-          araddrSB    = araddrB;
-          rreadySB    = rreadyB;
-          // output
-          arreadyB_o_r = arreadySB;
-          rdataB_o_r  = rdataSB;
-          rrespB_o_r  = rrespSB;
-          // rvalidB_o_r = rvalidSB; 
-        end
+        arreadyA_r   = 0;
+        rdataA_r     = 0;
+        rrespA_r     = 0;
+
+        rvalidB_r    = rvalid;
+        rvalidA_r    = 0;
       end
       default: begin end
     endcase
   end
 
 
-  always @(*) begin
-    case(araddrMux_s) 
-      2'b01: begin
-        if(araddrA == `YSYX_23060059_UART) begin
-          rvalidA_o_r = rvalidSA;
-        end else 
-          rvalidA_o_r = rvalidSB;
-        rvalidB_o_r = 0;
-      end
-      2'b10: begin
-        if(araddrB == `YSYX_23060059_UART) 
-          rvalidB_o_r = rvalidSA;
-        else 
-          rvalidB_o_r = rvalidSB;
-        rvalidA_o_r = 0;
-      end
-      default: begin
-        rvalidA_o_r = 0;
-        rvalidB_o_r = 0;
-      end
-    endcase
-  end
   
-  assign arreadyA_o = arreadyA_o_r; 
-  assign rdataA_o   = rdataA_o_r;
-  assign rvalidA_o  = rvalidA_o_r;
-  assign rrespA_o   = rrespA_o_r;
+  assign arreadyA_o = arreadyA_r; 
+  assign rdataA_o   = rdataA_r;
+  assign rvalidA_o  = rvalidA_r;
+  assign rrespA_o   = rrespA_r;
 
-  assign arreadyB_o = arreadyB_o_r; 
-  assign rdataB_o   = rdataB_o_r;
-  assign rvalidB_o  = rvalidB_o_r;
-  assign rrespB_o   = rrespB_o_r;
+  assign arreadyB_o = arreadyB_r; 
+  assign rdataB_o   = rdataB_r;
+  assign rvalidB_o  = rvalidB_r;
+  assign rrespB_o   = rrespB_r;
 
+  assign rready     = rready_r;
+  assign araddr     = araddr_r;
+  assign arvalid    = arvalid_r;
 
+  assign rvalidA_o  = rvalidA_r;
+  assign rvalidB_o  = rvalidB_r;
 
   parameter MEM_W_A = 1;
   reg   [1 :0]  wMux;
@@ -244,30 +231,18 @@ module ysyx_23060059_arbiter(
 
   always @(posedge clock) begin
     if(reset) aw_state <= 0;
-    else    aw_state <= aw_next_state; 
+    else      aw_state <= aw_next_state; 
   end
 
   always@(*) begin
     case(aw_state)
       IDLE:
-        if(awvalidA)
-          if(awaddrA == `YSYX_23060059_UART && awreadySA)
-            aw_next_state = MEM_W_A;
-          else if(awreadySB)
-            aw_next_state = MEM_W_A;
-          else
-            aw_next_state = IDLE;
-        else if(awvalidB)
-          if(awaddrB == `YSYX_23060059_UART && awreadySA)
-            aw_next_state = MEM_W_A;
-          else if(arreadySB)
-            aw_next_state = MEM_W_A;
-          else
-            aw_next_state = IDLE;
+        if((awvalidA || awvalidB) && awready)
+          aw_next_state = MEM_W_A;
         else
           aw_next_state = IDLE;
       MEM_W_A:
-        if((bvalidA_o && breadyA) || (bvalidB_o && breadyA))
+        if(bvalid && bready)
           aw_next_state = IDLE;
         else
           aw_next_state = MEM_W_A;
@@ -275,155 +250,146 @@ module ysyx_23060059_arbiter(
   end
 
 
-  reg   [1 :0]  wMux_s;  // for save
+  reg   [1 :0]  wMux_r;  // for save
   always @(posedge clock) begin
     if(reset) begin
-      wMux_s  <= 0;
+      wMux_r  <= 0;
     end else begin
-      if(aw_next_state == MEM_W_A) begin
-        wMux_s <= wMux; 
+      if(aw_next_state == IDLE) begin
+        wMux_r <= 0; 
       end else begin
-        wMux_s <= 0;
+        wMux_r <= wMux;
       end
     end
   end
 
   // awaddr
   always @(*) begin
-    if(aw_next_state == MEM_W_A) begin
-      if(awvalidA) begin
+    if(aw_state == IDLE) begin
+      if(awvalidA) 
         wMux      = 2'b01;
-      end else if(awvalidB) begin
+      else if(awvalidB) 
         wMux      = 2'b10;
-      end else begin
-        wMux      = wMux_s;
+      else begin
+        wMux      = wMux_r;
       end
-    end else begin
-      wMux    = wMux_s;
-    end
+    end else 
+      wMux    = wMux_r;
   end
 
 
-  reg          awvalidSA,    awvalidSB;
-  reg  [31:0]  awaddrSA,     awaddrSB;
-  reg  [63:0]  wdataSA,      wdataSB;
-  reg  [7 :0]  wstrbSA,      wstrbSB;
-  reg          wvalidSA,     wvalidSB;
-  reg          breadySA,     breadySB;
+  reg          awvalid_r;
+  reg  [31:0]  awaddr_r;
+  reg  [63:0]  wdata_r;
+  reg  [7 :0]  wstrb_r;
+  reg          wvalid_r;
+  reg          bready_r;
+  reg  [3 :0]  awid_r;
+  reg  [7 :0]  awlen_r;
+  reg  [2 :0]  awsize_r;
+  reg  [1 :0]  awburst_r;
+  reg          wlast_r;
 
-  reg          awreadyA_o_r, awreadyB_o_r;
-  reg          wreadyA_o_r,  wreadyB_o_r;
-  reg          bvalidA_o_r,  bvalidB_o_r;
-  reg  [1 :0]  brespA_o_r,   brespB_o_r;
+  reg          awreadyA_r, awreadyB_r;
+  reg          wreadyA_r,  wreadyB_r;
+  reg          bvalidA_r,  bvalidB_r;
+  reg  [1 :0]  brespA_r,   brespB_r;
 
-  wire         awreadySA,    awreadySB;
-  wire         wreadySA,     wreadySB;
-  wire         bvalidSA,     bvalidSB;
-  wire [1 :0]  brespSA,      brespSB;
 
   always @(*) begin
-    awvalidSA = 0;    awvalidSB = 0;
-    awaddrSA  = 0;    awaddrSB  = 0;
-    wdataSA   = 0;    wdataSB   = 0;
-    wstrbSA   = 0;    wstrbSB   = 0;
-    wvalidSA  = 0;    wvalidSB  = 0;
-    breadySA  = 0;    breadySB  = 0;
+    awvalid_r = 0;    
+    awaddr_r  = 0;   
+    wdata_r   = 0;    
+    wstrb_r   = 0;    
+    wvalid_r  = 0;    
+    bready_r  = 0;
+    awid_r    = 0;
+    awlen_r   = 0;
+    awsize_r  = 0;
+    awburst_r = 0;
+    wlast_r   = 0;  
 
-    awreadyA_o_r = 0; awreadyB_o_r = 0;
-    wreadyA_o_r  = 0; wreadyB_o_r  = 0;
-    brespA_o_r   = 0; brespB_o_r   = 0;
+    awreadyA_r = 0; awreadyB_r = 0;
+    wreadyA_r  = 0; wreadyB_r  = 0;
+    brespA_r   = 0; brespB_r   = 0;
+    bvalidA_r  = 0; bvalidB_r  = 0;
     case(wMux)
       2'b01: begin
-        if(awaddrA == `YSYX_23060059_UART) begin
-          // input 
-          awvalidSA    = awvalidA;
-          awaddrSA     = awaddrA;
-          wdataSA      = wdataA;
-          wstrbSA      = wstrbA;
-          wvalidSA     = wvalidA;
-          breadySA     = breadyA;
-          // output
-          awreadyA_o_r = awreadySA;
-          wreadyA_o_r  = wreadySA;
-          // bvalidA_o_r  = bvalidSA;
-          brespA_o_r   = brespSA;
-        end else begin  // MEMORY WRITE
-          awvalidSB    = awvalidA;
-          awaddrSB     = awaddrA;
-          wdataSB      = wdataA;
-          wstrbSB      = wstrbA;
-          wvalidSB     = wvalidA;
-          breadySB     = breadyA;
-          // output
-          awreadyA_o_r = awreadySB;
-          wreadyA_o_r  = wreadySB;
-          // bvalidA_o_r  = bvalidSB;
-          brespA_o_r   = brespSB;
-        end
+        awvalid_r  = awvalidA;
+        awaddr_r   = awaddrA;
+        wdata_r    = wdataA;
+        wstrb_r    = wstrbA;
+        wvalid_r   = wvalidA;
+        bready_r   = breadyA;
+        awid_r     = awidA;
+        awlen_r    = awlenA;
+        awsize_r   = awsizeA;
+        awburst_r  = awburstA;
+        wlast_r    = wlastA;
+
+        awreadyA_r = awready;
+        wreadyA_r  = wready;
+        brespA_r   = bresp;
+
+        awreadyB_r = 0;
+        wreadyB_r  = 0;
+        brespB_r    = 0; 
+
+        bvalidA_r  = bvalid;
+        bvalidB_r  = 0;
       end
       2'b10: begin
-        if(awaddrB == `YSYX_23060059_UART) begin
-          // input 
-          awvalidSA    = awvalidB;
-          awaddrSA     = awaddrB;
-          wdataSA      = wdataB;
-          wstrbSA      = wstrbB;
-          wvalidSA     = wvalidB;
-          breadySA     = breadyB;
-          // output
-          awreadyB_o_r = awreadySA;
-          wreadyB_o_r  = wreadySA;
-          // bvalidB_o_r  = bvalidSA;
-          brespB_o_r   = brespSA;
-        end else begin  // MEMORY WRITE
-          awvalidSB    = awvalidB;
-          awaddrSB     = awaddrB;
-          wdataSB      = wdataB;
-          wstrbSB      = wstrbB;
-          wvalidSB     = wvalidB;
-          breadySB     = breadyB;
-          // output
-          awreadyB_o_r = awreadySB;
-          wreadyB_o_r  = wreadySB;
-          // bvalidB_o_r  = bvalidSB;
-          brespB_o_r   = brespSB;
-        end
+        awvalid_r  = awvalidB;
+        awaddr_r   = awaddrB;
+        wdata_r    = wdataB;
+        wstrb_r    = wstrbB;
+        wvalid_r   = wvalidB;
+        bready_r   = breadyB;
+        awid_r     = awidB;
+        awlen_r    = awlenB;
+        awsize_r   = awsizeB;
+        awburst_r  = awburstB;
+        wlast_r    = wlastB;
+
+        awreadyB_r = awready;
+        wreadyB_r  = wready;
+        brespB_r   = bresp;
+
+        awreadyA_r = 0;
+        wreadyA_r  = 0;
+        brespA_r   = 0;
+
+        bvalidB_r  = bvalid;
+        bvalidA_r  = 0; 
       end
     default: begin end
     endcase
   end
 
-  assign awreadyA_o  = awreadyA_o_r;
-  assign wreadyA_o   = wreadyA_o_r;
-  assign bvalidA_o   = bvalidA_o_r;
-  assign brespA_o    = brespA_o_r;
+  assign awreadyA_o  = awreadyA_r;
+  assign wreadyA_o   = wreadyA_r;
+  assign bvalidA_o   = bvalidA_r;
+  assign brespA_o    = brespA_r;
 
-  assign awreadyB_o  = awreadyB_o_r;
-  assign wreadyB_o   = wreadyB_o_r;
-  assign bvalidB_o   = bvalidB_o_r;
-  assign brespB_o    = brespB_o_r;
+  assign awreadyB_o  = awreadyB_r;
+  assign wreadyB_o   = wreadyB_r;
+  assign bvalidB_o   = bvalidB_r;
+  assign brespB_o    = brespB_r;
 
-  always @(*) begin
-    case(wMux_s)
-    2'b01: begin
-      if(awaddrA == `YSYX_23060059_UART)
-        bvalidA_o_r  = bvalidSA;
-      else 
-        bvalidA_o_r  = bvalidSB;
-      bvalidB_o_r = 0;
-    end
-    2'b10: begin
-      if(awaddrB == `YSYX_23060059_UART)
-        bvalidB_o_r = bvalidSA;
-      else 
-        bvalidB_o_r  = bvalidSB;
-      bvalidA_o_r = 0;
-    end
-    default: begin
-      bvalidA_o_r = 0;
-      bvalidB_o_r = 0;
-    end
-    endcase
-  end 
+  assign awvalid     = awvalid_r;    
+  assign awaddr      = awaddr_r;   
+  assign wdata       = wdata_r;    
+  assign wstrb       = wstrb_r;    
+  assign wvalid      = wvalid_r;
+  assign bready      = bready_r;
+
+  assign awid        = awid_r;
+  assign awlen       = awlen_r;
+  assign awsize      = awsize_r;
+  assign awburst     = awburst_r;
+  assign wlast       = wlast_r;  
+
+  assign bvalidA_o   = bvalidA_r;
+  assign bvalidB_o   = bvalidB_r;  
 
 endmodule
