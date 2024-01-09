@@ -1,9 +1,5 @@
 `include "defines.v"
 
-// define ALU TYPE
-import "DPI-C" function void n_pmem_read(input int raddr, output int rdata);
-import "DPI-C" function void n_pmem_write(input int waddr, input int wdata, input byte wmask);
-
 module ysyx_23060059(
     input            clock,
     input            reset,

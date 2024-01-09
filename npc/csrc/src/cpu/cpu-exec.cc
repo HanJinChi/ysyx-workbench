@@ -43,35 +43,6 @@ extern "C" void mrom_read(int addr, int* data)  {
   *data = paddr_read(addr, 4); 
 }
 
-void n_pmem_read(int raddr, int *rdata){
-  raddr = raddr & ~0x3u;
-  *rdata = paddr_read(raddr, 4);
-}
-
-void n_pmem_write(int waddr, int wdata, char wmask){
-  int i = 0;
-  waddr = waddr & ~0x3u;
-  uint8_t wdata_bytes[sizeof(int)];
-  memcpy(wdata_bytes, &wdata, sizeof(int));
-  switch (wmask)
-  {
-  case 0:
-    break;
-  case 1:
-    paddr_write(waddr, 1, wdata_bytes[0]);
-    break;
-  case 0b11:
-    paddr_write(waddr, 2, wdata_bytes[1]<<8 | wdata_bytes[0]);
-    break;
-  case 0b1111:
-    paddr_write(waddr, 4, wdata);
-    break;
-  default:
-    break;
-  }
-}
-
-
 
 void copy_cpu_state(){
   cpu.csr.mcause =  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;
