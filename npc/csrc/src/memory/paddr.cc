@@ -9,6 +9,7 @@ extern VysyxSoCFull* top;
 
 static uint8_t pmem[MSIZE] = {};
 static uint8_t pmrom[MROM_SIZE] = {};
+static uint8_t pflash[FLASH_SIZE] = {};
 
 
 extern void cpu_exit();
@@ -16,13 +17,24 @@ extern void cpu_exit();
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + MBASE; }
 
-
 uint8_t* mrom_guest_to_host(paddr_t paddr) { return pmrom + paddr - MROM_BASE; }
 paddr_t mrom_host_to_guest(uint8_t *haddr) { return haddr - pmrom + MROM_BASE; }
 
 static word_t mrom_read(paddr_t addr, int len) {
   word_t ret = host_read(mrom_guest_to_host(addr), len);
   return ret;
+}
+
+uint8_t* flash_guest_to_host(paddr_t paddr) { return pflash + paddr - FLASH_BASE; }
+paddr_t flash_host_to_guest(uint8_t *haddr) { return haddr - pflash + FLASH_BASE; }
+
+static word_t flash_read(paddr_t addr, int len) {
+  word_t ret = host_read(flash_guest_to_host(addr), len);
+  return ret;
+}
+
+static void flash_write(paddr_t addr, int len, word_t data) {
+  host_write(flash_guest_to_host(addr), len, data);
 }
 
 word_t pmem_read(paddr_t addr, int len) {
@@ -76,6 +88,17 @@ word_t paddr_read(paddr_t addr, int len) {
   #endif
     return data;
   }
+  if(in_flash(addr)){
+    word_t data = flash_read(addr, len);
+  #ifdef CONFIG_MTRACE
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrMux == 2){ // 取值
+      memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__pc_v, addr, len, data); 
+    }else{
+      memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", addr, addr, len, data);
+    }
+  #endif
+    return data;
+  }
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
@@ -91,4 +114,10 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
+}
+
+void init_flash(){
+  for(int i = 0; i < FLASH_SIZE/4; i++){
+    flash_write(FLASH_BASE+i, 4, FLASH_BASE+i);
+  }
 }

@@ -20,7 +20,10 @@
 #define PC_RESET_OFFSET 0x0
 
 #define MROM_BASE 0x20000000
-#define MROM_SIZE 0x10000
+#define MROM_SIZE 0x1000
+
+#define FLASH_BASE 0x30000000
+#define FLASH_SIZE 0x10000000
 
 typedef uint32_t word_t;
 typedef int32_t  sword_t;

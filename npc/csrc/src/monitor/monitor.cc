@@ -11,6 +11,7 @@ void init_function_log(const char *log_file);
 void init_device_log(const char *log_file);
 void init_exception_log(const char* log_file);
 void init_mem();
+void init_flash();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();

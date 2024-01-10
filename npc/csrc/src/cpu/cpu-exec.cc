@@ -3,6 +3,7 @@
 #include <cpu/difftest.h>
 #include <memory/paddr.h>
 #include <isa.h>
+#include "common.h"
 #include "svdpi.h"
 #include "VysyxSoCFull__Dpi.h"
 #include "utils.h"
@@ -37,9 +38,13 @@ void set_decode_inst(int pc, int inst){
   s.inst = inst;
 }
 
-extern "C" void flash_read(int addr, int *data) { assert(0); }
+extern "C" void flash_read(int addr, int *data) { 
+  addr = addr &(~0x3u);
+  addr = addr + FLASH_BASE;
+  *data = paddr_read(addr, 4);
+}
 extern "C" void mrom_read(int addr, int* data)  { 
-  addr = addr & ~0x3u;
+  addr = addr & (~0x3u);
   *data = paddr_read(addr, 4); 
 }
 

@@ -15,7 +15,8 @@
 #define SERIAL_LC        0x3
 #define SERIAL_LS        0x5
 
-
+#define FLASH_BASE       0x30000000
+#define FLASH_SIZE       0x10000000
 
 #define RTC_ADDR        (DEVICE_BASE + 0x0000048)
 #define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
