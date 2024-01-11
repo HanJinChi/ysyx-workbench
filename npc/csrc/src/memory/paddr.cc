@@ -118,6 +118,6 @@ void paddr_write(paddr_t addr, int len, word_t data) {
 
 void init_flash(){
   for(int i = 0; i < FLASH_SIZE/4; i++){
-    flash_write(FLASH_BASE+i, 4, FLASH_BASE+i);
+    flash_write(FLASH_BASE+i*4, 4, FLASH_BASE+i*4);
   }
 }

@@ -15,6 +15,11 @@
 #define SERIAL_LC        0x3
 #define SERIAL_LS        0x5
 
+#define SPI_BASE         0x10001000
+#define SPI_CTRL         0x10
+#define SPI_DIVIDER      0x14
+#define SPI_SS           0x18
+
 #define FLASH_BASE       0x30000000
 #define FLASH_SIZE       0x10000000
 

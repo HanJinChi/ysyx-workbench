@@ -159,6 +159,7 @@ void init_monitor(int argc, char *argv[])
 
   /* Initialize memory. */
   init_mem();
+  init_flash();
 
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
