@@ -102,9 +102,9 @@ module ysyx_23060059_idu(
       end
     end
   end
-  assign send_ready = !buffer; // buffer长度为1时则不能再接受数据
-  assign instruction    = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
-  assign pc             = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
+  assign send_ready   = !buffer; // buffer长度为1时则不能再接受数据
+  assign instruction  = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
+  assign pc           = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
   
   always @(posedge clock) begin
     if(reset) begin

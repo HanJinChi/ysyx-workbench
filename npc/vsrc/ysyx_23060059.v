@@ -213,7 +213,7 @@ module ysyx_23060059(
   wire   [3 :0]         ridA;
   wire   [3 :0]         ridB;
 
-  Reg #(32, 32'h2000_0000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
+  Reg #(32, 32'h3000_0000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
   // instruction fetch Unit
   ysyx_23060059_ifu ifufetch(
@@ -574,7 +574,7 @@ module ysyx_23060059(
       if(set_pc != 0) begin
         pc_next = set_pc;
       end else 
-        if(pc == 32'h2000_0000) pc_next = 32'h2000_0000;
+        if(pc == 32'h3000_0000) pc_next = 32'h3000_0000;
         else                   pc_next = pc_next_r;
   end
 

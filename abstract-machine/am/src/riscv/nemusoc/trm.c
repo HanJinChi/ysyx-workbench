@@ -25,6 +25,15 @@ void putch(char ch) {
   outb(SERIAL_PORT, ch);
 }
 
+void bootloader(){
+  char* dst = &_sram_data_begin;
+  char* src = &_rom_data_begin;
+
+  for(int i = 0; i < (uintptr_t)&_data_end - (uintptr_t)&_data_begin; i++){
+    dst[i] = src[i];
+  }
+}
+
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : :"r"(code)); // ebreak
   // never run here
@@ -32,13 +41,7 @@ void halt(int code) {
 }
 
 void _trm_init() {
-  char* dst = &_sram_data_begin;
-  char* src = &_rom_data_begin;
-
-  for(int i = 0; i < (uintptr_t)&_data_end - (uintptr_t)&_data_begin; i++){
-    dst[i] = src[i];
-  }
-
+  bootloader();
   int ret = main(mainargs);
   halt(ret);
 }

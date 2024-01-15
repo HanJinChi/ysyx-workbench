@@ -2,28 +2,28 @@ ENTRY(_start) /* 指定程序的入口点为_start */
 PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD;}
 
 MEMORY {
-  mrom : ORIGIN = 0x20000000, LENGTH = 4K
-  sram : ORIGIN = 0x0f000000, LENGTH = 8K
+  flash : ORIGIN = 0x30000000, LENGTH = 256M
+  sram  : ORIGIN = 0x0f000000, LENGTH = 8K
 }
 
 SECTIONS {
-  . = ORIGIN(mrom);
+  . = ORIGIN(flash);
   .text : {
     *(entry)
     *(.text*)
-  } > mrom AT> mrom :text
+  } > flash AT> flash :text
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
     *(.srodata*)
-  } > mrom AT > mrom
+  } > flash AT > flash
   _rom_data_begin = .;
   .data : {
     _data_begin = .;
     *(.data*)
     *(.sdata*)
-  } > sram AT> mrom :data 
+  } > sram AT> flash :data 
   edata = .;
   _data = .;
 	_bss_start = .;
@@ -31,7 +31,7 @@ SECTIONS {
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  } > sram AT> mrom :bss
+  } > sram AT> flash :bss
   _data_end = _bss_start + SIZEOF(.bss); 
 }
 

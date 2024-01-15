@@ -88,7 +88,7 @@ module ysyx_23060059_lsu (
 
 
   reg [2:0]  state, next_state;
-  parameter  IDLE = 0, MEM_READ_A = 1, MEM_READ_B = 2, MEM_WRITE_A = 3, MEM_WRITE_B = 4, MEM_NULL = 5;
+  localparam  IDLE = 0, MEM_READ_A = 1, MEM_READ_B = 2, MEM_READ_C = 3, MEM_WRITE_A = 4, MEM_WRITE_B = 5, MEM_WRITE_C = 6, MEM_NULL = 7;
 
   always @(posedge clock) begin
     if(reset) state <= IDLE;
@@ -115,13 +115,18 @@ module ysyx_23060059_lsu (
       MEM_READ_B:
         if(rvalid && rready)
           if(rresp == 0)
-            next_state = MEM_NULL;
+            next_state = MEM_READ_C;
           else begin
             $display("rresp !=0, error !");
             assert(0);
           end
         else
           next_state = MEM_READ_B;
+      MEM_READ_C:
+        if(send_valid)
+          next_state = IDLE;
+        else
+          next_state = MEM_READ_C;
       MEM_WRITE_A:
         if(awvalid && awready)
           next_state = MEM_WRITE_B;
@@ -137,6 +142,11 @@ module ysyx_23060059_lsu (
           end
         else
           next_state = MEM_WRITE_B;
+      MEM_WRITE_C:
+        if(send_valid)
+          next_state = IDLE;
+        else
+          next_state = MEM_WRITE_C;
       MEM_NULL:
         if(send_valid)
           next_state = IDLE;
@@ -189,7 +199,7 @@ module ysyx_23060059_lsu (
   wire         ren_b;
   wire         wen_b;
 
-  Reg #(32, 32'h0) regd0 (clock, reset, result_i,  exu_result_b,  buffer_en);
+  Reg #(32, 32'h0) regd0 (clock, reset, result_i,      exu_result_b,  buffer_en);
   Reg #(32, 32'h0) regd1 (clock, reset, pc_i,          pc_b,          buffer_en);
   Reg #(32, 32'h0) regd2 (clock, reset, pc_next_i,     pc_next_b,     buffer_en);
   Reg #(32, 32'h0) regd3 (clock, reset, instruction_i, instruction_b, buffer_en);
@@ -267,6 +277,11 @@ module ysyx_23060059_lsu (
           end
         end else if(next_state == MEM_READ_B) begin
           arvalid_r <= 0;
+        end else if(next_state == MEM_READ_C) begin
+          if(send_valid_r == 0) begin
+            send_valid_r <= 1;
+            rdata_r      <= rdata;
+          end
         end else if(next_state == MEM_WRITE_A) begin
           if(awvalid_r == 0) begin
             awvalid_r           <= 1;
@@ -281,15 +296,14 @@ module ysyx_23060059_lsu (
         end else if(next_state == MEM_WRITE_B) begin
           awvalid_r <= 0;
           wvalid_r  <= 0; 
-        end else begin  // MEM_NULL 
+        end else if(next_state == MEM_WRITE_C) begin  
+          if(send_valid_r == 0) 
+            send_valid_r <= 1;
+        end else begin // MEM_NULL 
           if(send_valid_r == 0) begin
             send_valid_r <= 1;
-            if(rvalid) begin
-              rdata_r <= rdata;  // MEM_READ_B -> MEM_NULL
-            end else if(!bvalid) begin  // IDLE -> MEM_NULL
-              if(buffer)
-                buffer             <= 0;
-            end
+            if(buffer)
+              buffer     <= 0;
           end
         end
       end
@@ -301,7 +315,7 @@ module ysyx_23060059_lsu (
 
   reg lsu_to_wbu_en;
   always @(*) begin
-    if(next_state == MEM_NULL && send_valid_r == 0) begin
+    if((next_state == MEM_NULL || next_state == MEM_READ_A || next_state == MEM_WRITE_A) && send_valid_r == 0) begin
       lsu_to_wbu_en = 1;
     end else
       lsu_to_wbu_en = 0;

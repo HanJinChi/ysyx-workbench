@@ -7,6 +7,6 @@ static inline uint32_t  inw(uintptr_t addr) { return *(volatile uint32_t  *)addr
 
 int main(){
   for(int i = 0; i < FLASH_SIZE/4; i++){
-    check(inw(FLASH_BASE+i) == (FLASH_BASE+i));
+    check(inw(FLASH_BASE+i*4) == (FLASH_BASE+i*4));
   }
 }

@@ -62,7 +62,7 @@ static long load_img()
   Log("The image is %s, size = %ld", img_file, size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(mrom_guest_to_host(MROM_RESET_VECTOR), size, 1, fp);
+  int ret = fread(flash_guest_to_host(FLASH_BASE), size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
@@ -159,7 +159,6 @@ void init_monitor(int argc, char *argv[])
 
   /* Initialize memory. */
   init_mem();
-  init_flash();
 
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());

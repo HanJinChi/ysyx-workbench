@@ -23,6 +23,7 @@ void init_function_log(const char *log_file);
 void init_device_log(const char *log_file);
 void init_exception_log(const char *log_file);
 void init_mem();
+void init_flash();
 void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
@@ -73,7 +74,7 @@ static long load_img()
   Log("The image is %s, size = %ld", img_file, size);
 
   fseek(fp, 0, SEEK_SET);
-  int ret = fread(mrom_guest_to_host(MROM_RESET_VECTOR), size, 1, fp);
+  int ret = fread(flash_guest_to_host(PFLASH_LEFT), size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);

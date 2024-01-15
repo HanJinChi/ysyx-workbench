@@ -60,7 +60,7 @@ uint32_t flash_read(uint32_t addr){
 }
 
 int main(){
-    for(int i = 1; i < FLASH_SIZE/4; i++){
+    for(int i = 0; i < FLASH_SIZE/4; i++){
       if(flash_read(FLASH_BASE+i*4) == (FLASH_BASE+i*4))
         putch('Y');
       else

@@ -1,3 +1,4 @@
+#include "common.h"
 #include <memory/paddr.h>
 
 static const uint32_t img [] = {
@@ -9,5 +10,5 @@ static const uint32_t img [] = {
 
 void init_isa(){
   /* Load built-in image. */
-  memcpy(mrom_guest_to_host(MROM_RESET_VECTOR), img, sizeof(img));
+  memcpy(flash_guest_to_host(FLASH_BASE), img, sizeof(img));
 }

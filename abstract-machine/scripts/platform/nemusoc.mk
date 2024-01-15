@@ -1,5 +1,11 @@
 AM_SRCS := riscv/nemusoc/start.S \
-           riscv/nemusoc/trm.c 
+           riscv/nemusoc/trm.c \
+		   riscv/nemusoc/trm.c \
+           riscv/nemusoc/ioe/ioe.c \
+           riscv/nemusoc/ioe/timer.c \
+           riscv/nemusoc/ioe/input.c \
+           riscv/nemusoc/ioe/gpu.c 
+
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/soc_linker.ld 
