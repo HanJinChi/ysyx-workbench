@@ -212,7 +212,7 @@ void init_cpu(){
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-  cpu.pc = 0x20000000;
+  cpu.pc = 0x30000000;
   for(int i = 0; i < 10; i++){
     step_and_dump_wave();
     step_and_dump_wave();
@@ -253,7 +253,7 @@ void exec_once(){
   copy_cpu_state();
 
   #ifdef CONFIG_DIFFTEST
-    // if(top->skip_d == 1) difftest_skip_ref();
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__skip == 1) difftest_skip_ref();
   #endif
 
 

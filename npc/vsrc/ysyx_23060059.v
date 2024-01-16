@@ -63,10 +63,6 @@ module ysyx_23060059(
     output	[63:0]	 io_slave_rdata,
     output		       io_slave_rlast,
     output	[3 :0]	 io_slave_rid
-    // output reg  [31:0]    pc_next,
-    // output reg  [31:0]    pc,
-    // output                ebreak_t,
-    // output                skip_d
 );
 
   wire                  endflag; 
@@ -552,6 +548,12 @@ module ysyx_23060059(
   wire [31:0]  pc;
   wire         skip_d;
   wire         ebreak_t;
+
+  reg skip;
+  always @(posedge clock) begin
+    if(reset) skip <= 0;
+    else      skip <= skip_d;
+  end
   // assign pc_next = (pc_write_enable == 1) ? pc_next_idu : ((pc == 32'h80000000) ? 32'h80000000 : pc_next_idu);
 
   always @(*) begin

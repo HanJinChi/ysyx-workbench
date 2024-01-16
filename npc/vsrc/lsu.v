@@ -338,15 +338,17 @@ module ysyx_23060059_lsu (
   Reg #(1,  1 'h0) regd32 (clock, reset, ren_v,         ren,           lsu_to_wbu_en);
   Reg #(1,  1 'h0) regd33 (clock, reset, wen_v,         wen,           lsu_to_wbu_en);
 
+
+  // 从flash读取的数据是4字节对齐，从sram读取的数据是8字节对齐，
+  // 因此在处理从sram读取的数据时，要区分是前4字节还是后4字节
   reg  [63:0] rdata_8;
   reg  [63:0] rdata_16;
   reg  [63:0] rdata_32;
 
-
   always @(*) begin
     rdata_8 = 0;
     rdata_16 = 0;
-    if(araddr_r >= 32'h20000000 && araddr_r <= 32'h20000fff) begin
+    if(araddr_r >= 32'h30000000 && araddr_r <= 32'h3fffffff) begin 
       rdata_8  = rdata_r >> (araddr_r[1:0]*8);
       rdata_16 = rdata_r >> (araddr_r[1]*16);
       rdata_32 = {32'h0, rdata_r[31:0]};
@@ -397,7 +399,7 @@ module ysyx_23060059_lsu (
     1'b1, pc_o
   });
 
-  assign skip_d_o = (exu_result == 32'ha00003f8) && (ren || wen);
+  assign skip_d_o = (exu_result >= 32'h10000000 && exu_result <= 32'h10000010) && (ren || wen);
 
   wire  [31:0] exu_result_v;
   wire  [31:0] pc_v;

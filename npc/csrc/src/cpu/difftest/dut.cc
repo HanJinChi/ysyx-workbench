@@ -32,7 +32,7 @@ void difftest_detach(){
 void difftest_attach(){
   skip_difftest = false;
 
-  ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), MSIZE, DIFFTEST_TO_REF);
+  ref_difftest_memcpy(PFLASH_LEFT, flash_guest_to_host(PFLASH_LEFT), FLASH_SIZE, DIFFTEST_TO_REF);
 
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
@@ -60,7 +60,7 @@ void init_difftest(char *ref_so_file, long img_size, int port){
   assert(ref_difftest_init);
 
   ref_difftest_init(port);
-  ref_difftest_memcpy(MROM_RESET_VECTOR, mrom_guest_to_host(MROM_RESET_VECTOR), img_size, DIFFTEST_TO_REF);
+  ref_difftest_memcpy(PFLASH_LEFT, flash_guest_to_host(PFLASH_LEFT), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 
