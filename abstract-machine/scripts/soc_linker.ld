@@ -4,6 +4,7 @@ PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD;}
 MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
+  psram : ORIGIN = 0x80000000, LENGTH = 4M
 }
 
 SECTIONS {
@@ -23,7 +24,7 @@ SECTIONS {
     _data_begin = .;
     *(.data*)
     *(.sdata*)
-  } > sram AT> flash :data 
+  } > psram AT> flash :data 
   edata = .;
   _data = .;
 	_bss_start = .;
@@ -31,19 +32,19 @@ SECTIONS {
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  } > sram AT> flash :bss
+  } > psram AT> flash :bss
   _data_end = _bss_start + SIZEOF(.bss); 
 }
 
 
 SECTIONS{
-  . = ORIGIN(sram);
-  _sram_data_begin = .;
+  . = ORIGIN(psram);
+  _psram_data_begin = .;
   . = . + (_data_end - _data_begin);
   _heap_start = .;
-  . = _heap_start + 0x500;
+  . = _heap_start + 0x100000;
   _stack_top = .;
-  . = _stack_top + 0x1000;
+  . = _stack_top + 0x100000;
   _stack_pointer = .;
   end = .;
   _end = .;

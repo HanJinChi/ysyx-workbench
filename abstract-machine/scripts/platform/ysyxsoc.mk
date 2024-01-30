@@ -1,9 +1,10 @@
 AM_SRCS := riscv/ysyxsoc/start.S \
-           riscv/ysyxsoc/trm.c 
+           riscv/ysyxsoc/trm.c \
+		   riscv/ysyxsoc/ioe.c 
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/soc_linker.ld 
-LDFLAGS   += --gc-sections -e _start --print-map
+LDFLAGS   += --gc-sections -e _start 
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 DIFF_ARGS = -d $(NPC_HOME)/riscv32-nemu-interpreter-so
 CFLAGS += -I$(AM_HOME)/am/src/riscv/ysyxsoc/include

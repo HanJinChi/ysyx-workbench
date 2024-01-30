@@ -16,7 +16,7 @@
 #include <assert.h>
 
 #define MBASE 0x80000000
-#define MSIZE 0x8000000
+#define MSIZE 0x10000000
 #define PC_RESET_OFFSET 0x0
 
 #define FLASH_BASE 0x30000000

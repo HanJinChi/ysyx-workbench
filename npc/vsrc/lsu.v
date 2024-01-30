@@ -348,14 +348,14 @@ module ysyx_23060059_lsu (
   always @(*) begin
     rdata_8 = 0;
     rdata_16 = 0;
-    if(araddr_r >= 32'h30000000 && araddr_r <= 32'h3fffffff) begin 
-      rdata_8  = rdata_r >> (araddr_r[1:0]*8);
-      rdata_16 = rdata_r >> (araddr_r[1]*16);
-      rdata_32 = {32'h0, rdata_r[31:0]};
-    end else begin
+    if((araddr_r >= 32'hf000000 && araddr_r <= 32'hfffffff)) begin 
       rdata_8  = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1:0]*8);
       rdata_16 = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1]*16);
       rdata_32 = rdata_r >> (araddr_r[2]*32);
+    end else begin
+      rdata_8  = rdata_r >> (araddr_r[1:0]*8);
+      rdata_16 = rdata_r >> (araddr_r[1]*16);
+      rdata_32 = {32'h0, rdata_r[31:0]};
     end
   end
 

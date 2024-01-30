@@ -87,7 +87,7 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   if (in_pmem(addr)) { 
     pmem_write(addr, len, data); 
   #ifdef CONFIG_MTRACE 
-    memory_log_write("pc is 0x%x, to address 0x%x write %d byte: 0x%x\n", cpu.pc, addr, len, data);
+    memory_log_write("pc is 0x%x, to address 0x%x write %d byte: 0x%x\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__pc_v, addr, len, data);
   #endif
     return; 
   }

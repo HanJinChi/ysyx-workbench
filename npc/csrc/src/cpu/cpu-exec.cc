@@ -48,6 +48,34 @@ extern "C" void mrom_read(int addr, int* data)  {
   *data = paddr_read(addr, 4); 
 }
 
+extern "C" void psram_read(int addr, int* data)  { 
+  addr = addr & (~0x3u);
+  addr = addr + MBASE;
+  *data = paddr_read(addr, 4); 
+}
+
+extern "C" void psram_write(int addr, int data, char mask)  { 
+  // addr = addr & (~0x3u); // 因为psram最后是verilog实现的，所以这里不用四字节对齐
+  addr = addr + MBASE;
+  int len = 0;
+  switch (mask) 
+  {
+    case 0:
+      break;
+    case 1:
+      paddr_write(addr, 1, data);
+      break;
+    case 0b11:
+      paddr_write(addr, 2, data);
+      break;
+    case 0b1111:
+      paddr_write(addr, 4, data);
+      break;
+    default:
+      break;
+  }
+}
+
 
 void copy_cpu_state(){
   cpu.csr.mcause =  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;

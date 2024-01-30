@@ -45,7 +45,7 @@ module PSRAM_READER (
     input   wire            clk,
     input   wire            rst_n,
     input   wire [23:0]     addr,
-    input   wire            rd,
+    input   wire            rd, // read enable 
     input   wire [2:0]      size,
     output  wire            done,
     output  wire [31:0]     line,
@@ -117,9 +117,12 @@ module PSRAM_READER (
     always @ (posedge clk)
         if(counter >= 20 && counter <= FINAL_COUNT)
             if(sck)
-                data[byte_index] <= {data[byte_index][3:0], din}; // Optimize!
+                data[byte_index] <= {data[byte_index][3:0], din}; // 接受数据
 
-    assign dout     =   (counter < 8)   ?   {3'b0, CMD_EBH[7 - counter]}:
+    // counter == (0~7),传输命令(EBh)
+    // counter == (8~13),传输地址
+    // couter  == (14~20),读延迟
+    assign dout     =   (counter < 8)   ?   {3'b0, CMD_EBH[7 - counter]}: // 发送命令
                         (counter == 8)  ?   saddr[23:20]        :
                         (counter == 9)  ?   saddr[19:16]        :
                         (counter == 10) ?   saddr[15:12]        :
