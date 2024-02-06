@@ -305,8 +305,117 @@ module ysyx_23060059_xbar(
       wMux    = wMux_r;
   end
 
-  reg   awready_r;
-  reg   wready_r;
-  reg   
+  reg           awready_r;
+  reg           wready_r;
+  reg           bvalid_r;
+  reg   [1 :0]  bresp_r;
+  reg   [31:0]  awaddrA_r;  reg   [31:0]  awaddrB_r;
+  reg           awvalidA_r; reg           awvalidB_r;
+  reg   [3 :0]  awidA_r;    reg   [3 :0]  awidB_r;
+  reg   [7 :0]  awlenA_r;   reg   [7 :0]  awlenB_r;
+  reg   [2 :0]  awsizeA_r;  reg   [2 :0]  awsizeB_r;
+  reg   [1 :0]  awburstA_r; reg   [1 :0]  awburstB_r;
+
+  reg   [63:0]  wdataA_r;   reg   [63:0]  wdataB_r;
+  reg   [7 :0]  wstrbA_r;   reg   [7 :0]  wstrbB_r;
+  reg           wvalidA_r;  reg           wvalidB_r;
+  reg           wlastA_r;   reg           wlastB_r;
+  reg           breadyA_r;  reg           breadyB_r;
+  always @(*) begin
+    awready_r  = 0;
+    wready_r   = 0;
+    bvalid_r   = 0;
+    bresp_r    = 0;
+    awaddrA_r  = 0;  awaddrB_r  = 0;
+    awvalidA_r = 0;  awvalidA_r = 0;
+    awidA_r    = 0;  awidB_r    = 0;
+    awlenA_r   = 0;  awlenB_r   = 0;
+    awsizeA_r  = 0;  awsizeB_r  = 0;
+    awburstA_r = 0;  awburstB_r = 0;
+    wdataA_r   = 0;  wdataB_r   = 0;
+    wstrbA_r   = 0;  wstrbB_r   = 0;
+    wvalidA_r  = 0;  wvalidB_r  = 0;
+    wlastA_r   = 0;  wlastB_r   = 0;
+    breadyA_r  = 0;  breadyB_r  = 0;
+    case(wMux)
+      2'b01:begin
+        awready_r  = awreadyA;
+        wready_r   = wreadyA;
+        bvalid_r   = bvalidA;
+        bresp_r    = brespA;
+        
+        awaddrA_r  = awaddr;
+        awvalidA_r = awvalid;
+        awidA_r    = awid;
+        awlenA_r   = awlen;
+        awsizeA_r  = awsize;
+        awburstA_r = awburst;
+        wdataA_r   = wdata;
+        wstrbA_r   = wstrb;
+        wvalidA_r  = wvalid;
+        wlastA_r   = wlast;
+        breadyA_r  = bready;
+
+        awaddrB_r  = 0;
+        awvalidB_r = 0;
+        awidB_r    = 0;
+        awlenB_r   = 0;
+        awsizeB_r  = 0;
+        awburstB_r = 0;
+        wdataB_r   = 0;
+        wstrbB_r   = 0;
+        wvalidB_r  = 0;
+        wlastB_r   = 0;
+        breadyB_r  = 0;
+      end
+      2'b10: begin
+        awready_r  = awreadyB;
+        wready_r   = wreadyB;
+        bvalid_r   = bvalidB;
+        bresp_r    = bresp;
+        
+        awaddrB_r  = awaddr;
+        awvalidB_r = awvalid;
+        awidB_r    = awid;
+        awlenB_r   = awlen;
+        awsizeB_r  = awsize;
+        awburstB_r = awburst;
+        wdataB_r   = wdata;
+        wstrbB_r   = wstrb;
+        wvalidB_r  = wvalid;
+        wlastB_r   = wlast;
+        breadyB_r  = bready;
+
+        awaddrA_r  = 0;
+        awvalidA_r = 0;
+        awidA_r    = 0;
+        awlenA_r   = 0;
+        awsizeA_r  = 0;
+        awburstA_r = 0;
+        wdataA_r   = 0;
+        wstrbA_r   = 0;
+        wvalidA_r  = 0;
+        wlastA_r   = 0;
+        breadyA_r  = 0;
+      end
+      default: begin end 
+    endcase
+  end
+
+  assign awready_o  = awready_r;
+  assign wready_o   = wready_r;
+  assign bvalid_o   = bvalid_r;
+  assign bresp_o    = bresp_r;
+  assign awaddrA_o  = awaddrA_r;  assign awaddrB_o  = awaddrB_r;
+  assign awvalidA_o = awvalidA_r; assign awvalidB_o = awvalidB_r;
+  assign awidA_o    = awidA_r;    assign awidA_o    = awidA_r;
+  assign awlenA_o   = awlenA_r;   assign awlenB_o   = awlenB_r;
+  assign awsizeA_o  = awsizeA_r;  assign awsizeB_o  = awsizeB_r;
+  assign awburstA_o = awburstA_r; assign awburstB_o = awburstB_r;
+  assign wdataA_o   = wdataA_r;   assign wdataB_o   = wdataB_r;
+  assign wstrbA_o   = wstrbA_r;   assign wstrbB_o   = wstrbB_r;
+  assign wvalidA_o  = wvalidA_r;  assign wvalidB_o  = wvalidB_r;
+  assign wlastA_o   = wlastA_r;   assign wlastB_o   = wlastB_r;
+  assign breadyA_o  = breadyA_r;  assign breadyB_o  = breadyB_r;  
 
 endmodule
