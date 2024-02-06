@@ -34,8 +34,73 @@ module ysyx_23060059_xbar(
   // b channel
   input    wire          bready,
   output   wire          bvalid_o,
-  output   wire  [1 :0]  bresp_o
+  output   wire  [1 :0]  bresp_o,
+  // xbar <-> soc
+  // xbar <-> clint
+  // ar channel
+  output   wire  [31:0]  araddrA,
+  output   wire  [31:0]  araddrB,
+  output   wire          arvalidA,
+  output   wire          arvalidB,
+  output   wire  [3 :0]  aridA,
+  output   wire  [3 :0]  aridB,
+  output   wire  [7 :0]  arlenA,
+  output   wire  [7 :0]  arlenB,
+  output   wire  [2 :0]  arsizeA,
+  output   wire  [2 :0]  arsizeB,
+  output   wire  [1 :0]  arburstA,
+  output   wire  [1 :0]  arburstB,
+  input    wire          arready_A,
+  input    wire          arready_B,
+  // r channel
+  output   wire          rreadyA,
+  output   wire          rreadyB,
+  input    wire  [63:0]  rdataA,
+  input    wire  [63:0]  rdataB,
+  input    wire          rvalidA,
+  input    wire          rvalidB,
+  input    wire  [1 :0]  rrespA,
+  input    wire  [1 :0]  rrespB,
+  input    wire  [3 :0]  ridA,
+  input    wire  [3 :0]  ridB,
+  input    wire          rlastA,
+  input    wire          rlastB,
+  // aw channel 
+  output   wire  [31:0]  awaddrA,
+  output   wire  [31:0]  awaddrB,
+  output   wire          awvalidA,
+  output   wire          awvalidB,
+  output   wire  [3 :0]  awidA,
+  output   wire  [3 :0]  awidB,
+  output   wire  [7 :0]  awlenA,
+  output   wire  [7 :0]  awlenB,
+  output   wire  [2 :0]  awsizeA,
+  output   wire  [2 :0]  awsizeB,
+  output   wire  [1 :0]  awburstA,
+  output   wire  [1 :0]  awburstB,
+  input    wire          awreadyA,
+  input    wire          awreadyB,
+  // w channel
+  output   wire  [63:0]  wdataA,
+  output   wire  [63:0]  wdataB,
+  output   wire  [7 :0]  wstrbA,
+  output   wire  [7 :0]  wstrbB,
+  output   wire          wvalidA,
+  output   wire          wvalidB,
+  output   wire          wlastA,
+  output   wire          wlastB,
+  input    wire          wreadyA,
+  input    wire          wreadyB,
+  // b channel
+  output   wire          breadyA,
+  output   wire          breadyB,
+  input    wire          bvalidA,
+  input    wire          bvalidB,
+  input    wire  [1 :0]  brespA,
+  input    wire  [1 :0]  brespB
 );
+
+  
 
 
 
