@@ -205,8 +205,6 @@ module ysyx_23060059_arbiter(
     endcase
   end
 
-
-  
   assign arreadyA_o = arreadyA_r; 
   assign rdataA_o   = rdataA_r;
   assign rvalidA_o  = rvalidA_r;
@@ -249,7 +247,6 @@ module ysyx_23060059_arbiter(
     endcase
   end
 
-
   reg   [1 :0]  wMux_r;  // for save
   always @(posedge clock) begin
     if(reset) begin
@@ -276,7 +273,6 @@ module ysyx_23060059_arbiter(
     end else 
       wMux    = wMux_r;
   end
-
 
   reg          awvalid_r;
   reg  [31:0]  awaddr_r;
