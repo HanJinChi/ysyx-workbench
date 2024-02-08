@@ -209,6 +209,67 @@ module ysyx_23060059(
   wire   [3 :0]         ridA;
   wire   [3 :0]         ridB;
 
+  wire                  arready;
+  wire   [31:0]         araddr;
+  wire                  arvalid;
+  wire   [3 :0]         arid;
+  wire   [7 :0]         arlen;
+  wire   [2 :0]         arsize;
+  wire   [1 :0]         arburst;
+  wire   [63:0]         rdata;
+  wire                  rvalid;
+  wire   [1 :0]         rresp;
+  wire   [3 :0]         rid;
+  wire                  rlast;
+  wire                  rready;
+  wire                  awready;
+  wire                  awvalid;
+  wire   [3 :0]         awid;
+  wire   [7 :0]         awlen;
+  wire   [2 :0]         awsize;
+  wire   [1 :0]         awburst;
+  wire   [31:0]         awaddr;
+  wire   [63:0]         wdata;
+  wire   [7 :0]         wstrb;
+  wire                  wvalid;
+  wire                  wlast;
+  wire                  wready;
+  wire                  bvalid;
+  wire   [1 :0]         bresp;
+  wire                  bready;
+
+  wire                  arready_clint;
+  wire   [31:0]         araddr_clint;
+  wire                  arvalid_clint;
+  wire   [3 :0]         arid_clint;
+  wire   [7 :0]         arlen_clint;
+  wire   [2 :0]         arsize_clint;
+  wire   [1 :0]         arburst_clint;
+  wire                  rvalid_clint;
+  wire   [1 :0]         rresp_clint;
+  wire   [63:0]         rdata_clint;
+  wire                  rlast_clint;
+  wire   [3 :0]         rid_clint;
+  wire                  rready_clint;
+  wire                  awready_clint;
+  wire                  awvalid_clint;
+
+  wire   [31:0]         awaddr_clint;
+  wire   [3 :0]         awid_clint;
+  wire   [7 :0]         awlen_clint;
+  wire   [2 :0]         awsize_clint;
+  wire   [1 :0]         awburst_clint;
+  wire                  wready_clint;
+  wire                  wvalid_clint;
+  wire   [63:0]         wdata_clint;
+  wire   [7 :0]         wstrb_clint;
+  wire                  wlast_clint;
+  wire                  bvalid_clint;
+  wire   [1 :0]         bresp_clint;
+  wire   [3 :0]         bid_clint;
+  wire                  bready_clint;
+
+ 
   Reg #(32, 32'h3000_0000) regd(clock, reset, pc_next_idu, pc,  pc_write_enable); // assign pc value
 
   // instruction fetch Unit
@@ -513,35 +574,160 @@ module ysyx_23060059(
     .brespA_o               (brespA          ),
     .brespB_o               (brespB          ),
 
-    .arready                (io_master_arready),
-    .araddr                 (io_master_araddr ),
-    .arvalid                (io_master_arvalid),
-    .arid                   (io_master_arid   ),
-    .arlen                  (io_master_arlen  ),
-    .arsize                 (io_master_arsize ),
-    .arburst                (io_master_arburst),
-    .rdata                  (io_master_rdata  ),
-    .rvalid                 (io_master_rvalid ),
-    .rresp                  (io_master_rresp  ),
-    .rid                    (io_master_rid    ),
-    .rlast                  (io_master_rlast  ),
-    .rready                 (io_master_rready ),
-    .awready                (io_master_awready),
-    .awvalid                (io_master_awvalid),
-    .awid                   (io_master_awid   ),
-    .awlen                  (io_master_awlen  ),
-    .awsize                 (io_master_awsize ),
-    .awburst                (io_master_awburst),
-    .awaddr                 (io_master_awaddr ),
-    .wdata                  (io_master_wdata  ),
-    .wstrb                  (io_master_wstrb  ),
-    .wvalid                 (io_master_wvalid ),
-    .wlast                  (io_master_wlast  ),
-    .wready                 (io_master_wready ),
-    .bvalid                 (io_master_bvalid ),
-    .bresp                  (io_master_bresp  ),
-    .bready                 (io_master_bready )
+    .arready                (arready         ),
+    .araddr                 (araddr          ),
+    .arvalid                (arvalid         ),
+    .arid                   (arid            ),
+    .arlen                  (arlen           ),
+    .arsize                 (arsize          ),
+    .arburst                (arburst         ),
+    .rdata                  (rdata           ),
+    .rvalid                 (rvalid          ),
+    .rresp                  (rresp           ),
+    .rid                    (rid             ),
+    .rlast                  (rlast           ),
+    .rready                 (rready          ),
+    .awready                (awready         ),
+    .awvalid                (awvalid         ),
+    .awid                   (awid            ),
+    .awlen                  (awlen           ),
+    .awsize                 (awsize          ),
+    .awburst                (awburst         ),
+    .awaddr                 (awaddr          ),
+    .wdata                  (wdata           ),
+    .wstrb                  (wstrb           ),
+    .wvalid                 (wvalid          ),
+    .wlast                  (wlast           ),
+    .wready                 (wready          ),
+    .bvalid                 (bvalid          ),
+    .bresp                  (bresp           ),
+    .bready                 (bready          )
   );
+
+  ysyx_23060059_xbar xbar(
+    .clock                  (clock           ),
+    .reset                  (reset           ),
+    .araddr                 (araddr          ),
+    .arvalid                (arvalid         ),
+    .arid                   (arid            ),
+    .arlen                  (arlen           ),
+    .arsize                 (arsize          ),
+    .arburst                (arburst         ),
+    .arready_o              (arready         ),
+    .rready                 (rready          ),
+    .rdata_o                (rdata           ),
+    .rvalid_o               (rvalid          ),
+    .rresp_o                (rresp           ),
+    .rid_o                  (rid             ),
+    .rlast_o                (rlast           ),   
+    .awaddr                 (awaddr          ),
+    .awvalid                (awvalid         ),
+    .awid                   (awid            ),
+    .awlen                  (awlen           ),
+    .awsize                 (awsize          ),
+    .awburst                (awburst         ),
+    .awready_o              (awready         ),
+    .wdata                  (wdata           ),
+    .wstrb                  (wstrb           ),
+    .wvalid                 (wvalid          ),
+    .wlast                  (wlast           ),
+    .wready_o               (wready          ),
+    .bready                 (bready          ),
+    .bvalid_o               (bvalid          ),
+    .bresp_o                (bresp           ),
+
+    .araddrA_o              (araddr_clint     ),
+    .araddrB_o              (io_master_araddr ),
+    .arvalidA_o             (arvalid_clint    ),
+    .arvalidB_o             (io_master_arvalid),
+    .aridA_o                (arid_clint       ),
+    .aridB_o                (io_master_arid   ),
+    .arlenA_o               (arlen_clint      ),
+    .arlenB_o               (io_master_arlen  ),
+    .arsizeA_o              (arsize_clint     ),
+    .arsizeB_o              (io_master_arsize ),
+    .arburstA_o             (arburst_clint    ),
+    .arburstB_o             (io_master_arburst),
+    .arreadyA               (arready_clint    ),
+    .arreadyB               (io_master_arready),
+    .rreadyA_o              (rready_clint     ),
+    .rreadyB_o              (io_master_rready ),
+    .rdataA                 (rdata_clint      ),
+    .rdataB                 (io_master_rdata  ),
+    .rvalidA                (rvalid_clint     ),
+    .rvalidB                (io_master_rvalid ),
+    .rrespA                 (rresp_clint      ),
+    .rrespB                 (io_master_rresp  ),
+    .ridA                   (rid_clint        ),
+    .ridB                   (io_master_rid    ),
+    .rlastA                 (rlast_clint      ),
+    .rlastB                 (io_master_rlast  ),
+    .awaddrA_o              (awaddr_clint     ),
+    .awaddrB_o              (io_master_awaddr ),
+    .awvalidA_o             (awvalid_clint    ),
+    .awvalidB_o             (io_master_awvalid),
+    .awidA_o                (awid_clint       ),
+    .awidB_o                (io_master_awid   ),
+    .awlenA_o               (awlen_clint      ),
+    .awlenB_o               (io_master_awlen  ),
+    .awsizeA_o              (awsize_clint     ),
+    .awsizeB_o              (io_master_awsize ),
+    .awburstA_o             (awburst_clint    ),
+    .awburstB_o             (io_master_awburst),
+    .awreadyA               (awready_clint    ),
+    .awreadyB               (io_master_awready),
+    .wdataA_o               (wdata_clint      ),
+    .wdataB_o               (io_master_wdata  ),
+    .wstrbA_o               (wstrb_clint      ),
+    .wstrbB_o               (io_master_wstrb  ),
+    .wvalidA_o              (wvalid_clint     ),
+    .wvalidB_o              (io_master_wvalid ),
+    .wlastA_o               (wlast_clint      ),
+    .wlastB_o               (io_master_wlast  ),
+    .wreadyA                (wready_clint     ),
+    .wreadyB                (io_master_wready ),
+    .breadyA_o              (bready_clint     ),
+    .breadyB_o              (io_master_bready ),
+    .bvalidA                (bvalid_clint     ),
+    .bvalidB                (io_master_bvalid ),
+    .brespA                 (bresp_clint      ),
+    .brespB                 (io_master_bresp  )
+  );
+
+  ysyx_23060059_clint clint(
+    .clock                  (clock           ),
+    .reset                  (reset           ),
+    .arready                (arready_clint   ),
+    .araddr                 (araddr_clint    ),
+    .arvalid                (arvalid_clint   ),
+    .arid                   (arid_clint      ),
+    .arlen                  (arlen_clint     ),
+    .arsize                 (arsize_clint    ),
+    .arburst                (arburst_clint   ),
+    .rvalid                 (rvalid_clint    ),
+    .rresp                  (rresp_clint     ),
+    .rdata                  (rdata_clint     ),
+    .rlast                  (rlast_clint     ),
+    .rid                    (rid_clint       ),
+    .rready                 (rready_clint    ),
+    .awready                (awready_clint   ),
+    .awaddr                 (awaddr_clint    ),
+    .awvalid                (awvalid_clint   ),
+    .awid                   (awid_clint      ),
+    .awlen                  (awlen_clint     ),
+    .awsize                 (awsize_clint    ),
+    .awburst                (awburst_clint   ),
+    .wready                 (wready_clint    ),
+    .wvalid                 (wvalid_clint    ),
+    .wdata                  (wdata_clint     ),
+    .wstrb                  (wstrb_clint     ),
+    .wlast                  (wlast_clint     ),
+    .bvalid                 (bvalid_clint    ),
+    .bresp                  (bresp_clint     ),
+    .bid                    (bid_clint       ),
+    .bready                 (bready_clint    ) 
+  ); 
+  
 
   reg  [31:0]  set_pc;
   reg  [31:0]  pc_next;

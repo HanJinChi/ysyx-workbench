@@ -119,7 +119,7 @@ module ysyx_23060059_xbar(
           else
             ar_next_state = IDLE;
         R_A:
-          if(rvalid && rready)
+          if(rvalid_o && rready)
             ar_next_state = IDLE;
           else
             ar_next_state = R_A;
@@ -186,7 +186,7 @@ module ysyx_23060059_xbar(
     rreadyA_r  = 0; rreadyB_r  = 0;
     case(araddrMux)
       2'b01: begin
-        araddrA_r  = araddrA;
+        araddrA_r  = araddr;
         arvalidA_r = arvalid;
         aridA_r    = arid;
         arlenA_r   = arlen;
@@ -248,11 +248,10 @@ module ysyx_23060059_xbar(
   assign aridA_o    = aridA_r;    assign aridB_o    = aridB_r;
   assign arlenA_o   = arlenA_r;   assign arlenB_o   = arlenB_r;
   assign arsizeA_o  = arsizeA_r;  assign arsizeB_o  = arsizeB_r;
-  assign arburstA_o = arburstA_r; assign arburstA_o = arbursta_r;
+  assign arburstA_o = arburstA_r; assign arburstA_o = arburstA_r;
   assign rreadyA_o  = rreadyA_r;  assign rreadyB_o  = rreadyB_r;
 
   parameter W_A = 1;
-  reg   [1 :0]  wMux;
   reg   [1 :0]  aw_state;
   reg   [1 :0]  aw_next_state;
 
@@ -269,7 +268,7 @@ module ysyx_23060059_xbar(
         else 
           aw_next_state = IDLE;
       W_A:
-        if(bvalid)
+        if(bvalid_o)
           aw_next_state = IDLE;
         else
           aw_next_state = W_A;
@@ -294,13 +293,13 @@ module ysyx_23060059_xbar(
   // awaddr
   always @(*) begin
     if(aw_state == IDLE) begin
-      if(awvalidA) 
-        wMux      = 2'b01;
-      else if(awvalidB) 
-        wMux      = 2'b10;
-      else begin
-        wMux      = wMux_r;
-      end
+      if(awvalid)
+        if(awaddr == `YSYX_23060059_CLINT_L || awaddr == `YSYX_23060059_CLINT_H) 
+          wMux = 2'b01;
+        else 
+          wMux = 2'b10;
+      else
+        wMux = wMux_r;  // waiting response
     end else 
       wMux    = wMux_r;
   end
@@ -372,7 +371,7 @@ module ysyx_23060059_xbar(
         awready_r  = awreadyB;
         wready_r   = wreadyB;
         bvalid_r   = bvalidB;
-        bresp_r    = bresp;
+        bresp_r    = brespB;
         
         awaddrB_r  = awaddr;
         awvalidB_r = awvalid;

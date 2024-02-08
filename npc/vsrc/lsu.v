@@ -37,7 +37,6 @@ module ysyx_23060059_lsu (
   output   wire          ecall_o,
   output   wire          ebreak_o,
   output   wire          skip_d_o,
-
   // lsu <-> axi, ar channel
   input    wire          arready,
   output   wire  [31:0]  araddr,
