@@ -398,7 +398,8 @@ module ysyx_23060059_lsu (
     1'b1, pc_o
   });
 
-  assign skip_d_o = (exu_result >= 32'h10000000 && exu_result <= 32'h10000010) && (ren || wen);
+  assign skip_d_o = ((exu_result >= `YSYX_23060059_UART_L && exu_result <= `YSYX_23060059_UART_H) 
+                    || (exu_result >= `YSYX_23060059_CLINT_L && exu_result <= `YSYX_23060059_CLINT_H)) && (ren || wen);
 
   wire  [31:0] exu_result_v;
   wire  [31:0] pc_v;
