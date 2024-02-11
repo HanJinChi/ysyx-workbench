@@ -25,12 +25,12 @@ module psram(
         else
           next_state = cmd_t;
       cmd_t:
-        if(counter == 5'h8) 
+        if(counter == 5'h2) 
           next_state = addr_t;
         else
           next_state = cmd_t;
       addr_t:
-        if(counter == 5'd14) // 8 + 6
+        if(counter == 5'd8) // 2 + 6
           if(cmd == 8'heb)
             next_state = delay;
           else
@@ -38,17 +38,17 @@ module psram(
         else 
           next_state = addr_t;
       write:
-        if(counter == 5'd22) // 8 + 6 + 8
+        if(counter == 5'd16) // 2 + 6 + 8
           next_state = idle;
         else
           next_state = write;
       delay: 
-        if(counter == 5'd20) // 8 + 6 + 6
+        if(counter == 5'd14) // 2 + 6 + 6
           next_state = read;
         else
           next_state = delay;
       read:
-        if(counter == 5'd28)
+        if(counter == 5'd22)
           next_state = idle;
         else 
           next_state = read;
@@ -62,7 +62,7 @@ module psram(
   assign dio = out ? dout : 4'bz;
 
   wire [4: 0] addr_index;
-  assign addr_index = 5 - (counter-8);
+  assign addr_index = 5 - (counter-2);
 
   reg  [4 :0] counter;
   reg         out;
@@ -74,7 +74,7 @@ module psram(
 
   reg  [3 :0] wdata[7:0];
   wire [31:0] wdata_all = {wdata[1], wdata[0], wdata[3], wdata[2], wdata[5], wdata[4], wdata[7], wdata[6]};
-  wire [4: 0] wdata_index = 7 - (counter-14); 
+  wire [4: 0] wdata_index = 7 - (counter-8); 
 
   always @(posedge sck or posedge ce_n) begin
     if(ce_n) begin
@@ -87,7 +87,10 @@ module psram(
       end
     end else begin
       if(next_state == cmd_t) begin
-        cmd[7-counter] <= dio[0];
+        if(counter == 0)
+          cmd[7:4] <= dio;
+        else
+          cmd[3:0] <= dio;
         counter        <= counter + 1;
       end else if(next_state == addr_t) begin
         adata[addr_index[2:0]] <= din;
@@ -96,14 +99,14 @@ module psram(
         counter <= counter + 1;
       end else if(next_state == read) begin
         out     <= 1;
-        dout    <= (counter == 5'd20) ? rdata[7 : 4] :  
-                   (counter == 5'd21) ? rdata[3 : 0] :
-                   (counter == 5'd22) ? rdata[15:12] :
-                   (counter == 5'd23) ? rdata[11: 8] :
-                   (counter == 5'd24) ? rdata[23:20] :
-                   (counter == 5'd25) ? rdata[19:16] :
-                   (counter == 5'd26) ? rdata[31:28] :
-                   (counter == 5'd27) ? rdata[27:24] :
+        dout    <= (counter == 5'd14) ? rdata[31:28] :  
+                   (counter == 5'd15) ? rdata[27:24] :
+                   (counter == 5'd16) ? rdata[7 : 4] :
+                   (counter == 5'd17) ? rdata[3 : 0] :
+                   (counter == 5'd18) ? rdata[15:12] :
+                   (counter == 5'd19) ? rdata[11: 8] :
+                   (counter == 5'd20) ? rdata[23:20] :
+                   (counter == 5'd21) ? rdata[19:16] :
                    0;     
         counter <= counter + 1;
       end else if(next_state == write) begin
@@ -124,11 +127,11 @@ module psram(
 
   reg [7:0] mask;
   always@(*) begin
-    if(counter == 5'd16)
+    if(counter == 5'd10)
       mask = 8'b1;
-    else if(counter == 5'd18)
+    else if(counter == 5'd12)
       mask = 8'b11;
-    else if(counter == 5'd22)
+    else if(counter == 5'd16)
       mask = 8'b1111;
     else
       mask = 0;

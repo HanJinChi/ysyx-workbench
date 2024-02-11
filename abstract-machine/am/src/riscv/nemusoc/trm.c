@@ -3,7 +3,7 @@
 #include <nemusoc.h>
 
 extern char _heap_start;
-extern char _sram_data_begin;
+extern char _psram_data_begin;
 extern char _data_begin;
 extern char _data_end;
 extern char _rom_data_begin;
@@ -26,7 +26,7 @@ void putch(char ch) {
 }
 
 void bootloader(){
-  char* dst = &_sram_data_begin;
+  char* dst = &_psram_data_begin;
   char* src = &_rom_data_begin;
 
   for(int i = 0; i < (uintptr_t)&_data_end - (uintptr_t)&_data_begin; i++){

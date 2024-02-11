@@ -23,7 +23,7 @@
 #define FLASH_BASE       0x30000000
 #define FLASH_SIZE       0x10000000
 
-#define RTC_ADDR        (DEVICE_BASE + 0x0000048)
+#define RTC_ADDR        0x2000000
 #define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
 #define KBD_ADDR        (DEVICE_BASE + 0x0000060)
 #define FB_ADDR         (MMIO_BASE   + 0x1000000)
