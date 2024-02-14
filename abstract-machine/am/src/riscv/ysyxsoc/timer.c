@@ -6,6 +6,8 @@ void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
   uptime->us = inl(RTC_ADDR + 4);
   uptime->us <<= 32;
   uptime->us += inl(RTC_ADDR);
+
+  uptime->us = (uptime->us)*4; // 需要根据实际使用仿真机器进行调整
 }
 
 

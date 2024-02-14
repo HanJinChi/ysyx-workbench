@@ -141,8 +141,11 @@ module ysyx_23060059_ifu(
         end
         if(set_value == 0) begin
           set_value      <= 1;
-          instruction_r  <= rdata[31:0];
           rresp_r        <= rresp;
+          if(araddr_r >= 32'hf000000 && araddr_r <= 32'hfffffff)
+            instruction_r <= araddr_r[2] ? rdata[63:32] : rdata[31:0];
+          else
+            instruction_r <= rdata[31:0];
         end
       end else begin // next_state == IDLE
         if(send_valid_r) send_valid_r <= 0;

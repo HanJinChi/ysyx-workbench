@@ -8,18 +8,20 @@ MEMORY {
 }
 
 SECTIONS {
-  . = ORIGIN(flash);
+  . = ORIGIN(sram);
+  _text_rodata_begin = .;
   .text : {
     *(entry)
     *(.text*)
-  } > flash AT> flash :text
+  } > sram AT> flash :text
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
     *(.srodata*)
-  } > flash AT > flash
-  _rom_data_begin = .;
+  } > sram AT > flash
+  _text_rodata_end = _text_rodata_begin + SIZEOF(.text)+ SIZEOF(.rodata);
+  _rom_data_begin = _text_rodata_end;
   .data : {
     _data_begin = .;
     *(.data*)
@@ -36,13 +38,18 @@ SECTIONS {
   _data_end = _bss_start + SIZEOF(.bss); 
 }
 
+SECTIONS{
+  . = ORIGIN(sram);
+  _sram_begin = .;
+}
+
 
 SECTIONS{
-  . = ORIGIN(psram);
+  . = ORIGIN(psram)+ORIGIN(sram)-ORIGIN(flash);
   _psram_data_begin = .;
   . = . + (_data_end - _data_begin);
-  _heap_start = .;
-  . = _heap_start + 0x100000;
+  _heap_start = ALIGN(0x1000);
+  . = _heap_start + 0x200000;
   _stack_top = .;
   . = _stack_top + 0x100000;
   _stack_pointer = .;

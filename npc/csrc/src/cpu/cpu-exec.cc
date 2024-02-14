@@ -49,7 +49,7 @@ extern "C" void mrom_read(int addr, int* data)  {
 }
 
 extern "C" void psram_read(int addr, int* data)  { 
-  addr = addr & (~0x3u);
+  // addr = addr & (~0x3u); // 因为psram最后是verilog实现的，所以这里不用四字节对齐
   addr = addr + MBASE;
   *data = paddr_read(addr, 4); 
 }
