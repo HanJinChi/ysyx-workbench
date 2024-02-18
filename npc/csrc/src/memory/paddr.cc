@@ -58,13 +58,13 @@ void out_of_bound(paddr_t addr) {
 word_t paddr_read(paddr_t addr, int len) {
   if (in_pmem(addr)) {
     word_t data = pmem_read(addr, len);
-  // #ifdef CONFIG_MTRACE
-  //   if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrMux == 1){ // 取值
-  //     memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n",top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrB, addr, len, data); // bug
-  //   }else{
-  //     memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", cpu.pc, addr, len, data);
-  //   }
-  // #endif
+  #ifdef CONFIG_MTRACE
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__arb__DOT__araddrMux == 2){ // 取值
+      memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__pc_v, addr, len, data); 
+    }else{
+      memory_log_write("pc is 0x%x, from address 0x%x read %d byte: 0x%x\n", addr, addr, len, data);
+    }
+  #endif
     return data;
   }
   if(in_flash(addr)){
@@ -87,7 +87,7 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   if (in_pmem(addr)) { 
     pmem_write(addr, len, data); 
   #ifdef CONFIG_MTRACE 
-    memory_log_write("pc is 0x%x, to address 0x%x write %d byte: 0x%x\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__pc_v, addr, len, data);
+    memory_log_write("pc is 0x%x, to address 0x%x write %d byte: 0x%x\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__pc_v, addr, len, (len == 4) ? data : ((len == 1) ? (data & 0xFF) : (data & 0xFFFF)));
   #endif
     return; 
   }

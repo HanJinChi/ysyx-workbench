@@ -7,9 +7,9 @@ extern char _psram_data_begin;
 extern char _data_begin;
 extern char _data_end;
 extern char _rom_data_begin;
-extern char _text_rodata_begin;
-extern char _text_rodata_end;
-extern char _sram_begin;
+extern char _text_begin;
+extern char _text_end;
+extern char _psram_text_begin;
 int main(const char *args);
 
 // #define PMEM_SIZE (8 * 1024 * 1024)
@@ -46,9 +46,9 @@ void bootloader(){
     dst[i] = src[i];
   }
 
-  dst = (&_sram_begin)+SRAM_BASE-FLASH_BASE;
-  src = (&_text_rodata_begin);
-  for(int i = 0; i < (uintptr_t)&_text_rodata_end - (uintptr_t)&_text_rodata_begin; i++){
+  dst = (&_psram_text_begin);
+  src = (&_text_begin);
+  for(int i = 0; i < (uintptr_t)&_text_end - (uintptr_t)&_text_begin; i++){
     dst[i] = src[i];
   }
 }
@@ -62,6 +62,6 @@ void halt(int code) {
 void _trm_init() {
   bootloader();
   uart_init();
-  int ret = (*(int(*)(const char *args))((uintptr_t)&main+SRAM_BASE-FLASH_BASE))(mainargs);
+  int ret = (*(int(*)(const char *args))((uintptr_t)&main+PSRAM_BASE-FLASH_BASE))(mainargs);
   halt(ret);
 }
