@@ -1,10 +1,24 @@
 ENTRY(_start) /* 指定程序的入口点为_start */
-PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD;}
+PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD; boot PT_LOAD;}
 
 MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
   psram : ORIGIN = 0x80000000, LENGTH = 4M
+}
+
+
+SECTIONS{
+  . = ORIGIN(sram);
+  _boot_begin = .;
+  .boot : {
+    *(.text.bootloader)
+  } > sram AT> flash :boot
+  _boot_end = .;
+}
+
+SECTIONS{
+  . = ORIGIN(sram);
 }
 
 SECTIONS {
@@ -15,6 +29,7 @@ SECTIONS {
     *(.text*)
     *(.rela*)
   } > psram AT> flash :text
+
   etext = .;
   _etext = .;
   .rodata : {

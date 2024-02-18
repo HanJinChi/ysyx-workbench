@@ -284,8 +284,6 @@ void exec_once(){
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__skip == 1) difftest_skip_ref();
   #endif
 
-
-
   #ifdef CONFIG_TRACE
     s.pc   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc;
     s.dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc_next;

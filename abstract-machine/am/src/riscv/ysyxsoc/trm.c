@@ -10,6 +10,8 @@ extern char _rom_data_begin;
 extern char _text_begin;
 extern char _text_end;
 extern char _psram_text_begin;
+extern char _boot_begin;
+extern char _boot_end;
 int main(const char *args);
 
 // #define PMEM_SIZE (8 * 1024 * 1024)
@@ -18,7 +20,7 @@ int main(const char *args);
 #define HEAP_SIZE (4 * 1024)
 #define HEAP_END ((uintptr_t)&_heap_start + HEAP_SIZE)
 
-Area heap = RANGE(&_heap_start, HEAP_END);
+Area heap = RANGE((uintptr_t)&_heap_start - (PSRAM_BASE - FLASH_BASE), HEAP_END);
 #ifndef MAINARGS
 #define MAINARGS ""
 #endif
@@ -37,6 +39,7 @@ void uart_init(){
   outb(SERIAL_BASE+SERIAL_LC, init_value);       // 恢复初始位
 }
 
+// 在sram中执行，负责将数据段和代码段从flash迁移至psram中
 void bootloader(){
   // 将数据段从rom(flash)迁移到psram 
   char* dst = &_psram_data_begin;
@@ -53,6 +56,16 @@ void bootloader(){
   }
 }
 
+// 在flash中执行，负责将bootloader从flash迁移至sram中
+void fsbl(){
+  char* src = &_boot_begin;
+  char* dst = SRAM_BASE;
+
+  for(int i = 0; i < (uintptr_t)&_boot_end - (uintptr_t)&_boot_begin; i++){
+    dst[i] = src[i];
+  }
+}
+
 void halt(int code) {
   asm volatile("mv a0, %0; ebreak" : :"r"(code)); // ebreak
   // never run here
@@ -60,7 +73,9 @@ void halt(int code) {
 }
 
 void _trm_init() {
-  bootloader();
+  fsbl();
+  // bootloader();
+  (*(void(*))((uintptr_t)&bootloader+SRAM_BASE-FLASH_BASE));
   uart_init();
   int ret = (*(int(*)(const char *args))((uintptr_t)&main+PSRAM_BASE-FLASH_BASE))(mainargs);
   halt(ret);
