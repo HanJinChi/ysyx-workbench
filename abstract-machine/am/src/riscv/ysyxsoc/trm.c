@@ -3,15 +3,9 @@
 #include <ysyxsoc.h>
 
 extern char _heap_start;
-extern char _psram_data_begin;
-extern char _data_begin;
-extern char _data_end;
-extern char _rom_data_begin;
-extern char _text_begin;
-extern char _text_end;
-extern char _psram_text_begin;
 extern char _boot_begin;
 extern char _boot_end;
+extern char _ssbl;
 int main(const char *args);
 
 // #define PMEM_SIZE (8 * 1024 * 1024)
@@ -39,27 +33,11 @@ void uart_init(){
   outb(SERIAL_BASE+SERIAL_LC, init_value);       // 恢复初始位
 }
 
-// 在sram中执行，负责将数据段和代码段从flash迁移至psram中
-void bootloader(){
-  // 将数据段从rom(flash)迁移到psram 
-  char* dst = &_psram_data_begin;
-  char* src = &_rom_data_begin;
 
-  for(int i = 0; i < (uintptr_t)&_data_end - (uintptr_t)&_data_begin; i++){
-    dst[i] = src[i];
-  }
-
-  dst = (&_psram_text_begin);
-  src = (&_text_begin);
-  for(int i = 0; i < (uintptr_t)&_text_end - (uintptr_t)&_text_begin; i++){
-    dst[i] = src[i];
-  }
-}
-
-// 在flash中执行，负责将bootloader从flash迁移至sram中
+// 在flash中执行，负责将bootloader从flash迁移至psram中
 void fsbl(){
   char* src = &_boot_begin;
-  char* dst = SRAM_BASE;
+  char* dst = (uintptr_t)src - FLASH_BASE + PSRAM_BASE;
 
   for(int i = 0; i < (uintptr_t)&_boot_end - (uintptr_t)&_boot_begin; i++){
     dst[i] = src[i];
@@ -75,7 +53,7 @@ void halt(int code) {
 void _trm_init() {
   fsbl();
   // bootloader();
-  (*(void(*))((uintptr_t)&bootloader+SRAM_BASE-FLASH_BASE));
+  ((void (*)())((uintptr_t)&_ssbl-FLASH_BASE+PSRAM_BASE))();
   uart_init();
   int ret = (*(int(*)(const char *args))((uintptr_t)&main+PSRAM_BASE-FLASH_BASE))(mainargs);
   halt(ret);

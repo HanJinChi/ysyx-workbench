@@ -1,5 +1,5 @@
 ENTRY(_start) /* 指定程序的入口点为_start */
-PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD; boot PT_LOAD;}
+PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD;}
 
 MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
@@ -8,35 +8,25 @@ MEMORY {
 }
 
 
-SECTIONS{
-  . = ORIGIN(sram);
-  _boot_begin = .;
-  .boot : {
-    *(.text.bootloader)
-  } > sram AT> flash :boot
-  _boot_end = .;
-}
-
-SECTIONS{
-  . = ORIGIN(sram);
-}
 
 SECTIONS {
   . = ORIGIN(psram);
-  _text_begin = .;
   .text : {
+    _text_begin = .;
     *(entry)
     *(.text*)
     *(.rela*)
+    _boot_begin = .;
+    *(boot)
+    _boot_end = .;
   } > psram AT> flash :text
-
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
     *(.srodata*)
   } > psram AT > flash
-  _text_end = _text_begin + SIZEOF(.text)+ SIZEOF(.rodata);
+  _text_end = etext+ SIZEOF(.rodata);
   _rom_data_begin = _text_end;
   .data : {
     _data_begin = .;
@@ -57,10 +47,7 @@ SECTIONS {
 
 SECTIONS{
   . = ORIGIN(psram)-ORIGIN(flash)+ORIGIN(psram);
-  _psram_text_begin = .;
   . = . + (_text_end - _text_begin);
-
-  _psram_data_begin = ORIGIN(psram)-ORIGIN(flash)+ _data_begin;
   . = . + (_data_end - _data_begin);
   _heap_start = ALIGN(0x1000);
   . = _heap_start + 0x200000;

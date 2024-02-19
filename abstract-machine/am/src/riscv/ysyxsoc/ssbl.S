@@ -1,0 +1,61 @@
+.section boot, "ax"
+.globl _ssbl
+.type _ssbl, @function
+
+_ssbl:
+  addi sp, sp, -28
+  sw a0,0(sp)
+  sw a1,4(sp)
+  sw a2,8(sp)
+  sw a3,12(sp)
+  sw a4,16(sp)
+  sw s0,20(sp)
+  sw s1,24(sp)
+
+  la s0, _boot_begin
+  la s1, _boot_end
+  la a0, _rom_data_begin
+  la a1, _data_begin
+  la a2, _data_end
+  li a3, 0x80000000
+  li a4, 0x30000000
+
+  sub a0,a0,a3
+  add a0,a0,a4
+loopA:
+  lbu a3, 0(a0)
+  addi a1,a1,1
+  addi a0,a0,1
+  sb  a3, -1(a1)
+
+  bleu a1,a2,loopA
+
+  la a0, _text_begin
+  la a1, _text_begin
+  la a2, _text_end
+  li a3, 0x80000000
+  sub a0,a0,a3
+  add a0,a0,a4
+
+loopB:
+  sltu t0, a1, s0
+  sltu t1, s1, a1
+  or  t0, t0, t1
+  beqz t0, skip
+  lbu a3, 0(a0)
+  sb  a3, 0(a1)
+skip:
+  addi a1,a1,1
+  addi a0,a0,1
+  bne a1,a2,loopB
+
+  lw a0,0(sp)
+  lw a1,4(sp)
+  lw a2,8(sp)
+  lw a3,12(sp)
+  lw a4,16(sp)
+  lw s0,20(sp)
+  lw s1,24(sp)
+
+  addi sp,sp,28
+  ret
