@@ -1,6 +1,5 @@
 ENTRY(_start) /* 指定程序的入口点为_start */
-PHDRS { text PT_LOAD; data PT_LOAD; bss PT_LOAD;}
-
+PHDRS { text PT_LOAD; rodata PT_LOAD;  data PT_LOAD; bss PT_LOAD;}
 MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
@@ -25,7 +24,7 @@ SECTIONS {
   .rodata : {
     *(.rodata*)
     *(.srodata*)
-  } > psram AT > flash
+  } > psram AT > flash :rodata
   _text_end = etext+ SIZEOF(.rodata);
   _rom_data_begin = _text_end;
   .data : {
@@ -43,7 +42,6 @@ SECTIONS {
   } > psram AT> flash :bss
   _data_end = _bss_start + SIZEOF(.bss); 
 }
-
 
 SECTIONS{
   . = ORIGIN(psram)-ORIGIN(flash)+ORIGIN(psram);

@@ -37,7 +37,7 @@ void uart_init(){
 // 在flash中执行，负责将bootloader从flash迁移至psram中
 void fsbl(){
   char* src = &_boot_begin;
-  char* dst = (uintptr_t)src - FLASH_BASE + PSRAM_BASE;
+  char* dst = (char*)((uintptr_t)&_boot_begin - FLASH_BASE + PSRAM_BASE);
 
   for(int i = 0; i < (uintptr_t)&_boot_end - (uintptr_t)&_boot_begin; i++){
     dst[i] = src[i];
@@ -52,7 +52,6 @@ void halt(int code) {
 
 void _trm_init() {
   fsbl();
-  // bootloader();
   ((void (*)())((uintptr_t)&_ssbl-FLASH_BASE+PSRAM_BASE))();
   uart_init();
   int ret = (*(int(*)(const char *args))((uintptr_t)&main+PSRAM_BASE-FLASH_BASE))(mainargs);
