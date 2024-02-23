@@ -76,6 +76,10 @@ extern "C" void psram_write(int addr, int data, char mask)  {
   }
 }
 
+extern "C" void sdram_write(int addr, int* data){
+  addr = addr + SDRAM_BASE;
+  *data = paddr_read(addr, 4);
+}
 
 void copy_cpu_state(){
   cpu.csr.mcause =  top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT____Vcellout__genblk2__BRA__0__KET____DOT__regt____pinNumber4;

@@ -22,6 +22,8 @@
 #define FLASH_BASE 0x30000000
 #define FLASH_SIZE 0x10000000
 
+#define SDRAM_BASE 0xa0000000
+
 typedef uint32_t word_t;
 typedef int32_t  sword_t;
 #define FMT_WORD "0x%08x"

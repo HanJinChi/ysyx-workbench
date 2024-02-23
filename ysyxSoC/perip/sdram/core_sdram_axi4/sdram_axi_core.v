@@ -94,6 +94,7 @@ localparam CMD_REFRESH       = 4'b0001;
 localparam CMD_LOAD_MODE     = 4'b0000;
 
 // Mode: Burst Length = 4 bytes, CAS=2
+// 一次传输2字节，共传输两次
 localparam MODE_REG          = {3'b000,1'b0,2'b00,3'b010,1'b0,3'b001};
 
 // SM states
@@ -125,7 +126,7 @@ localparam SDRAM_TRFC_CYCLES = (60 + (CYCLE_TIME_NS-1)) / CYCLE_TIME_NS;
 // External Interface
 //-----------------------------------------------------------------
 wire [ 31:0]  ram_addr_w       = inport_addr_i;
-wire [  3:0]  ram_wr_w         = inport_wr_i;
+wire [  3:0]  ram_wr_w         = inport_wr_i; // 
 wire          ram_rd_w         = inport_rd_i;
 wire          ram_accept_w;
 wire [ 31:0]  ram_write_data_w = inport_write_data_i;
@@ -166,8 +167,9 @@ reg [SDRAM_DQM_W-1:0]  dqm_buffer_q;
 wire [SDRAM_DATA_W-1:0] sdram_data_in_w;
 
 reg                    refresh_q;
-
+// row_opem_q记录当前选择的哪个存储体
 reg [SDRAM_BANKS-1:0]  row_open_q;
+// active_row_q记录每个存储体激活的行地址
 reg [SDRAM_ROW_W-1:0]  active_row_q[0:SDRAM_BANKS-1];
 
 reg  [STATE_W-1:0]     state_q;
