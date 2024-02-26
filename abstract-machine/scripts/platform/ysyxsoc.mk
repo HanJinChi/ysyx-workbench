@@ -6,7 +6,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 		   riscv/ysyxsoc/timer.c \
 		   riscv/ysyxsoc/ioe.c 
 
-CFLAGS    += -fdata-sections -ffunction-sections
+CFLAGS    += -fdata-sections -ffunction-sections 
 LDFLAGS   += -T $(AM_HOME)/scripts/soc_linker.ld
 # --gc-sections:不链接未使用函数
 LDFLAGS   += --gc-sections -e _start --print-map
@@ -14,7 +14,7 @@ CFLAGS += -DMAINARGS=\"$(mainargs)\"
 DIFF_ARGS = -d $(NPC_HOME)/riscv32-nemu-interpreter-so
 CFLAGS += -I$(AM_HOME)/am/src/riscv/ysyxsoc/include
 YSYXSOCFLAGS += -l $(shell dirname $(IMAGE).elf)/ysyxsoc-log.txt -m $(shell dirname $(IMAGE).elf)/memory-ysyxsoc-log.txt -f $(shell dirname $(IMAGE).elf)/function-ysyxsoc-log.txt -e $(IMAGE).elf -v $(shell dirname $(IMAGE).elf)/device-ysyxsoc-log.txt
-YSYXSOCFLAGS += -b -a $(shell dirname $(IMAGE).elf)/bin -x $(shell dirname $(IMAGE).elf)/exception-ysyxsoc-log.txt
+YSYXSOCFLAGS += -a $(shell dirname $(IMAGE).elf)/bin -x $(shell dirname $(IMAGE).elf)/exception-ysyxsoc-log.txt
 YSYXSOCFLAGS += $(DIFF_ARGS)
 
 .PHONY: $(AM_HOME)/am/src/riscv/ysyxsoc/trm.c

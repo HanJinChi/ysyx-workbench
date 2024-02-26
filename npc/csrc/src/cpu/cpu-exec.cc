@@ -76,9 +76,53 @@ extern "C" void psram_write(int addr, int data, char mask)  {
   }
 }
 
-extern "C" void sdram_write(int addr, int* data){
+extern "C" void sdram_read(int addr, int* data){
   addr = addr + SDRAM_BASE;
   *data = paddr_read(addr, 4);
+  // printf("read addr: 0x%x, data is 0x%x\n", addr, *data);
+}
+
+extern "C" void sdram_write(int addr, int data, char mask)  { 
+  addr = addr + SDRAM_BASE;
+  int len = 0;
+  // printf("write addr: 0x%x, data is 0x%x, mask is %d\n", addr, data, mask);
+  switch (mask) 
+  {
+    case 0:
+      break;
+    case 1:
+      paddr_write(addr, 1, data & 0xff);
+      break;
+    case 0b10:
+      paddr_write(addr+1, 1, (data & 0xff00)>>8);
+      break;
+    case 0b100:
+      paddr_write(addr+2, 1, (data & 0xff0000)>>16);
+      break;
+    case 0b1000:
+      paddr_write(addr+3, 1, (data & 0xff000000)>>24);
+      break;
+    case 0b1100:
+      paddr_write(addr+2, 2, (data & 0xffff0000)>>16);
+      break;
+    case 0b11:
+      paddr_write(addr, 2, data & 0x0000ffff);
+      break;
+    case 0b0110:
+      paddr_write(addr+1, 2, (data & 0x0ff0)>>8);
+      break;
+    case 0b0111:
+      paddr_write(addr, 3, data & 0x00ffffff);
+      break;
+    case 0b1110:
+      paddr_write(addr+1, 3, (data & 0xffffff00)>>8);
+      break;
+    case 0b1111:
+      paddr_write(addr, 4, data);
+      break;
+    default:
+      break;
+  }
 }
 
 void copy_cpu_state(){

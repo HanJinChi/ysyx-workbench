@@ -38,10 +38,11 @@ loopA:
   add a0,a0,a4
 
 loopB:
-  sltu t0, a1, s0
-  sltu t1, s1, a1
-  or  t0, t0, t1
-  beqz t0, skip
+  bleu a1,s0,lw
+  bleu s1,a1,lw
+  beqz zero,skip
+lw:
+
   lbu a3, 0(a0)
   sb  a3, 0(a1)
 skip:

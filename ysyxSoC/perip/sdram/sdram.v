@@ -47,12 +47,14 @@ module sdram(
   wire [3:0] cmd;
   assign cmd = {cs, ras, cas, we};
 
-  reg [3:0] state, next_state;
+  reg [2:0] state, next_state;
 
-  wire [23:0] addr;
+  wire [24:0] addr;
+  wire [SDRAM_BANK_W-1:0] bank;
+
   assign bank = ba;
   assign addr_col = a;
-  assign addr = {active_row[bank],bank,addr_col[SDRAM_COL_W:2],2'b0};
+  assign addr = {active_row[bank],bank,addr_col[SDRAM_COL_W-1:0],1'b0};
 
   always @(*) begin
     case(state)
@@ -68,24 +70,25 @@ module sdram(
             next_state = write_t;
           CMD_TERMINATE:
             next_state = terminate_t;
+          CMD_READ:
+            next_state = read_t;
           default: next_state = idle;
         endcase
       activate_t:
         next_state = idle;
       read_t:
-        next_state = delay_t;
-      delay_t:
-        if(counter == 2)
-          next_state = send_t;
-        else 
-          next_state = delay_t;
+        next_state = send_t;
       send_t:
-        if(counter == 4)
+        if(counter == 2)
           next_state = idle;
         else
           next_state = send_t;
       write_t:
-
+        if(counter == 2)
+          next_state = idle;
+        else
+          next_state = write_t;
+      default: next_state = idle;
     endcase
   end
 
@@ -99,32 +102,42 @@ module sdram(
 
   reg  [3:0] counter;
   reg  [31:0] rdata;
+  reg  [15:0] wdata_buffer;
+  reg  [1:0]  wmask_buffer;
   wire [SDRAM_ROW_W-1:0] addr_col;
-  wire [SDRAM_BANK_W-1:0] bank;
+  reg  [15:0] dout;
+  integer idx;
   always @(posedge clk) begin
     if(!cke) begin
-      out      <= 0;
-      bank     <= 0;
-      counter  <= 0;
+      out             <= 0;
+      counter         <= 0;
+      wdata_buffer    <= 0;
+      wmask_buffer    <= 0;
+      dout            <= 0;
       for (idx=0;idx<SDRAM_BANKS;idx=idx+1)
-          active_row_q[idx] <= {SDRAM_ROW_W{1'b0}};
+          active_row[idx] <= {SDRAM_ROW_W{1'b0}};
     end else begin
       if(next_state == register_t)begin
 
       end else if(next_state == activate_t)begin
         active_row[ba] <= a; // 行地址
       end else if(next_state == read_t) begin
-        sdram_read({8'h0,addr}, rdata);
-      end else if(next_state == delay_t) begin
-        counter <= counter + 1;
+        sdram_read({7'h0,addr}, rdata);
       end else if(next_state == send_t) begin
         out    <= 1;
-        dout   <= (counter == 4'd2) ? rdata[15:0 ]  :
-                  (counter == 4'd3) ? rdata[31:16]  :
+        dout   <= (counter == 4'd0) ? rdata[15:0 ]  :
+                  (counter == 4'd1) ? rdata[31:16]  :
                   0;
         counter <= counter + 1;
       end else if(next_state == write_t) begin
-
+        wdata_buffer <= din;
+        wmask_buffer <= ~dqm;
+        if(counter == 4'd1) 
+          sdram_write({7'h0,addr}, {din, wdata_buffer}, {4'h0,~dqm, wmask_buffer});
+        counter <= counter + 1;
+      end else begin // idle
+        counter <= 0;
+        out     <= 0; 
       end
     end
   end
