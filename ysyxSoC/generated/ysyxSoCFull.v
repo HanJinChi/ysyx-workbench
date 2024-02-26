@@ -4379,7 +4379,19 @@ module ysyxSoCFull(
     .ce_n (_asic_psram_ce_n),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
     .dio  (_dio_wire)
   );
-  sdram sdram (	// @[src/main/scala/ysyxSoC/SoC.scala:138:23]
+  sdram sdramA (	// @[src/main/scala/ysyxSoC/SoC.scala:138:23]
+    .clk (_asic_sdram_clk),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .cke (_asic_sdram_cke),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .cs  (_asic_sdram_cs),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .ras (_asic_sdram_ras),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .cas (_asic_sdram_cas),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .we  (_asic_sdram_we),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .a   (_asic_sdram_a),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .ba  (_asic_sdram_ba),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .dqm (_asic_sdram_dqm),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
+    .dq  (_dq_wire)
+  );
+  sdram sdramB (	// @[src/main/scala/ysyxSoC/SoC.scala:138:23]
     .clk (_asic_sdram_clk),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
     .cke (_asic_sdram_cke),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]
     .cs  (_asic_sdram_cs),	// @[src/main/scala/ysyxSoC/SoC.scala:100:24]

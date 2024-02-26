@@ -20,8 +20,10 @@ module sdram_top_apb (
   output        sdram_we,
   output [12:0] sdram_a,
   output [ 1:0] sdram_ba,
-  output [ 1:0] sdram_dqm,
-  inout  [15:0] sdram_dq
+  output [ 1:0] sdram_dqmA,
+  output [ 1:0] sdram_dqmB,
+  inout  [15:0] sdram_dqA,
+  inout  [15:0] sdram_dqB,
 );
 
   wire sdram_dout_en;
