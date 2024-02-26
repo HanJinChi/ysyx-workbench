@@ -17,7 +17,7 @@ _ssbl:
   la a0, _rom_data_begin
   la a1, _data_begin
   la a2, _data_end
-  li a3, 0x80000000
+  li a3, 0xa0000000
   li a4, 0x30000000
 
   sub a0,a0,a3
@@ -33,7 +33,7 @@ loopA:
   la a0, _text_begin
   la a1, _text_begin
   la a2, _text_end
-  li a3, 0x80000000
+  li a3, 0xa0000000
   sub a0,a0,a3
   add a0,a0,a4
 

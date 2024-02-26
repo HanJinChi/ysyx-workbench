@@ -25,6 +25,7 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t sram[CONFIG_SRAM_SIZE] PG_ALIGN = {};
 static uint8_t flash[CONFIG_FLASH_SIZE] PG_ALIGN = {};
+static uint8_t sdram[CONFIG_SDRAM_SIZE] PG_ALIGN = {};
 #endif
 
 extern CPU_state cpu;
@@ -39,6 +40,9 @@ paddr_t sram_host_to_guest(uint8_t *haddr) { return haddr - sram + CONFIG_SRAM_M
 uint8_t* flash_guest_to_host(paddr_t paddr) { return flash + paddr - CONFIG_FLASH_BASE; }
 paddr_t flash_host_to_guest(uint8_t *haddr) { return haddr - flash + CONFIG_FLASH_BASE; }
 
+uint8_t* sdram_guest_to_host(paddr_t paddr) { return sdram + paddr - CONFIG_SDRAM_BASE; }
+paddr_t sdram_host_to_guest(uint8_t *haddr) { return haddr - sdram + CONFIG_SDRAM_BASE; }
+
 
 static word_t sram_read(paddr_t addr, int len) {
   word_t ret = host_read(sram_guest_to_host(addr), len);
@@ -47,6 +51,22 @@ static word_t sram_read(paddr_t addr, int len) {
 
 static void sram_write(paddr_t addr, int len, word_t data) {
   host_write(sram_guest_to_host(addr), len, data);
+  cpu.memory_write_addr    = addr;
+  switch(len){
+    case 1: cpu.memory_write_context = data & 0xFF; break;
+    case 2: cpu.memory_write_context = data & 0xFFFF; break;
+    case 4: cpu.memory_write_context = data; break;
+    default: cpu.memory_write_context = data;
+  }
+}
+
+static word_t sdram_read(paddr_t addr, int len) {
+  word_t ret = host_read(sdram_guest_to_host(addr), len);
+  return ret;
+}
+
+static void sdram_write(paddr_t addr, int len, word_t data) {
+  host_write(sdram_guest_to_host(addr), len, data);
   cpu.memory_write_addr    = addr;
   switch(len){
     case 1: cpu.memory_write_context = data & 0xFF; break;
@@ -105,6 +125,13 @@ word_t paddr_read(paddr_t addr, int len) {
 #endif
     return data;
   }
+  if(in_sdram(addr)){
+    word_t data = sdram_read(addr, len);
+#ifdef CONFIG_MTRACE
+    memory_log_write("pc is 0x%8x, from address " FMT_PADDR " read %d byte: 0x%x\n", cpu.pc, addr, len, data); 
+#endif
+    return data;
+  }
   if(in_sram(addr)){
     word_t data = sram_read(addr, len);
 #ifdef CONFIG_MTRACE
@@ -131,6 +158,13 @@ void paddr_write(paddr_t addr, int len, word_t data) {
     memory_log_write("pc is 0x%8x, to address " FMT_PADDR " write %d byte: 0x%x\n", cpu.pc, addr, len, data); 
 #endif
     return; 
+  }
+  if(in_sdram(addr)){
+    sdram_write(addr, len, data);
+#ifdef CONFIG_MTRACE
+    memory_log_write("pc is 0x%8x, to address " FMT_PADDR " write %d byte: 0x%x\n", cpu.pc, addr, len, data); 
+#endif
+    return;
   }
   if(in_sram(addr)){
     sram_write(addr, len, data);

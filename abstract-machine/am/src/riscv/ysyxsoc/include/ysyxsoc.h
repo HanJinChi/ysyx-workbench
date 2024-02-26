@@ -27,6 +27,8 @@
 
 #define SRAM_BASE         0xf000000
 
+#define SDRAM_BASE        0xa0000000
+
 #define RTC_ADDR        0x2000000
 #define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
 #define KBD_ADDR        (DEVICE_BASE + 0x0000060)

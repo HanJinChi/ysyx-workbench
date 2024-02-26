@@ -9,6 +9,14 @@ config MSIZE
   hex "Memory size"
   default 0x8000000
 
+config SDRAM_BASE
+  hex "Sdram Memory base address"
+  default 0xa0000000
+
+config SDRAM_SIZE
+  hex "Sdram size"
+  default 0x8000000
+
 
 config SRAM_MBASE
   hex "Sram base address"

@@ -4,12 +4,13 @@ MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 256M
   sram  : ORIGIN = 0x0f000000, LENGTH = 8K
   psram : ORIGIN = 0x80000000, LENGTH = 4M
+  sdram : ORIGIN = 0xa0000000, LENGTH = 4M
 }
 
 
 
 SECTIONS {
-  . = ORIGIN(psram);
+  . = ORIGIN(sdram);
   .text : {
     _text_begin = .;
     *(entry)
@@ -18,20 +19,20 @@ SECTIONS {
     _boot_begin = .;
     *(boot)
     _boot_end = .;
-  } > psram AT> flash :text
+  } > sdram AT> flash :text
   etext = .;
   _etext = .;
   .rodata : {
     *(.rodata*)
     *(.srodata*)
-  } > psram AT > flash :rodata
+  } > sdram AT > flash :rodata
   _text_end = etext+ SIZEOF(.rodata);
   _rom_data_begin = _text_end;
   .data : {
     _data_begin = .;
     *(.data*)
     *(.sdata*)
-  } > psram AT> flash :data 
+  } > sdram AT> flash :data 
   edata = .;
   _data = .;
 	_bss_start = .;
@@ -39,12 +40,12 @@ SECTIONS {
     *(.bss*)
     *(.sbss*)
     *(.scommon)
-  } > psram AT> flash :bss
+  } > sdram AT> flash :bss
   _data_end = _bss_start + SIZEOF(.bss); 
 }
 
 SECTIONS{
-  . = ORIGIN(psram)-ORIGIN(flash)+ORIGIN(psram);
+  . = ORIGIN(sdram)-ORIGIN(flash)+ORIGIN(sdram);
   . = . + (_text_end - _text_begin);
   . = . + (_data_end - _data_begin);
   _heap_start = ALIGN(0x1000);

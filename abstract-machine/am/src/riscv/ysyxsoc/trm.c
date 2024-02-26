@@ -11,10 +11,10 @@ int main(const char *args);
 // #define PMEM_SIZE (8 * 1024 * 1024)
 // #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
 
-#define HEAP_SIZE (4 * 1024)
-#define HEAP_END ((uintptr_t)&_heap_start + HEAP_SIZE)
+#define HEAP_SIZE (2 * 1024 * 1024)
+#define HEAP_END ((uintptr_t)&_heap_start- (SDRAM_BASE - FLASH_BASE) + HEAP_SIZE)
 
-Area heap = RANGE((uintptr_t)&_heap_start - (PSRAM_BASE - FLASH_BASE), HEAP_END);
+Area heap = RANGE((uintptr_t)&_heap_start - (SDRAM_BASE - FLASH_BASE), HEAP_END);
 #ifndef MAINARGS
 #define MAINARGS ""
 #endif
@@ -37,7 +37,7 @@ void uart_init(){
 // 在flash中执行，负责将bootloader从flash迁移至psram中
 void fsbl(){
   char* src = &_boot_begin;
-  char* dst = (char*)((uintptr_t)&_boot_begin - FLASH_BASE + PSRAM_BASE);
+  char* dst = (char*)((uintptr_t)&_boot_begin - FLASH_BASE + SDRAM_BASE);
 
   for(int i = 0; i < (uintptr_t)&_boot_end - (uintptr_t)&_boot_begin; i++){
     dst[i] = src[i];
@@ -52,8 +52,8 @@ void halt(int code) {
 
 void _trm_init() {
   fsbl();
-  ((void (*)())((uintptr_t)&_ssbl-FLASH_BASE+PSRAM_BASE))();
+  ((void (*)())((uintptr_t)&_ssbl-FLASH_BASE+SDRAM_BASE))();
   uart_init();
-  int ret = (*(int(*)(const char *args))((uintptr_t)&main+PSRAM_BASE-FLASH_BASE))(mainargs);
+  int ret = (*(int(*)(const char *args))((uintptr_t)&main+SDRAM_BASE-FLASH_BASE))(mainargs);
   halt(ret);
 }
