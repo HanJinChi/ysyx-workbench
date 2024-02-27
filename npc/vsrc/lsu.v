@@ -1,5 +1,4 @@
-// 只支持对psram对齐写和非对齐读
-// 支持对 sdram的非对齐写和非对齐读
+// 支持非对齐读不支持非对齐写
 
 module ysyx_23060059_lsu (
   input    wire          clock,
@@ -148,13 +147,10 @@ module ysyx_23060059_lsu (
         else
           next_state = MEM_WRITE_B;
       MEM_WRITE_C:
-        if(second_write)
-          next_state = MEM_WRITE_A;
-        else 
-          if(send_valid)
-            next_state = IDLE;
-          else
-            next_state = MEM_WRITE_C;
+        if(send_valid)
+          next_state = IDLE;
+        else
+          next_state = MEM_WRITE_C;
       MEM_NULL:
         if(send_valid)
           next_state = IDLE;
@@ -252,7 +248,6 @@ module ysyx_23060059_lsu (
   reg  [3 :0]  awid_r;  
   reg  [31:0]  pc_r;
   reg          second_read;  
-  reg          second_write;
 
   always @(posedge clock) begin
     if(reset) begin
@@ -269,7 +264,6 @@ module ysyx_23060059_lsu (
       awid_r             <= 0;
       pc_r               <= 0;
       second_read        <= 0;
-      second_write       <= 0;
     end else begin
       if(next_state == IDLE) begin
         if(send_valid_r) begin
@@ -287,8 +281,6 @@ module ysyx_23060059_lsu (
               m_signed             <= m_signed_v;
               rmask                <= rmask_v;
               pc_r                 <= pc_v;
-              if(buffer)
-                buffer             <= 0;
             end
           end
         end else if(next_state == MEM_READ_B) begin
@@ -299,54 +291,36 @@ module ysyx_23060059_lsu (
               if(second_read) begin
                 send_valid_r <= 1;
                 rdata_r      <= rdata;
-                second_read  <= 0; 
+                second_read  <= 0;
+                if(buffer)
+                  buffer             <= 0; 
               end else 
                 second_read  <= 1;
                 rdata_r      <= rdata;
             end else begin
               send_valid_r <= 1;
               rdata_r      <= rdata;
+              if(buffer)
+                buffer             <= 0;
             end
           end
         end else if(next_state == MEM_WRITE_A) begin
-          if(second_write) begin
+          if(awvalid_r == 0) begin
             awvalid_r           <= 1;
             wvalid_r            <= 1;
             awid_r              <= awid_r + 1;
-            wstrb_r             <= unalign_wstrb_vB;
-            wdata_r             <= unalign_wdata_vB;
-            awaddr_r            <= {exu_result_v[31:2],2'b0}+4; 
-          end else begin
-            if(awvalid_r == 0) begin
-              awvalid_r           <= 1;
-              wvalid_r            <= 1;
-              awid_r              <= awid_r + 1;
-              if(buffer)
-                buffer            <= 0;
-              if(write_unalign) begin
-                awaddr_r      <= exu_result_v;
-                wdata_r       <= unalign_wdata_vA;
-                wstrb_r       <= unalign_wstrb_vA;
-              end else begin
-                awaddr_r      <= exu_result_v;
-                wdata_r       <= align_wdata_v;
-                wstrb_r       <= align_wstrb_v;
-              end 
+            awaddr_r            <= exu_result_v;
+            wdata_r             <= align_wdata_v;
+            wstrb_r             <= align_wstrb_v;
+            if(buffer)
+              buffer            <= 0;
             end
-          end
         end else if(next_state == MEM_WRITE_B) begin
           awvalid_r <= 0;
           wvalid_r  <= 0; 
         end else if(next_state == MEM_WRITE_C) begin  
           if(send_valid_r == 0) begin
-            if(write_unalign) begin
-              if(second_write) begin               
-                second_write <= 0;
-                send_valid_r <= 1;
-              end else 
-                second_write <= 1;
-            end else
-              send_valid_r   <= 1;
+            send_valid_r   <= 1;
           end
         end else begin // MEM_NULL 
           if(send_valid_r == 0) begin
@@ -489,100 +463,88 @@ module ysyx_23060059_lsu (
     end
   end
 
-  reg  [7 :0] unalign_wstrb_vA;
-  reg  [7 :0] unalign_wstrb_vB;
-  reg  [63:0] unalign_wdata_vA;
-  reg  [63:0] unalign_wdata_vB;
+  // reg  [7 :0] unalign_wstrb_vA;
+  // reg  [7 :0] unalign_wstrb_vB;
+  // reg  [63:0] unalign_wdata_vA;
+  // reg  [63:0] unalign_wdata_vB;
 
-  always @(*) begin
-    unalign_wdata_vA = 0;
-    unalign_wdata_vB = 0;
-    unalign_wstrb_vA = 0;
-    unalign_wstrb_vB = 0;
-    if(wmask_v == 8'b00000011) begin
-      case(awaddr_v[2:0])
-        3'b000: begin end // 对齐
-        3'b001: begin end // 对齐
-        3'b010: begin end // 对齐
-        3'b011:           // 不对齐
-          begin
-            unalign_wstrb_vA = 8'b00001000;
-            unalign_wdata_vA = {32'h0, rsb_v[7:0], 24'h0};
-            unalign_wstrb_vB = 8'b00010000;
-            unalign_wdata_vB = {24'h0, rsb_v[15:8], 32'h0};
-          end
-        3'b100: begin end // 对齐
-        3'b101: begin end // 对齐
-        3'b110: begin end // 对齐
-        3'b111: 
-          begin
-            unalign_wstrb_vA = 8'b10000000;
-            unalign_wdata_vA = {rsb_v[7:0], 56'h0};
-            unalign_wstrb_vB = 8'b00000001;
-            unalign_wdata_vB = {56'h0, rsb_v[15:8]};
-          end
-      endcase
-    end else if(wmask_v == 8'b00001111) begin
-      case(awaddr_v[2:0])
-        3'b000: begin end //对齐
-        3'b001: 
-          begin
-            unalign_wstrb_vA = 8'b00001110;
-            unalign_wdata_vA = {32'h0, rsb_v[23:0], 8'h0};
-            unalign_wstrb_vB = 8'b00010000;
-            unalign_wdata_vB = {24'h0, rsb_v[31:24], 32'h0};
-          end
-        3'b010:
-          begin
-            unalign_wstrb_vA = 8'b00001100;
-            unalign_wdata_vA = {32'h0, rsb_v[15:0], 16'h0};
-            unalign_wstrb_vB = 8'b00110000;
-            unalign_wdata_vB = {16'h0, rsb_v[31:16], 32'h0};
-          end
-        3'b011:
-          begin
-            unalign_wstrb_vA = 8'b00001000;
-            unalign_wdata_vA = {32'h0, rsb_v[7:0], 24'h0};
-            unalign_wstrb_vB = 8'b01110000;
-            unalign_wdata_vB = {8'h0, rsb_v[31:8], 32'h0};
-          end
-        3'b100: begin end //对齐
-        3'b101: 
-          begin
-            unalign_wstrb_vA = 8'b11100000;
-            unalign_wdata_vA = {rsb_v[23:0], 40'h0};
-            unalign_wstrb_vB = 8'b00000001;
-            unalign_wdata_vB = {56'h0, rsb_v[31:24]};
-          end
-        3'b110:
-          begin
-            unalign_wstrb_vA = 8'b11000000;
-            unalign_wdata_vA = {rsb_v[15:0], 48'h0};
-            unalign_wstrb_vB = 8'b00000011;
-            unalign_wdata_vB = {48'h0, rsb_v[31:16]};
-          end
-        3'b111:
-          begin
-            unalign_wstrb_vA = 8'b10000000;
-            unalign_wdata_vA = {rsb_v[7:0], 56'h0};
-            unalign_wstrb_vB = 8'b00000111;
-            unalign_wdata_vB = {40'h0, rsb_v[31:8]};
-          end
-      endcase
-    end
-  end
-
-  reg write_unalign;
-  always @(*) begin
-    write_unalign = 0;
-    if(wmask_v == 8'b00000011) begin
-      if(awaddr_v[1:0] == 2'b11)
-        write_unalign = 1;
-    end else if(rmask_v == 32'hffffffff) begin
-      if(awaddr_v[1:0] != 2'h0)
-        write_unalign = 1;
-    end
-  end
+  // always @(*) begin
+  //   unalign_wdata_vA = 0;
+  //   unalign_wdata_vB = 0;
+  //   unalign_wstrb_vA = 0;
+  //   unalign_wstrb_vB = 0;
+  //   if(wmask_v == 8'b00000011) begin
+  //     case(awaddr_v[2:0])
+  //       3'b000: begin end // 对齐
+  //       3'b001: begin end // 对齐
+  //       3'b010: begin end // 对齐
+  //       3'b011:           // 不对齐
+  //         begin
+  //           unalign_wstrb_vA = 8'b00001000;
+  //           unalign_wdata_vA = {32'h0, rsb_v[7:0], 24'h0};
+  //           unalign_wstrb_vB = 8'b00010000;
+  //           unalign_wdata_vB = {24'h0, rsb_v[15:8], 32'h0};
+  //         end
+  //       3'b100: begin end // 对齐
+  //       3'b101: begin end // 对齐
+  //       3'b110: begin end // 对齐
+  //       3'b111: 
+  //         begin
+  //           unalign_wstrb_vA = 8'b10000000;
+  //           unalign_wdata_vA = {rsb_v[7:0], 56'h0};
+  //           unalign_wstrb_vB = 8'b00000001;
+  //           unalign_wdata_vB = {56'h0, rsb_v[15:8]};
+  //         end
+  //     endcase
+  //   end else if(wmask_v == 8'b00001111) begin
+  //     case(awaddr_v[2:0])
+  //       3'b000: begin end //对齐
+  //       3'b001: 
+  //         begin
+  //           unalign_wstrb_vA = 8'b00001110;
+  //           unalign_wdata_vA = {32'h0, rsb_v[23:0], 8'h0};
+  //           unalign_wstrb_vB = 8'b00010000;
+  //           unalign_wdata_vB = {24'h0, rsb_v[31:24], 32'h0};
+  //         end
+  //       3'b010:
+  //         begin
+  //           unalign_wstrb_vA = 8'b00001100;
+  //           unalign_wdata_vA = {32'h0, rsb_v[15:0], 16'h0};
+  //           unalign_wstrb_vB = 8'b00110000;
+  //           unalign_wdata_vB = {16'h0, rsb_v[31:16], 32'h0};
+  //         end
+  //       3'b011:
+  //         begin
+  //           unalign_wstrb_vA = 8'b00001000;
+  //           unalign_wdata_vA = {32'h0, rsb_v[7:0], 24'h0};
+  //           unalign_wstrb_vB = 8'b01110000;
+  //           unalign_wdata_vB = {8'h0, rsb_v[31:8], 32'h0};
+  //         end
+  //       3'b100: begin end //对齐
+  //       3'b101: 
+  //         begin
+  //           unalign_wstrb_vA = 8'b11100000;
+  //           unalign_wdata_vA = {rsb_v[23:0], 40'h0};
+  //           unalign_wstrb_vB = 8'b00000001;
+  //           unalign_wdata_vB = {56'h0, rsb_v[31:24]};
+  //         end
+  //       3'b110:
+  //         begin
+  //           unalign_wstrb_vA = 8'b11000000;
+  //           unalign_wdata_vA = {rsb_v[15:0], 48'h0};
+  //           unalign_wstrb_vB = 8'b00000011;
+  //           unalign_wdata_vB = {48'h0, rsb_v[31:16]};
+  //         end
+  //       3'b111:
+  //         begin
+  //           unalign_wstrb_vA = 8'b10000000;
+  //           unalign_wdata_vA = {rsb_v[7:0], 56'h0};
+  //           unalign_wstrb_vB = 8'b00000111;
+  //           unalign_wdata_vB = {40'h0, rsb_v[31:8]};
+  //         end
+  //     endcase
+  //   end
+  // end
 
   // wd choose
   MuxKeyWithDefault #(4, 2, 32) wdc (wd_o, wdOp, exu_result, {
