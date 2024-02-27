@@ -273,7 +273,7 @@ module ysyx_23060059_lsu (
         if(next_state == MEM_READ_A) begin
           if(second_read) begin
             arvalid_r    <= 1;
-            araddr_r     <= exu_result_v + 4;
+            araddr_r     <= araddr_r + 4;
           end else begin
             if(arvalid_r == 0) begin
               arvalid_r            <= 1;
@@ -281,6 +281,8 @@ module ysyx_23060059_lsu (
               m_signed             <= m_signed_v;
               rmask                <= rmask_v;
               pc_r                 <= pc_v;
+              if(buffer)
+                buffer             <= 0;
             end
           end
         end else if(next_state == MEM_READ_B) begin
@@ -300,8 +302,6 @@ module ysyx_23060059_lsu (
             end else begin
               send_valid_r <= 1;
               rdata_r      <= rdata;
-              if(buffer)
-                buffer             <= 0;
             end
           end
         end else if(next_state == MEM_WRITE_A) begin

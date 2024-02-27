@@ -333,7 +333,7 @@ void exec_once(){
   #endif
 
   #ifdef CONFIG_TRACE
-    s.pc   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc;
+    s.pc   = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc;  // s.pc代表刚执行完的这条指令的pc值
     s.dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc_next;
     s.inst = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__instruction;
 
