@@ -11,7 +11,7 @@ MEMORY {
 
 SECTIONS {
   . = ORIGIN(sdram);
-  .text : {
+  .text : ALIGN(0x4) { 
     _text_begin = .;
     *(entry)
     *(.text*)
@@ -22,26 +22,29 @@ SECTIONS {
   } > sdram AT> flash :text
   etext = .;
   _etext = .;
-  .rodata : {
+  .rodata : ALIGN(0x4) {
     *(.rodata*)
     *(.srodata*)
   } > sdram AT > flash :rodata
-  _text_end = etext+ SIZEOF(.rodata);
+
+  . = etext+ SIZEOF(.rodata);
+  _text_end = ALIGN(0x4);
   _rom_data_begin = _text_end;
-  .data : {
+  .data : ALIGN(0x4){
     _data_begin = .;
     *(.data*)
     *(.sdata*)
   } > sdram AT> flash :data 
-  edata = .;
-  _data = .;
-	_bss_start = .;
-  .bss : {
+  edata = ALIGN(0x4);
+  _data = ALIGN(0x4);
+	_bss_start = ALIGN(0x4);
+  .bss : ALIGN(0x4){
     *(.bss*)
     *(.sbss*)
     *(.scommon)
   } > sdram AT> flash :bss
-  _data_end = _bss_start + SIZEOF(.bss); 
+  . = _bss_start + SIZEOF(.bss);
+  _data_end = ALIGN(0x4);
 }
 
 SECTIONS{

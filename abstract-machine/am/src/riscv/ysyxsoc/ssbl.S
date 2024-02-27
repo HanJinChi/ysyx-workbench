@@ -23,10 +23,10 @@ _ssbl:
   sub a0,a0,a3
   add a0,a0,a4
 loopA:
-  lbu a3, 0(a0)
-  addi a1,a1,1
-  addi a0,a0,1
-  sb  a3, -1(a1)
+  lw a3, 0(a0)
+  addi a1,a1,4
+  addi a0,a0,4
+  sw  a3, -4(a1)
 
   bleu a1,a2,loopA
 
@@ -43,11 +43,11 @@ loopB:
   beqz zero,skip
 lw:
 
-  lbu a3, 0(a0)
-  sb  a3, 0(a1)
+  lw  a3, 0(a0)
+  sw  a3, 0(a1)
 skip:
-  addi a1,a1,1
-  addi a0,a0,1
+  addi a1,a1,4
+  addi a0,a0,4
   bne a1,a2,loopB
 
   lw a0,0(sp)
