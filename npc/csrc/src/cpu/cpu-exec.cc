@@ -2,6 +2,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <memory/paddr.h>
+#include <nvboard.h>
 #include <isa.h>
 #include "common.h"
 #include "svdpi.h"

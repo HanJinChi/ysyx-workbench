@@ -23,16 +23,20 @@
 #define FLASH_BASE       0x30000000
 #define FLASH_SIZE       0x10000000
 
-#define PSRAM_BASE        0x80000000
+#define PSRAM_BASE       0x80000000
 
-#define SRAM_BASE         0xf000000
+#define SRAM_BASE        0xf000000
 
-#define SDRAM_BASE        0xa0000000
+#define SDRAM_BASE       0xa0000000
 
-#define RTC_ADDR        0x2000000
-#define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
-#define KBD_ADDR        (DEVICE_BASE + 0x0000060)
-#define FB_ADDR         (MMIO_BASE   + 0x1000000)
+#define RTC_ADDR         0x2000000
+#define VGACTL_ADDR      (DEVICE_BASE + 0x0000100)
+#define KBD_ADDR         (DEVICE_BASE + 0x0000060)
+#define FB_ADDR          (MMIO_BASE   + 0x1000000)
 
+#define GPIO_BASE        0x10002000
+#define GPIO_LED         0x0
+#define GPIO_SWITCH      0x4
+#define GPIO_DIGITAL     0x8
 
 #endif
