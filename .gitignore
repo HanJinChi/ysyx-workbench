@@ -6,6 +6,7 @@
 !/nanos-lite/*
 !/navy-apps/*
 !/npc/*
+!/nvborad/*
 !Makefile
 !README.md
 !/ysyxSoC/*
