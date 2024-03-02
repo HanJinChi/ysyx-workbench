@@ -11,7 +11,7 @@ MEMORY {
 
 SECTIONS {
   . = ORIGIN(sdram);
-  .text : ALIGN(0x4) { 
+  .text : ALIGN(8) { 
     _text_begin = .;
     *(entry)
     *(.text*)
@@ -22,16 +22,15 @@ SECTIONS {
   } > sdram AT> flash :text
   etext = .;
   _etext = .;
-  .rodata : ALIGN(0x4) {
+  .rodata : ALIGN(8) {
     *(.rodata*)
     *(.srodata*)
   } > sdram AT > flash :rodata
 
   . = etext+ SIZEOF(.rodata);
-  _text_end = ALIGN(0x4);
-  _rom_data_begin = _text_end;
+  _text_end = ALIGN(8);
 
-  .data.extra : ALIGN(0x4){
+  .data.extra : ALIGN(8){
     _data_begin = .;
     /* section information for finsh shell */
     __fsymtab_start = .;
@@ -62,13 +61,13 @@ SECTIONS {
     . = ALIGN(8);
   } > sdram AT> flash :data 
 
-  .data : ALIGN(0x4){
+  .data : ALIGN(8){
     *(.data*)
     *(.sdata*)
   } > sdram AT> flash :data 
-  edata = ALIGN(0x4);
-  _data = ALIGN(0x4);
-	_bss_start = ALIGN(0x4);
+  edata = ALIGN(8);
+  _data = ALIGN(8);
+	_bss_start = ALIGN(8);
 
   .bss.extra : {
     . = ALIGN(8);
@@ -79,13 +78,13 @@ SECTIONS {
     __am_apps_bss_end = .;
     . = ALIGN(8);
   }  > sdram AT> flash :bss
-  .bss : ALIGN(0x4){
+  .bss : ALIGN(8){
     *(.bss*)
     *(.sbss*)
     *(.scommon)
   } > sdram AT> flash :bss
   . = _bss_start + SIZEOF(.bss);
-  _data_end = ALIGN(0x4);
+  _data_end = ALIGN(8);
 }
 
 SECTIONS{

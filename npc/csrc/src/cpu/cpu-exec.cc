@@ -268,6 +268,7 @@ void init_cpu(){
   top->trace(tfp, 0);
   tfp->open("dump.vcd");
 #endif
+  // reset
   top->reset = 1;
   top->clock = 0;
   top->eval();
@@ -275,13 +276,16 @@ void init_cpu(){
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
+  for(int i = 0; i < 10; i++){
+    step_and_dump_wave();
+    step_and_dump_wave();
+  }
   top->clock = 1;
   top->eval();
 #ifdef CONFIG_VCD_TRACE
   tfp->dump(contextp->time());
   contextp->timeInc(1);
 #endif
-
   top->reset = 0;
   top->clock = 0;
   top->eval();
@@ -290,10 +294,6 @@ void init_cpu(){
   contextp->timeInc(1);
 #endif
   cpu.pc = 0x30000000;
-  for(int i = 0; i < 10; i++){
-    step_and_dump_wave();
-    step_and_dump_wave();
-  }
 }
 
 void cpu_exit(){

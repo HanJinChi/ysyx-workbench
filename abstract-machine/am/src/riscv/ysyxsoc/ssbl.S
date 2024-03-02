@@ -14,7 +14,7 @@ _ssbl:
 
   la s0, _boot_begin
   la s1, _boot_end
-  la a0, _rom_data_begin
+  la a0, _data_begin
   la a1, _data_begin
   la a2, _data_end
   li a3, 0xa0000000
