@@ -107,6 +107,8 @@ module gpio_top_apb(
   assign in_prdata = in_prdata_r;
   assign in_pready = in_pready_r;
 
+  assign gpio_out = gpio_led;
+
   bcd7seg seg0 (gpio_seg[0], gpio_seg_0);
   bcd7seg seg1 (gpio_seg[1], gpio_seg_1);
   bcd7seg seg2 (gpio_seg[2], gpio_seg_2);

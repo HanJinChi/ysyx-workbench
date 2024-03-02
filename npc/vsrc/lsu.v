@@ -560,7 +560,8 @@ module ysyx_23060059_lsu (
   });
 
   assign skip_d_o = ((exu_result >= `YSYX_23060059_UART_L && exu_result <= `YSYX_23060059_UART_H) 
-                    || (exu_result >= `YSYX_23060059_CLINT_L && exu_result <= `YSYX_23060059_CLINT_H)) && (ren || wen);
+                    || (exu_result >= `YSYX_23060059_CLINT_L && exu_result <= `YSYX_23060059_CLINT_H) 
+                    || (exu_result >= `YSYX_23060059_GPIO_L && exu_result <= `YSYX_23060059_GPIO_H) )&& (ren || wen);
 
   wire  [31:0] exu_result_v;
   wire  [31:0] pc_v;

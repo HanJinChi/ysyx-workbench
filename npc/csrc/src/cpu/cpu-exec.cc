@@ -15,6 +15,8 @@ VysyxSoCFull* top;
 CPU_state cpu = {};
 static Decode s;
 
+void nvboard_bind_all_pins(VysyxSoCFull* top);
+
 uint32_t ins = 0;
 bool end = 0;
 
@@ -260,6 +262,12 @@ void init_cpu(){
   contextp = new VerilatedContext;
   tfp = new VerilatedVcdC;
   top = new VysyxSoCFull;
+
+#ifdef CONFIG_HAS_NVBOARD
+  nvboard_bind_all_pins(top);
+  nvboard_init();
+#endif  
+
 #ifdef CONFIG_VCD_TRACE
   contextp->traceEverOn(true);
   contextp->time(0);
@@ -328,6 +336,7 @@ void exec_once(){
   } 
   ins_count++;
   copy_cpu_state();
+  nvboard_update();
 
   #ifdef CONFIG_DIFFTEST
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__skip == 1) difftest_skip_ref();
