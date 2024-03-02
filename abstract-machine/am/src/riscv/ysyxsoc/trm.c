@@ -29,8 +29,8 @@ void uart_init(){
   uint8_t init_value = inb(SERIAL_BASE+SERIAL_LC);
   outb(SERIAL_BASE+SERIAL_LC, init_value | 0x80); // 最高位设为1,代表可以设置除数（波特率）
   outb(SERIAL_BASE+SERIAL_IE, 0x00);              // 设置波特率
-  outb(SERIAL_BASE+SERIAL_TR, 0x1);
-  outb(SERIAL_BASE+SERIAL_LC, init_value);       // 恢复初始位
+  outb(SERIAL_BASE+SERIAL_TR, 0x1);               // 设置波特率
+  outb(SERIAL_BASE+SERIAL_LC, init_value);        // 恢复初始位
 }
 
 

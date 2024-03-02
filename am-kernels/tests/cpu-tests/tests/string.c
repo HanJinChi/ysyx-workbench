@@ -1,4 +1,3 @@
-#include "am.h"
 #include "trap.h"
 
 char *s[] = {

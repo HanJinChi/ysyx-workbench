@@ -34,6 +34,8 @@ void reopen_all_log();
 
 void step_and_dump_wave();
 
+void single_cycle();
+
 void device_update();
 
 void set_decode_inst(int pc, int inst){
@@ -310,7 +312,7 @@ void cpu_exit(){
   delete tfp;
 }
 
-void step_and_dump_wave(){ // 执行一次函数是半个周期
+inline void step_and_dump_wave(){ // 执行一次函数是半个周期
   top->clock = !top->clock;
 //   printf("ysyx_23060059 reg is %0x8x\n", top->rootp->__Vtrigrprev__ysyx_23060059__ysyx_23060059__ra__genblk1__BRA__31__KET____DOT__regx____PVT__clock);
   top->eval();
@@ -321,22 +323,27 @@ void step_and_dump_wave(){ // 执行一次函数是半个周期
 
 }
 
+void single_cycle(){
+  step_and_dump_wave();
+  step_and_dump_wave();
+#ifdef CONFIG_HAS_NVBOARD 
+  nvboard_update();
+#endif
+}
+
 void exec_once(){
   // 执行两个周期是一条指令
   while(true){
-    step_and_dump_wave();
-    step_and_dump_wave();
+    single_cycle();
     clock_count++;
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ls__DOT__send_valid_r == 1) {
-      step_and_dump_wave();
-      step_and_dump_wave();
+      single_cycle();
       clock_count++;
       break;
     }
   } 
   ins_count++;
   copy_cpu_state();
-  nvboard_update();
 
   #ifdef CONFIG_DIFFTEST
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__skip == 1) difftest_skip_ref();

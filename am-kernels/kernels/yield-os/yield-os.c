@@ -1,7 +1,6 @@
 #include <am.h>
 #include <klib-macros.h>
 #include <klib.h>
-#include <stdio.h>
 
 #define STACK_SIZE (4096 * 8)
 typedef union {
