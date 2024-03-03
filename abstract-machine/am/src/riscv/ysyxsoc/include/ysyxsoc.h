@@ -12,6 +12,7 @@
 #define SERIAL_RB        0x0
 #define SERIAL_TR        0x0 // LSB
 #define SERIAL_IE        0x1 // MSB
+#define SERIAL_FC        0x2 // MSB
 #define SERIAL_LC        0x3
 #define SERIAL_LS        0x5
 
