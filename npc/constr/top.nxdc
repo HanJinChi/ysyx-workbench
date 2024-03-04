@@ -11,5 +11,8 @@ externalPins_gpio_seg_5 (DEC5P, SEG5G, SEG5F, SEG5E, SEG5D, SEG5C, SEG5B, SEG0A)
 externalPins_gpio_seg_6 (DEC6P, SEG6G, SEG6F, SEG6E, SEG6D, SEG6C, SEG6B, SEG0A)
 externalPins_gpio_seg_7 (DEC7P, SEG7G, SEG7F, SEG7E, SEG7D, SEG7C, SEG7B, SEG0A)
 
-externalPins_uart_tx    (UART_TX)
-externalPins_uart_rx    (UART_RX)
+externalPins_uart_tx UART_TX
+externalPins_uart_rx UART_RX
+
+externalPins_ps2_clk PS2_CLK
+externalPins_ps2_data PS2_DAT

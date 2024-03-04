@@ -30,7 +30,7 @@ void uart_init(){
   outb(SERIAL_BASE+SERIAL_LC, init_value | 0x80); // 最高位设为1,代表可以设置除数（波特率）
   outb(SERIAL_BASE+SERIAL_IE, 0x00);              // 设置波特率
   outb(SERIAL_BASE+SERIAL_TR, 0x1);               // 设置波特率
-  outb(SERIAL_BASE+SERIAL_FC, 0x8b11000110);      // 设置fifo深度
+  outb(SERIAL_BASE+SERIAL_FC, 0b11000110);      // 设置fifo深度
   outb(SERIAL_BASE+SERIAL_LC, init_value);        // 恢复初始位
 }
 

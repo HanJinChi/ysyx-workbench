@@ -42,6 +42,7 @@ enum {
   MAP(_KEYS, _KEY_NAME)
 };
 
+
 #define SDL_KEYMAP(k) keymap[concat(SDL_SCANCODE_, k)] = concat(_KEY_, k);
 static uint32_t keymap[256] = {};
 
