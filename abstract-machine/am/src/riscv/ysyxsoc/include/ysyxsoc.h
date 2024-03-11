@@ -34,12 +34,14 @@
 
 #define KBD_ADDR         0x10011000
 
-#define VGACTL_ADDR      (DEVICE_BASE + 0x0000100)
-#define FB_ADDR          (MMIO_BASE   + 0x1000000)
-
 #define GPIO_BASE        0x10002000
 #define GPIO_LED         0x0
 #define GPIO_SWITCH      0x4
 #define GPIO_DIGITAL     0x8
+
+#define VGA_SCREEN_W     640
+#define VGA_SCREEN_H     480
+#define VGA_BASE         0x21000000
+
 
 #endif

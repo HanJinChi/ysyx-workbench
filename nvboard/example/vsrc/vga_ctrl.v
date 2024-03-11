@@ -13,14 +13,14 @@ module vga_ctrl (
 );
 
 parameter h_frontporch = 96;
-parameter h_active = 144;
-parameter h_backporch = 784;
+parameter h_active = 144; // 96 + 48
+parameter h_backporch = 784; // 96+48+640 
 parameter h_total = 800;
 
 parameter v_frontporch = 2;
-parameter v_active = 35;
-parameter v_backporch = 515;
-parameter v_total = 525;
+parameter v_active = 35; // 2 + 33
+parameter v_backporch = 515; // 480 + 35
+parameter v_total = 525; // 515 + 10
 
 reg [9:0] x_cnt;
 reg [9:0] y_cnt;
@@ -50,7 +50,7 @@ assign h_valid = (x_cnt > h_active) & (x_cnt <= h_backporch);
 assign v_valid = (y_cnt > v_active) & (y_cnt <= v_backporch);
 assign valid = h_valid & v_valid;
 //计算当前有效像素坐标
-assign h_addr = h_valid ? (x_cnt - 10'd145) : 10'd0;
+assign h_addr = h_valid ? (x_cnt - 10'd145) : 10'd0; // x_cnt从1开始
 assign v_addr = v_valid ? (y_cnt - 10'd36) : 10'd0;
 //设置输出的颜色值
 assign {vga_r, vga_g, vga_b} = vga_data;

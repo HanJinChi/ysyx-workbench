@@ -2,8 +2,8 @@ TOPNAME = ysyxSoCFull
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0 --timescale "1ns/1ns" --autoflush 
-
+				-O3 --x-assign fast --x-initial fast --noassert --trace -j 0 --timescale "1ns/1ns" --autoflush
+				
 VERILATOR_INC_PATH = $(WORK_DIR)/vsrc
 VERILATOR_INC_PATH += $(WORK_DIR)/../ysyxSoC/perip/uart16550/rtl
 VERILATOR_INC_PATH += $(WORK_DIR)/../ysyxSoC/perip/spi/rtl

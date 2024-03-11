@@ -71,7 +71,7 @@ void video_test() {
   unsigned long last = 0;
   unsigned long fps_last = 0;
   int fps = 0;
-
+  printf("video test begin\n");
   while (1) {
     unsigned long upt = io_read(AM_TIMER_UPTIME).us / 1000;
     if (upt - last > 1000 / FPS) {
