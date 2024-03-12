@@ -365,5 +365,4 @@ module ysyx_23060059_exu(
   assign csr_rd_i_w      = buffer ? csr_rd_b      : csr_rd_i;
 
 
-
 endmodule

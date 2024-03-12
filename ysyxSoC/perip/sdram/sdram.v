@@ -2,7 +2,9 @@
 import "DPI-C" function void sdram_read(input int raddr, output int rdata);
 import "DPI-C" function void sdram_write(input int waddr, input int wdata, input byte mask);
 
-module sdram(
+module sdram #(
+  parameter NUM = 0
+)(
   input        clk,
   input        cke,
   input        cs,
@@ -79,12 +81,12 @@ module sdram(
       read_t:
         next_state = send_t;
       send_t:
-        if(counter == 2)
+        if(counter == 1)
           next_state = idle;
         else
           next_state = send_t;
       write_t:
-        if(counter == 2)
+        if(counter == 1)
           next_state = idle;
         else
           next_state = write_t;
@@ -102,8 +104,6 @@ module sdram(
 
   reg  [3:0] counter;
   reg  [31:0] rdata;
-  reg  [15:0] wdata_buffer;
-  reg  [1:0]  wmask_buffer;
   wire [SDRAM_ROW_W-1:0] addr_col;
   reg  [15:0] dout;
   integer idx;
@@ -111,8 +111,6 @@ module sdram(
     if(!cke) begin
       out             <= 0;
       counter         <= 0;
-      wdata_buffer    <= 0;
-      wmask_buffer    <= 0;
       dout            <= 0;
       for (idx=0;idx<SDRAM_BANKS;idx=idx+1)
           active_row[idx] <= {SDRAM_ROW_W{1'b0}};
@@ -125,15 +123,15 @@ module sdram(
         sdram_read({7'h0,addr}, rdata);
       end else if(next_state == send_t) begin
         out    <= 1;
-        dout   <= (counter == 4'd0) ? rdata[15:0 ]  :
-                  (counter == 4'd1) ? rdata[31:16]  :
+        dout   <= (NUM == 0) ? rdata[15:0 ]  :
+                  (NUM == 1) ? rdata[31:16]  :
                   0;
         counter <= counter + 1;
       end else if(next_state == write_t) begin
-        wdata_buffer <= din;
-        wmask_buffer <= ~dqm;
-        if(counter == 4'd1) 
-          sdram_write({7'h0,addr}, {din, wdata_buffer}, {4'h0,~dqm, wmask_buffer});
+        if(NUM == 0)
+          sdram_write({7'h0,addr}, {16'b0, din}, {6'h0, ~dqm});
+        else
+          sdram_write({7'h0,addr}, {din, 16'b0}, {4'h0, ~dqm, 2'h0});
         counter <= counter + 1;
       end else begin // idle
         counter <= 0;

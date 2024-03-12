@@ -1,5 +1,3 @@
-// 支持非对齐读不支持非对齐写
-
 module ysyx_23060059_lsu (
   input    wire          clock,
   input    wire          reset,
