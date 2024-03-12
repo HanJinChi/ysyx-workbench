@@ -44,7 +44,8 @@ void *malloc(size_t size) {
     next = (uintptr_t)heap.start;
   }
   void *ret_addr = (void *)next;
-  next = next + size;
+  next = next+size;
+  if(next%4 != 0) next += 4 - (next%4); // 4字节对齐
   return ret_addr;
 // #endif
   // return NULL;

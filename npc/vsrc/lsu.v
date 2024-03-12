@@ -124,13 +124,10 @@ module ysyx_23060059_lsu (
         else
           next_state = MEM_READ_B;
       MEM_READ_C:
-        if(second_read)
-          next_state = MEM_READ_A;
+        if(send_valid)
+          next_state = IDLE;
         else
-          if(send_valid)
-            next_state = IDLE;
-          else
-            next_state = MEM_READ_C;
+          next_state = MEM_READ_C;
       MEM_WRITE_A:
         if(awvalid && awready)
           next_state = MEM_WRITE_B;
@@ -247,7 +244,6 @@ module ysyx_23060059_lsu (
   reg  [7 :0]  wstrb_r;
   reg  [3 :0]  awid_r;  
   reg  [31:0]  pc_r;
-  reg          second_read;  
 
   always @(posedge clock) begin
     if(reset) begin
@@ -263,7 +259,6 @@ module ysyx_23060059_lsu (
       wvalid_r           <= 0;
       awid_r             <= 0;
       pc_r               <= 0;
-      second_read        <= 0;
     end else begin
       if(next_state == IDLE) begin
         if(send_valid_r) begin
@@ -271,38 +266,21 @@ module ysyx_23060059_lsu (
         end
       end else begin
         if(next_state == MEM_READ_A) begin
-          if(second_read) begin
-            arvalid_r    <= 1;
-            araddr_r     <= araddr_r + 4;
-          end else begin
-            if(arvalid_r == 0) begin
-              arvalid_r            <= 1;
-              araddr_r             <= exu_result_v;
-              m_signed             <= m_signed_v;
-              rmask                <= rmask_v;
-              pc_r                 <= pc_v;
-              if(buffer)
-                buffer             <= 0;
+          if(arvalid_r == 0) begin
+            arvalid_r            <= 1;
+            araddr_r             <= exu_result_v;
+            m_signed             <= m_signed_v;
+            rmask                <= rmask_v;
+            pc_r                 <= pc_v;
+            if(buffer)
+              buffer             <= 0;
             end
-          end
         end else if(next_state == MEM_READ_B) begin
           arvalid_r            <= 0;
         end else if(next_state == MEM_READ_C) begin
           if(send_valid_r == 0) begin
-            if(unalign) begin
-              if(second_read) begin
-                send_valid_r <= 1;
-                rdata_r      <= rdata;
-                second_read  <= 0;
-                if(buffer)
-                  buffer             <= 0; 
-              end else 
-                second_read  <= 1;
-                rdata_r      <= rdata;
-            end else begin
-              send_valid_r <= 1;
-              rdata_r      <= rdata;
-            end
+            send_valid_r <= 1;
+            rdata_r      <= rdata;
           end
         end else if(next_state == MEM_WRITE_A) begin
           if(awvalid_r == 0) begin
@@ -409,36 +387,36 @@ module ysyx_23060059_lsu (
   });
 
   // 只考虑在psram和sdram非对齐读取
-  wire [63:0] unalign_rdata;
-  assign unalign_rdata = {rdata_r[31:0], rdata_buffer[31:0]};
+  // wire [63:0] unalign_rdata;
+  // assign unalign_rdata = {rdata_r[31:0], rdata_buffer[31:0]};
 
-  reg  [63:0] unalign_rdata_16;
-  reg  [63:0] unalign_rdata_32;
-  always @(*) begin
-    unalign_rdata_16 = 0;
-    unalign_rdata_32 = 0;
-    if(rmask == 32'h0000ffff) begin // araddr_r[1:0] == 2'b11
-      unalign_rdata_16 = {48'h0, unalign_rdata[39:24]};
-    end else begin
-      case(araddr_r[1:0])
-        2'b01:
-          unalign_rdata_32 = {32'h0, unalign_rdata[39:8]};
-        2'b10:
-          unalign_rdata_32 = {32'h0, unalign_rdata[47:16]};
-        2'b11:
-          unalign_rdata_32 = {32'h0, unalign_rdata[55:24]};
-        default: unalign_rdata_32 = 0;
-      endcase
-    end
-  end
+  // reg  [63:0] unalign_rdata_16;
+  // reg  [63:0] unalign_rdata_32;
+  // always @(*) begin
+  //   unalign_rdata_16 = 0;
+  //   unalign_rdata_32 = 0;
+  //   if(rmask == 32'h0000ffff) begin // araddr_r[1:0] == 2'b11
+  //     unalign_rdata_16 = {48'h0, unalign_rdata[39:24]};
+  //   end else begin
+  //     case(araddr_r[1:0])
+  //       2'b01:
+  //         unalign_rdata_32 = {32'h0, unalign_rdata[39:8]};
+  //       2'b10:
+  //         unalign_rdata_32 = {32'h0, unalign_rdata[47:16]};
+  //       2'b11:
+  //         unalign_rdata_32 = {32'h0, unalign_rdata[55:24]};
+  //       default: unalign_rdata_32 = 0;
+  //     endcase
+  //   end
+  // end
 
-  wire [31:0] unalign_mread;
-  MuxKeyWithDefault #(2, 32, 32) rwd1(unalign_mread, rmask, 32'h0, {
-    32'h0000ffff, m_signed ? {{16{unalign_rdata_16[15]}}, unalign_rdata_16[15:0]} : unalign_rdata_16[31:0] & rmask,
-    32'hffffffff, unalign_rdata_32[31:0]
-  });
+  // wire [31:0] unalign_mread;
+  // MuxKeyWithDefault #(2, 32, 32) rwd1(unalign_mread, rmask, 32'h0, {
+  //   32'h0000ffff, m_signed ? {{16{unalign_rdata_16[15]}}, unalign_rdata_16[15:0]} : unalign_rdata_16[31:0] & rmask,
+  //   32'hffffffff, unalign_rdata_32[31:0]
+  // });
 
-  wire [31:0] mread = unalign ? unalign_mread : align_mread;
+  wire [31:0] mread = align_mread;
 
   wire [31:0] awaddr_v;
   reg  [7 :0] align_wstrb_v;
