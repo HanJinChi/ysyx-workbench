@@ -13,7 +13,7 @@ module ysyx_23060059_ifu(
     output   wire  [7 :0]  arlen,
     output   wire  [2 :0]  arsize,
     output   wire  [1 :0]  arburst,
-    // ifu <->axi, r channel
+    // ifu <-> axi, r channel
     input    wire  [63:0]  rdata,
     input    wire          rvalid,
     input    wire  [1 :0]  rresp,

@@ -9,47 +9,55 @@
 module ysyx_23060059_icache(
   input    wire           clock,
   input    wire           reset,
+  // icache <-> ifu
   input    wire           arvalid,
   input    wire  [31 :0]  addr_i,
-  output   wire  [31 :0]  data_o,
+  output   wire  [63 :0]  data_o,
   output   wire           rvalid,
   // axi part
+  // icache <-> axi, ar channel
+  output   wire  [31 :0]  axi_araddr,
+  output   wire  [3  :0]  axi_arid,
+  output   wire  [7  :0]  axi_arlen,
+  output   wire  [2  :0]  axi_arsize,
+  output   wire  [1  :0]  axi_arburst,
   input    wire           axi_arready,
-  input    wire  [31 :0]  axi_rdata,
+  // icache <-> axi, r channel
+  input    wire  [63 :0]  axi_rdata,
   input    wire           axi_rvalid,
   input    wire  [1  :0]  axi_rresp,
+  input    wire           axi_rlast,
+  input    wire  [3 :0]   axi_rid,
   output   wire           axi_arvalid,
-  output   wire           axi_rready,
-  output   wire  [31 :0]  axi_araddr,
+  output   wire           axi_rready
+  // //
+  // output   wire  [5  :0]  io_sram0_addr,
+  // output   wire           io_sram0_cen,
+  // output   wire           io_sram0_wen,
+  // output   wire  [127:0]  io_sram0_wmask,
+  // output   wire  [127:0]  io_sram0_wdata,
+  // input    wire  [127:0]  io_sram0_rdata,
 
-  //
-  output   wire  [5  :0]  io_sram0_addr,
-  output   wire           io_sram0_cen,
-  output   wire           io_sram0_wen,
-  output   wire  [127:0]  io_sram0_wmask,
-  output   wire  [127:0]  io_sram0_wdata,
-  input    wire  [127:0]  io_sram0_rdata,
+  // output   wire  [5  :0]  io_sram1_addr,
+  // output   wire           io_sram1_cen,
+  // output   wire           io_sram1_wen,
+  // output   wire  [127:0]  io_sram1_wmask,
+  // output   wire  [127:0]  io_sram1_wdata,
+  // input    wire  [127:0]  io_sram1_rdata,
 
-  output   wire  [5  :0]  io_sram1_addr,
-  output   wire           io_sram1_cen,
-  output   wire           io_sram1_wen,
-  output   wire  [127:0]  io_sram1_wmask,
-  output   wire  [127:0]  io_sram1_wdata,
-  input    wire  [127:0]  io_sram1_rdata,
+  // output   wire  [5  :0]  io_sram2_addr,
+  // output   wire           io_sram2_cen,
+  // output   wire           io_sram2_wen,
+  // output   wire  [127:0]  io_sram2_wmask,
+  // output   wire  [127:0]  io_sram2_wdata,
+  // input    wire  [127:0]  io_sram2_rdata,
 
-  output   wire  [5  :0]  io_sram2_addr,
-  output   wire           io_sram2_cen,
-  output   wire           io_sram2_wen,
-  output   wire  [127:0]  io_sram2_wmask,
-  output   wire  [127:0]  io_sram2_wdata,
-  input    wire  [127:0]  io_sram2_rdata,
-
-  output   wire  [5  :0]  io_sram3_addr,
-  output   wire           io_sram3_cen,
-  output   wire           io_sram3_wen,
-  output   wire  [127:0]  io_sram3_wmask,
-  output   wire  [127:0]  io_sram3_wdata,
-  input    wire  [127:0]  io_sram3_rdata 
+  // output   wire  [5  :0]  io_sram3_addr,
+  // output   wire           io_sram3_cen,
+  // output   wire           io_sram3_wen,
+  // output   wire  [127:0]  io_sram3_wmask,
+  // output   wire  [127:0]  io_sram3_wdata,
+  // input    wire  [127:0]  io_sram3_rdata 
 );
 
   localparam nset = 32;
@@ -68,11 +76,12 @@ module ysyx_23060059_icache(
   reg [2:0] idx;
   reg       hit;
   reg [2:0] hway;
+  integer w;
   always @(*) begin
     idx  = addr_i[8:6];
     hit  = 0;
     hway = 0;
-    for(int w = 0; w < nway; w++) begin
+    for(w = 0; w < nway; w=w+1) begin
       if(meta[idx*nset+w][23] && meta[idx*nset+w][22:0] == addr_i[31:9]) begin
         hit  = 1'b1;
         hway = w;
@@ -85,7 +94,7 @@ module ysyx_23060059_icache(
 
   always @(posedge clock) begin
     if(reset) state <= IDLE;
-    else    state <= next_state;
+    else      state <= next_state;
   end
 
   always @(*) begin
@@ -133,8 +142,8 @@ module ysyx_23060059_icache(
 
 
   ysyx_23060059_replacer u_replacer(
-    .clock          (clock     ),
-    .reset          (reset     ),
+    .clock        (clock   ),
+    .reset        (reset   ),
     .idx          (idx     ),
     .way          (way     ),
     .access       (access  ),

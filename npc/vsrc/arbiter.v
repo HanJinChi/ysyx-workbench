@@ -156,50 +156,79 @@ module ysyx_23060059_arbiter(
   reg           arvalid_r;
   reg   [31:0]  araddr_r;
   reg           rready_r;
+  reg   [3 :0]  arid_r;
+  reg   [7 :0]  arlen_r;
+  reg   [2 :0]  arsize_r;
+  reg   [1 :0]  arburst_r;
 
   reg           arreadyA_r, arreadyB_r;
   reg   [63:0]  rdataA_r, rdataB_r;
   reg   [1 :0]  rrespA_r, rrespB_r;
   reg           rvalidA_r, rvalidB_r;
+  reg   [3 :0]  ridA_r, ridB_r;
+  reg           rlastA_r, rlastB_r;
 
   always @(*) begin
     arvalid_r    = 0;
     araddr_r     = 0;
     rready_r     = 0; 
+    arid_r       = 0;
+    arlen_r      = 0;
+    arsize_r     = 0;
+    arburst_r    = 0; 
     arreadyA_r   = 0; arreadyB_r = 0;
     rdataA_r     = 0; rdataB_r   = 0;
     rrespA_r     = 0; rrespB_r   = 0;
     rvalidA_r    = 0; rvalidB_r  = 0;
+    ridA_r       = 0; ridB_r = 0;
+    rlastA_r     = 0; rlastB_r = 0;
     case (araddrMux)
       2'b01: begin
         arvalid_r    = arvalidA;
         araddr_r     = araddrA;
         rready_r     = rreadyA;
+        arid_r       = aridA;
+        arlen_r      = arlenA;
+        arsize_r     = arsizeA;
+        arburst_r    = arburstA;
+
         arreadyA_r   = arready;
         rdataA_r     = rdata;
         rrespA_r     = rresp;
+        rvalidA_r    = rvalid;
+        ridA_r       = rid;
+        rlastA_r     = rlast;
 
         arreadyB_r   = 0;
         rdataB_r     = 0;
         rrespB_r     = 0;
-
-        rvalidA_r    = rvalid;
         rvalidB_r    = 0;
+        ridB_r       = 0;
+        rlastB_r     = 0;
+
       end
       2'b10: begin
         arvalid_r    = arvalidB;
         araddr_r     = araddrB;
         rready_r     = rreadyB;
+        arid_r       = aridB;
+        arlen_r      = arlenB;
+        arsize_r     = arsizeB;
+        arburst_r    = arburstB;
+
         arreadyB_r   = arready;
         rdataB_r     = rdata;
         rrespB_r     = rresp;
+        rvalidB_r    = rvalid;
+        ridB_r       = rid;
+        rlastB_r     = rlast;
 
         arreadyA_r   = 0;
         rdataA_r     = 0;
         rrespA_r     = 0;
-
-        rvalidB_r    = rvalid;
         rvalidA_r    = 0;
+        ridA_r       = 0;
+        rlastA_r     = 0;
       end
       default: begin end
     endcase
@@ -209,18 +238,26 @@ module ysyx_23060059_arbiter(
   assign rdataA_o   = rdataA_r;
   assign rvalidA_o  = rvalidA_r;
   assign rrespA_o   = rrespA_r;
+  assign rvalidA_o  = rvalidA_r;
+  assign ridA_o     = ridA_r;
+  assign rlastA_o   = rlastA_r;
 
   assign arreadyB_o = arreadyB_r; 
   assign rdataB_o   = rdataB_r;
   assign rvalidB_o  = rvalidB_r;
   assign rrespB_o   = rrespB_r;
+  assign rvalidB_o  = rvalidB_r;
+  assign ridB_o     = ridB_r;
+  assign rlastB_o   = rlastB_r;
+
 
   assign rready     = rready_r;
   assign araddr     = araddr_r;
   assign arvalid    = arvalid_r;
-
-  assign rvalidA_o  = rvalidA_r;
-  assign rvalidB_o  = rvalidB_r;
+  assign arid       = arid_r;
+  assign arlen      = arlen_r;
+  assign arsize     = arsize_r;
+  assign arburst    = arburst_r;
 
   parameter MEM_W_A = 1;
   reg   [1 :0]  wMux;
