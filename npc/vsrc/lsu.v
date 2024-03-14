@@ -41,49 +41,37 @@ module ysyx_23060059_lsu (
   input    wire          arready,
   output   wire  [31:0]  araddr,
   output   wire          arvalid,
-  output   wire  [3 :0]  arid,
-  output   wire  [7 :0]  arlen,
-  output   wire  [2 :0]  arsize,
-  output   wire  [1 :0]  arburst,
   // lsu <-> axi, r channel
   input    wire          rvalid,
-  input    wire  [1 :0]  rresp,
   input    wire  [63:0]  rdata,
-  input    wire          rlast,
-  input    wire  [3 :0]  rid,
   output   wire          rready,
   // lsu <-> axi, aw channel
   input    wire          awready,
   output   wire  [31:0]  awaddr,
   output   wire          awvalid,
-  output   wire  [3 :0]  awid,
-  output   wire  [7 :0]  awlen,
-  output   wire  [2 :0]  awsize,
-  output   wire  [1 :0]  awburst,
   // lsu <-> axi, w channel
   input    wire          wready,
   output   wire          wvalid,
   output   wire  [63:0]  wdata,
   output   wire  [7 :0]  wstrb,
-  output   wire          wlast,
   // lsu <-> axi, b channel
-  input    wire          bvalid,
-  input    wire  [1 :0]  bresp,
-  input    wire  [3 :0]  bid,
-  output   wire          bready,
+  // input    wire          bvalid,
+  // input    wire  [1 :0]  bresp,
+  // input    wire  [3 :0]  bid,
+  // output   wire          bready,
 
   output   wire          lsu_state
 );
   // r
-  assign arid    = 4'b0;
-  assign arlen   = 8'b0;
-  assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
-  assign arburst = 2'b01;  // INCR
-  // w
-  assign awid    = awid_r;
-  assign awlen   = 8'b0;
-  assign awsize  = 3'b010;
-  assign awburst = 2'b01;
+  // assign arid    = 4'b0;
+  // assign arlen   = 8'b0;
+  // assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
+  // assign arburst = 2'b01;  // INCR
+  // // w
+  // assign awid    = awid_r;
+  // assign awlen   = 8'b0;
+  // assign awsize  = 3'b010;
+  // assign awburst = 2'b01;
 
 
   reg [2:0]  state, next_state;
@@ -113,12 +101,7 @@ module ysyx_23060059_lsu (
           next_state = MEM_READ_A;
       MEM_READ_B:
         if(rvalid && rready)
-          if(rresp == 0)
-            next_state = MEM_READ_C;
-          else begin
-            $display("rresp !=0, error !");
-            assert(0);
-          end
+          next_state = MEM_READ_C;
         else
           next_state = MEM_READ_B;
       MEM_READ_C:
@@ -132,15 +115,7 @@ module ysyx_23060059_lsu (
         else
           next_state = MEM_WRITE_A;
       MEM_WRITE_B:
-        if(bvalid && bready)
-          if(bresp == 0)
-            next_state = MEM_WRITE_C;
-          else begin
-            $display("bresp !=0, error!\n");
-            assert(0);
-          end
-        else
-          next_state = MEM_WRITE_B;
+          next_state = MEM_WRITE_C;
       MEM_WRITE_C:
         if(send_valid)
           next_state = IDLE;
@@ -591,15 +566,13 @@ module ysyx_23060059_lsu (
   assign awaddr         = awaddr_r;
   assign awvalid        = awvalid_r;
   assign wvalid         = wvalid_r;
-  assign bready         = bready_r;
   assign wstrb          = wstrb_r;
   assign wdata          = wdata_r;
-  assign wlast          = 1;
 
 
   always @(posedge clock) begin
     if(reset) rready_r <= 0;
-    else    rready_r <= 1;
+    else      rready_r <= 1;
   end
 
   always @(posedge clock) begin

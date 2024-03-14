@@ -483,36 +483,19 @@ module ysyx_23060059(
     .arready               (arreadyB         ),
     .araddr                (araddrB          ),
     .arvalid               (arvalidB         ),
-    .arid                  (aridB            ),
-    .arlen                 (arlenB           ),
-    .arsize                (arsizeB          ),
-    .arburst               (arburstB         ),
 
     .rdata                 (rdataB           ),
-    .rresp                 (rrespB           ),
     .rvalid                (rvalidB          ),
-    .rlast                 (rlastB           ),
-    .rid                   (ridB             ),
     .rready                (rreadyB          ),
 
     .awready               (awreadyB         ),
     .awaddr                (awaddrB          ),
     .awvalid               (awvalidB         ),
-    .awid                  (awidB            ),
-    .awlen                 (awlenB           ),
-    .awsize                (awsizeB          ),
-    .awburst               (awburstB         ),
 
     .wready                (wreadyB          ),
     .wdata                 (wdataB           ),
     .wstrb                 (wstrbB           ),
-    .wvalid                (wvalidB          ),
-    .wlast                 (wlastB           ),
-    
-    .bvalid                (bvalidB          ),
-    .bresp                 (brespB           ),
-    .bready                (breadyB          ),
-    .bid                   (bidB             )
+    .wvalid                (wvalidB          )
   );
 
   ysyx_23060059_arbiter arb(
