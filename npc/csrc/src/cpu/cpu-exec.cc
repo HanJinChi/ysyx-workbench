@@ -374,7 +374,7 @@ void exec_once(){
       exception_log_write("pc is 0x%x, raise intr with exception number is %d\n", s.pc, cpu.gpr[15]);
     }
   #endif
-  end = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ebreak;
+  end = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__ebreak_o_r;
 
   if(end){
     NPCTRAP(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wb__DOT__pc, cpu.gpr[0]);

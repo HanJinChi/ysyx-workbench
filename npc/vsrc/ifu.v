@@ -5,20 +5,13 @@ module ysyx_23060059_ifu(
     input    wire  [31:0]  pc_next_idu,       // 来自idu的正确的pc_next
     input    wire          receive_valid,     // 来自idu的valid
     input    wire          receive_ready,
-    // ifu <-> axi, ar channel
+    // ifu <-> icache, ar channel
     input    wire          arready,
     output   wire  [31:0]  araddr,
     output   wire          arvalid,
-    output   wire  [3 :0]  arid,
-    output   wire  [7 :0]  arlen,
-    output   wire  [2 :0]  arsize,
-    output   wire  [1 :0]  arburst,
-    // ifu <-> axi, r channel
+    // ifu <-> icache, r channel
     input    wire  [63:0]  rdata,
     input    wire          rvalid,
-    input    wire  [1 :0]  rresp,
-    input    wire          rlast,
-    input    wire  [3 :0]  rid,
     output   wire          rready,
     // ifu <-> idu
     output   wire          send_valid,
@@ -52,12 +45,7 @@ module ysyx_23060059_ifu(
       end
       READ_B: begin
         if(rvalid && rready)
-          if(rresp == 0) 
             next_state = READ_C;
-          else begin
-            $display("rresp !=0 , error!");
-            assert(0);
-          end
         else 
           next_state = READ_B;
       end
@@ -77,7 +65,6 @@ module ysyx_23060059_ifu(
   end
 
 
-  reg [1 :0] rresp_r;
   reg        send_valid_r;
   reg        send_ready_r;
   reg [31:0] instruction_r;
@@ -108,7 +95,6 @@ module ysyx_23060059_ifu(
       arvalid_r            <= 0;
       araddr_r             <= 0;
       send_ready_r         <= 0;
-      rresp_r              <= 1;
       instruction_r        <= 0;
       send_valid_r         <= 0;
       ifu_re_fetch         <= 0;
@@ -125,7 +111,6 @@ module ysyx_23060059_ifu(
           araddr_r  <= pc_next;
         end
         if(set_value) set_value <= 0;
-        rresp_r     <= 1;
       end else if(next_state == READ_B) begin
         arvalid_r <= 0;
       end else if(next_state == READ_C) begin
@@ -141,7 +126,6 @@ module ysyx_23060059_ifu(
         end
         if(set_value == 0) begin
           set_value      <= 1;
-          rresp_r        <= rresp;
           if(araddr_r >= 32'hf000000 && araddr_r <= 32'hfffffff)
             instruction_r <= araddr_r[2] ? rdata[63:32] : rdata[31:0];
           else
@@ -201,10 +185,5 @@ module ysyx_23060059_ifu(
       end
     end
   end
-
-  assign arid    = 4'b0;
-  assign arlen   = 8'b0;
-  assign arsize  = 3'b010; // 4 bytes(32bit) per transfer
-  assign arburst = 2'b01; 
 
 endmodule

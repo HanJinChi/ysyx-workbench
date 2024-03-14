@@ -119,9 +119,10 @@ module ysyx_23060059(
   wire                  ecall;
   wire                  ecall_exu;
   wire                  ecall_lsu;
-  wire                  ebreak;
+  wire                  ebreak_idu;
   wire                  ebreak_exu;
   wire                  ebreak_lsu;
+  wire                  ebreak_wbu;
   wire                  csrwdOp;
   wire                  csrwdOp_exu;
   wire   [31:0]         rsa;
@@ -209,6 +210,13 @@ module ysyx_23060059(
   wire   [3 :0]         ridA;
   wire   [3 :0]         ridB;
 
+  wire                  icache_arready;
+  wire   [31:0]         ifu_araddr;
+  wire                  ifu_arvalid;
+  wire   [63:0]         icache_rdata;
+  wire                  icache_rvalid;
+  wire                  ifu_rready;
+
   wire                  arready;
   wire   [31:0]         araddr;
   wire                  arvalid;
@@ -284,19 +292,12 @@ module ysyx_23060059(
     .receive_ready         (idu_send_ready   ),
     .pc_ifu_to_idu         (pc_ifu_to_idu    ),
     .instruction           (instruction      ),
-    .arready               (arreadyA         ),
-    .araddr                (araddrA          ),
-    .arvalid               (arvalidA         ),
-    .arid                  (aridA            ),
-    .arlen                 (arlenA           ),
-    .arsize                (arsizeA          ),
-    .arburst               (arburstA         ),
-    .rdata                 (rdataA           ),
-    .rvalid                (rvalidA          ),
-    .rresp                 (rrespA           ),
-    .rready                (rreadyA          ),
-    .rlast                 (rlastA           ),
-    .rid                   (ridA             )
+    .arready               (icache_arready   ),
+    .araddr                (ifu_araddr       ),
+    .arvalid               (ifu_arvalid      ),
+    .rdata                 (icache_rdata     ),
+    .rvalid                (icache_rvalid    ),
+    .rready                (ifu_rready       )
   );
 
   // instruction Decode Unit
@@ -342,7 +343,7 @@ module ysyx_23060059(
     .reg_en_o              (reg_en           ),
     .csreg_en_o            (csreg_en         ),
     .ecall_o               (ecall            ),
-    .ebreak_o              (ebreak           ),
+    .ebreak_o              (ebreak_idu       ),
     .pc_o                  (pc_idu           ),
     .pc_next_o             (pc_next_idu      ),
     .rsb_o                 (rsb_idu          ),
@@ -373,7 +374,7 @@ module ysyx_23060059(
     .reg_en                (reg_en_lsu       ),
     .csreg_en              (csreg_en_lsu     ),
     .ecall                 (ecall_lsu        ),
-    .ebreak_o              (ebreak_t         ),
+    .ebreak_o              (ebreak_wbu       ),
     .state_o               (wbu_state        ),
     .rsa                   (rsa              ),
     .rsb                   (rsb              ),
@@ -403,7 +404,7 @@ module ysyx_23060059(
     .reg_en_i              (reg_en           ),
     .csreg_en_i            (csreg_en         ),
     .ecall_i               (ecall            ),
-    .ebreak_i              (ebreak           ),
+    .ebreak_i              (ebreak_idu       ),
     .pc_i                  (pc_idu           ),
     .pc_next_i             (pc_next_idu      ),
     .instruction_i         (instruction_idu  ),
@@ -728,12 +729,35 @@ module ysyx_23060059(
     .bready                 (bready_clint    ) 
   ); 
   
+  ysyx_23060059_icache icache(
+  .clock                    (clock           ),
+  .reset                    (reset           ),
+  .arvalid                  (ifu_arvalid     ),
+  .addr_i                   (ifu_araddr      ),
+  .rready                   (ifu_rready      ),
+  .data_o                   (icache_rdata    ),
+  .rvalid                   (icache_rvalid   ),
+  .arready                  (icache_arready  ),
+  .axi_araddr               (araddrA         ),
+  .axi_arid                 (aridA           ),
+  .axi_arlen                (arlenA          ),
+  .axi_arsize               (arsizeA         ),
+  .axi_arburst              (arburstA        ),
+  .axi_arvalid              (arvalidA        ),
+  .axi_arready              (arreadyA        ),
+  .axi_rdata                (rdataA          ),
+  .axi_rvalid               (rvalidA         ),
+  .axi_rresp                (rrespA          ),
+  .axi_rlast                (rlastA          ),
+  .axi_rid                  (ridA            ),
+  .axi_rready               (rreadyA         )
+  );
+
 
   reg  [31:0]  set_pc;
   reg  [31:0]  pc_next;
   wire [31:0]  pc;
   wire         skip_d;
-  wire         ebreak_t;
 
   reg skip;
   always @(posedge clock) begin
@@ -771,6 +795,12 @@ module ysyx_23060059(
     if(reset) pc_next_r <= 0;
     else
       pc_next_r <= pc_next;
+  end
+
+  reg ebreak;
+  always @(posedge clock) begin
+    if(reset) ebreak <= 0;
+    else      ebreak <= ebreak_wbu;
   end
  
 

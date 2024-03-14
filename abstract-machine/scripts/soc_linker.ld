@@ -11,13 +11,15 @@ MEMORY {
 
 SECTIONS {
   . = ORIGIN(sdram);
-  .text : ALIGN(8) { 
+  .text : ALIGN(16) { 
     _text_begin = .;
     *(entry)
     *(.text*)
     *(.rela*)
+    . = ALIGN(16);
     _boot_begin = .;
-    *(boot)
+    KEEP(*(boot))
+    . = ALIGN(16);
     _boot_end = .;
   } > sdram AT> flash :text
   etext = .;
