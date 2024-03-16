@@ -141,6 +141,7 @@ module ysyx_23060059(
   wire   [31:0]         csr_wd;
   wire   [31:0]         csra;
   wire   [31:0]         memory_read_wd;
+  wire   [31:0]         req_addr;
   wire                  pc_write_enable;
   wire                  ifu_send_valid;
   wire                  ifu_send_ready;
@@ -213,10 +214,25 @@ module ysyx_23060059(
   wire                  icache_arready;
   wire   [31:0]         ifu_araddr;
   wire                  ifu_arvalid;
-  wire   [63:0]         icache_rdata;
+  wire   [31:0]         icache_rdata;
   wire                  icache_rvalid;
   wire                  ifu_rready;
 
+  wire   [31:0]         lsu_req_addr;
+  wire                  dcache_arready;
+  wire                  lsu_arvalid;
+  wire                  dcache_rvalid;
+  wire   [63:0]         dcache_rdata;
+  wire                  lsu_rready;
+  wire                  dcache_awready;
+  wire                  lsu_awvalid;
+  wire                  dcache_wready;
+  wire                  lsu_wvalid;
+  wire   [63:0]         lsu_wdata;
+  wire   [7 :0]         lsu_wstrb;
+  wire                  lsu_bready;
+  wire                  dcache_bvalid;
+  
   wire                  arready;
   wire   [31:0]         araddr;
   wire                  arvalid;
@@ -480,22 +496,24 @@ module ysyx_23060059(
     .send_ready            (lsu_send_ready   ),
     .lsu_state             (lsu_state        ),
 
-    .arready               (arreadyB         ),
-    .araddr                (araddrB          ),
-    .arvalid               (arvalidB         ),
+    .req_addr              (lsu_req_addr     ),
+    .arready               (dcache_arready   ),
+    .arvalid               (lsu_arvalid      ),
 
-    .rdata                 (rdataB           ),
-    .rvalid                (rvalidB          ),
-    .rready                (rreadyB          ),
+    .rdata                 (dcache_rdata     ),
+    .rvalid                (dcache_rvalid    ),
+    .rready                (lsu_rready       ),
 
-    .awready               (awreadyB         ),
-    .awaddr                (awaddrB          ),
-    .awvalid               (awvalidB         ),
+    .awready               (dcache_awready   ),
+    .awvalid               (lsu_awvalid      ),
 
-    .wready                (wreadyB          ),
-    .wdata                 (wdataB           ),
-    .wstrb                 (wstrbB           ),
-    .wvalid                (wvalidB          )
+    .wready                (dcache_wready    ),
+    .wdata                 (lsu_wdata        ),
+    .wstrb                 (lsu_wstrb        ),
+    .wvalid                (lsu_wvalid       ),
+
+    .bvalid                (dcache_bvalid    ),
+    .bready                (lsu_bready       )
   );
 
   ysyx_23060059_arbiter arb(
@@ -736,6 +754,61 @@ module ysyx_23060059(
   .axi_rready               (rreadyA         )
   );
 
+  ysyx_23060059_dcache dcache(
+  .clock                    (clock           ),
+  .reset                    (reset           ),
+  .req_addr                 (lsu_req_addr    ),
+  .arvalid                  (lsu_arvalid     ),
+  .arready                  (dcache_arready  ),
+  .rready                   (lsu_rready      ),
+  .rvalid                   (dcache_rvalid   ),
+  .data_o                   (dcache_rdata    ),
+  .awvalid                  (lsu_awvalid     ),
+  .awready                  (dcache_awready  ),
+  // dcache <-> lsu, w channel
+  .wvalid                   (lsu_wvalid      ),
+  .lwdata                   (lsu_wdata       ),
+  .wstrb                    (lsu_wstrb       ),
+  .wready                   (dcache_wready   ),
+  // dcache <-> lsu, b channel
+  .bvalid                   (dcache_bvalid   ),
+  .bready                   (lsu_bready      ),
+  // dcache <-> axi, ar channel
+  .axi_araddr               (araddrB         ),
+  .axi_arid                 (aridB           ),
+  .axi_arlen                (arlenB          ),
+  .axi_arsize               (arsizeB         ),
+  .axi_arburst              (arburstB        ),
+  .axi_arvalid              (arvalidB        ),
+  .axi_arready              (arreadyB        ),
+  // dcache <-> axi, r channel
+  .axi_rdata                (rdataB          ),
+  .axi_rvalid               (rvalidB         ),
+  .axi_rresp                (rrespB          ),
+  .axi_rlast                (rlastB          ),
+  .axi_rid                  (ridB            ),
+  .axi_rready               (rreadyB         ),
+  // dcache <-> axi, aw channel
+  .axi_awready              (awreadyB        ),
+  .axi_awaddr               (awaddrB         ),
+  .axi_awvalid              (awvalidB        ),
+  .axi_awid                 (awidB           ),
+  .axi_awlen                (awlenB          ),
+  .axi_awsize               (awsizeB         ),
+  .axi_awburst              (awburstB        ),
+  // dcache <-> axi, w channel
+  .axi_wready               (wreadyB         ),
+  .axi_wvalid               (wvalidB         ),
+  .axi_wdata                (wdataB          ),
+  .axi_wstrb                (wstrbB          ),
+  .axi_wlast                (wlastB          ),
+  // dcache <-> axi, b channel
+  .axi_bvalid               (bvalidB         ),
+  .axi_bresp                (brespB          ),
+  .axi_bid                  (bidB            ),
+  .axi_bready               (breadyB         )
+  );
+
 
   reg  [31:0]  set_pc;
   reg  [31:0]  pc_next;
@@ -770,7 +843,7 @@ module ysyx_23060059(
         pc_next = set_pc;
       end else 
         if(pc == 32'h3000_0000) pc_next = 32'h3000_0000;
-        else                   pc_next = pc_next_r;
+        else                    pc_next = pc_next_r;
   end
 
   reg [31:0] pc_next_r;

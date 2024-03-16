@@ -13,7 +13,7 @@ module ysyx_23060059_icache(
   input    wire           arvalid,
   input    wire  [31 :0]  addr_i,
   input    wire           rready,
-  output   wire  [63 :0]  data_o,
+  output   wire  [31 :0]  data_o,
   output   wire           rvalid,
   output   wire           arready,
   // axi part
@@ -274,7 +274,7 @@ module ysyx_23060059_icache(
     end
   end
 
-  assign data_o      = {32'h0, data_r};
+  assign data_o      = data_r;
   assign axi_arvalid = axi_arvalid_r;
   assign rvalid      = rvalid_r;
   assign arready     = 1;

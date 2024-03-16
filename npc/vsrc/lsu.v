@@ -37,9 +37,11 @@ module ysyx_23060059_lsu (
   output   wire          ecall_o,
   output   wire          ebreak_o,
   output   wire          skip_d_o,
+
   // lsu <-> axi, ar channel
+  output   wire  [31:0]  req_addr,
+
   input    wire          arready,
-  output   wire  [31:0]  araddr,
   output   wire          arvalid,
   // lsu <-> axi, r channel
   input    wire          rvalid,
@@ -47,7 +49,6 @@ module ysyx_23060059_lsu (
   output   wire          rready,
   // lsu <-> axi, aw channel
   input    wire          awready,
-  output   wire  [31:0]  awaddr,
   output   wire          awvalid,
   // lsu <-> axi, w channel
   input    wire          wready,
@@ -55,10 +56,10 @@ module ysyx_23060059_lsu (
   output   wire  [63:0]  wdata,
   output   wire  [7 :0]  wstrb,
   // lsu <-> axi, b channel
-  // input    wire          bvalid,
+  input    wire          bvalid,
   // input    wire  [1 :0]  bresp,
   // input    wire  [3 :0]  bid,
-  // output   wire          bready,
+  output   wire          bready,
 
   output   wire          lsu_state
 );
@@ -115,7 +116,10 @@ module ysyx_23060059_lsu (
         else
           next_state = MEM_WRITE_A;
       MEM_WRITE_B:
+        if(bvalid && bready)
           next_state = MEM_WRITE_C;
+        else
+          next_state = MEM_WRITE_B;
       MEM_WRITE_C:
         if(send_valid)
           next_state = IDLE;
@@ -206,16 +210,14 @@ module ysyx_23060059_lsu (
   reg  [63:0]   rdata_r;
 
   reg          send_valid_r;
-  reg  [31:0]  araddr_r;
+  reg  [31:0]  req_addr_r;
   reg          arvalid_r;
   reg          rready_r;
-  reg  [31:0]  awaddr_r;
   reg          awvalid_r;
   reg          wvalid_r;
   reg          bready_r;
   reg  [63:0]  wdata_r;
   reg  [7 :0]  wstrb_r;
-  reg  [3 :0]  awid_r;  
   reg  [31:0]  pc_r;
 
   always @(posedge clock) begin
@@ -223,14 +225,12 @@ module ysyx_23060059_lsu (
       send_valid_r   <= 0;
       m_signed           <= 0;
       rmask              <= 0;
-      araddr_r           <= 0;
+      req_addr_r         <= 0;
       arvalid_r          <= 0;
       wdata_r            <= 0;
       wstrb_r            <= 0;
-      awaddr_r           <= 0;
       awvalid_r          <= 0;
       wvalid_r           <= 0;
-      awid_r             <= 0;
       pc_r               <= 0;
     end else begin
       if(next_state == IDLE) begin
@@ -241,7 +241,7 @@ module ysyx_23060059_lsu (
         if(next_state == MEM_READ_A) begin
           if(arvalid_r == 0) begin
             arvalid_r            <= 1;
-            araddr_r             <= exu_result_v;
+            req_addr_r           <= exu_result_v;
             m_signed             <= m_signed_v;
             rmask                <= rmask_v;
             pc_r                 <= pc_v;
@@ -259,8 +259,7 @@ module ysyx_23060059_lsu (
           if(awvalid_r == 0) begin
             awvalid_r           <= 1;
             wvalid_r            <= 1;
-            awid_r              <= awid_r + 1;
-            awaddr_r            <= exu_result_v;
+            req_addr_r          <= exu_result_v;
             wdata_r             <= align_wdata_v;
             wstrb_r             <= align_wstrb_v;
             if(buffer)
@@ -341,13 +340,13 @@ module ysyx_23060059_lsu (
   always @(*) begin
     rdata_8 = 0;
     rdata_16 = 0;
-    if((araddr_r >= 32'hf000000 && araddr_r <= 32'hfffffff)) begin 
-      rdata_8  = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1:0]*8);
-      rdata_16 = rdata_r >> (araddr_r[2]*32) >> (araddr_r[1]*16);
-      rdata_32 = rdata_r >> (araddr_r[2]*32);
+    if((req_addr_r >= 32'hf000000 && req_addr_r <= 32'hfffffff)) begin 
+      rdata_8  = rdata_r >> (req_addr_r[2]*32) >> (req_addr_r[1:0]*8);
+      rdata_16 = rdata_r >> (req_addr_r[2]*32) >> (req_addr_r[1]*16);
+      rdata_32 = rdata_r >> (req_addr_r[2]*32);
     end else begin
-      rdata_8  = rdata_r >> (araddr_r[1:0]*8);
-      rdata_16 = rdata_r >> (araddr_r[1]*16) >> (araddr_r[0]*8);
+      rdata_8  = rdata_r >> (req_addr_r[1:0]*8);
+      rdata_16 = rdata_r >> (req_addr_r[1]*16) >> (req_addr_r[0]*8);
       rdata_32 = {32'h0, rdata_r[31:0]};
     end
   end
@@ -368,10 +367,10 @@ module ysyx_23060059_lsu (
   // always @(*) begin
   //   unalign_rdata_16 = 0;
   //   unalign_rdata_32 = 0;
-  //   if(rmask == 32'h0000ffff) begin // araddr_r[1:0] == 2'b11
+  //   if(rmask == 32'h0000ffff) begin // req_addr_r[1:0] == 2'b11
   //     unalign_rdata_16 = {48'h0, unalign_rdata[39:24]};
   //   end else begin
-  //     case(araddr_r[1:0])
+  //     case(req_addr_r[1:0])
   //       2'b01:
   //         unalign_rdata_32 = {32'h0, unalign_rdata[39:8]};
   //       2'b10:
@@ -391,28 +390,15 @@ module ysyx_23060059_lsu (
 
   wire [31:0] mread = align_mread;
 
-  wire [31:0] awaddr_v;
-  reg  [7 :0] align_wstrb_v;
-  reg  [63:0] align_wdata_v;
-  assign awaddr_v = exu_result_v;
+  wire [31:0] req_addr_v;
+  wire [7 :0] align_wstrb_v;
+  wire [63:0] align_wdata_v;
 
   // AXITOAPB module 会把wmask再次恢复成四字节对齐
-  always @(*) begin
-    align_wstrb_v = 0;
-    align_wdata_v = 0;
-    if(wmask_v == 8'b00000001) begin
-      align_wstrb_v = wmask_v << awaddr_v[2:0];
-      align_wdata_v = {32'b0,rsb_v} << (awaddr_v[2:0]*8);
-    end
-    else if(wmask_v == 8'b00000011) begin  // 如果想让psram也支持非对齐写，这里需要修改
-        align_wstrb_v = wmask_v << (awaddr_v[2:1]*2) << (awaddr_v[0]);
-        align_wdata_v = {32'b0,rsb_v}   << (awaddr_v[2:1]*16) << (awaddr_v[0]*8);
-    end
-    else if(wmask_v == 8'b00001111) begin
-      align_wstrb_v = wmask_v << (awaddr_v[2]*4);
-      align_wdata_v = {32'b0,rsb_v}   << (awaddr_v[2]*32);
-    end
-  end
+  assign req_addr_v    = exu_result_v;
+  assign align_wstrb_v = wmask_v << req_addr_v[2:0];
+  assign align_wdata_v = {32'b0, rsb_v} << (req_addr_v[2]*32);
+
 
   // reg  [7 :0] unalign_wstrb_vA;
   // reg  [7 :0] unalign_wstrb_vB;
@@ -560,15 +546,14 @@ module ysyx_23060059_lsu (
   assign send_valid   = send_valid_r;
   assign send_ready   = !buffer; // buffer
 
-  assign araddr         = araddr_r;
+  assign req_addr       = req_addr_r;
   assign arvalid        = arvalid_r;
   assign rready         = rready_r;
-  assign awaddr         = awaddr_r;
   assign awvalid        = awvalid_r;
   assign wvalid         = wvalid_r;
   assign wstrb          = wstrb_r;
   assign wdata          = wdata_r;
-
+  assign bready         = 1;
 
   always @(posedge clock) begin
     if(reset) rready_r <= 0;

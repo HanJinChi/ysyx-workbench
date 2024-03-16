@@ -10,7 +10,7 @@ module ysyx_23060059_ifu(
     output   wire  [31:0]  araddr,
     output   wire          arvalid,
     // ifu <-> icache, r channel
-    input    wire  [63:0]  rdata,
+    input    wire  [31:0]  rdata,
     input    wire          rvalid,
     output   wire          rready,
     // ifu <-> idu
@@ -126,10 +126,7 @@ module ysyx_23060059_ifu(
         end
         if(set_value == 0) begin
           set_value      <= 1;
-          if(araddr_r >= 32'hf000000 && araddr_r <= 32'hfffffff)
-            instruction_r <= araddr_r[2] ? rdata[63:32] : rdata[31:0];
-          else
-            instruction_r <= rdata[31:0];
+          instruction_r <= rdata;
         end
       end else begin // next_state == IDLE
         if(send_valid_r) send_valid_r <= 0;
