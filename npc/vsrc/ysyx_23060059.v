@@ -152,6 +152,10 @@ module ysyx_23060059(
   wire                  exu_send_valid;
   wire                  exu_send_ready;
   wire                  ifu_receive_valid;
+  wire                  cache_flush_valid;
+  wire                  dcache_f_bvalid;
+  wire                  icache_f_bvalid;
+  wire                  cache_bready;
   wire   [31:0]         araddrA;
   wire   [31:0]         araddrB;
   wire                  arvalidA;
@@ -368,7 +372,11 @@ module ysyx_23060059(
     .send_valid            (idu_send_valid   ),
     .send_ready            (idu_send_ready   ),
     .receive_ready         (exu_send_ready   ),
-    .send_to_ifu_valid     (ifu_receive_valid)
+    .send_to_ifu_valid     (ifu_receive_valid),
+    .cache_flush_valid     (cache_flush_valid),
+    .icache_bvalid         (icache_f_bvalid  ),
+    .dcache_bvalid         (dcache_f_bvalid  ),
+    .cache_bready          (cache_bready     ) 
   );
 
   // Reg Array Unit
@@ -731,82 +739,88 @@ module ysyx_23060059(
   ); 
   
   ysyx_23060059_icache icache(
-  .clock                    (clock           ),
-  .reset                    (reset           ),
-  .arvalid                  (ifu_arvalid     ),
-  .addr_i                   (ifu_araddr      ),
-  .rready                   (ifu_rready      ),
-  .data_o                   (icache_rdata    ),
-  .rvalid                   (icache_rvalid   ),
-  .arready                  (icache_arready  ),
-  .axi_araddr               (araddrA         ),
-  .axi_arid                 (aridA           ),
-  .axi_arlen                (arlenA          ),
-  .axi_arsize               (arsizeA         ),
-  .axi_arburst              (arburstA        ),
-  .axi_arvalid              (arvalidA        ),
-  .axi_arready              (arreadyA        ),
-  .axi_rdata                (rdataA          ),
-  .axi_rvalid               (rvalidA         ),
-  .axi_rresp                (rrespA          ),
-  .axi_rlast                (rlastA          ),
-  .axi_rid                  (ridA            ),
-  .axi_rready               (rreadyA         )
+  .clock                    (clock            ),
+  .reset                    (reset            ),
+  .flush_valid              (cache_flush_valid),
+  .bvalid                   (icache_f_bvalid  ),
+  .bready                   (cache_bready     ),
+  .arvalid                  (ifu_arvalid      ),
+  .addr_i                   (ifu_araddr       ),
+  .rready                   (ifu_rready       ),
+  .data_o                   (icache_rdata     ),
+  .rvalid                   (icache_rvalid    ),
+  .arready                  (icache_arready   ),
+  .axi_araddr               (araddrA          ),
+  .axi_arid                 (aridA            ),
+  .axi_arlen                (arlenA           ),
+  .axi_arsize               (arsizeA          ),
+  .axi_arburst              (arburstA         ),
+  .axi_arvalid              (arvalidA         ),
+  .axi_arready              (arreadyA         ),
+  .axi_rdata                (rdataA           ),
+  .axi_rvalid               (rvalidA          ),
+  .axi_rresp                (rrespA           ),
+  .axi_rlast                (rlastA           ),
+  .axi_rid                  (ridA             ),
+  .axi_rready               (rreadyA          )
   );
 
   ysyx_23060059_dcache dcache(
-  .clock                    (clock           ),
-  .reset                    (reset           ),
-  .req_addr                 (lsu_req_addr    ),
-  .arvalid                  (lsu_arvalid     ),
-  .arready                  (dcache_arready  ),
-  .rready                   (lsu_rready      ),
-  .rvalid                   (dcache_rvalid   ),
-  .data_o                   (dcache_rdata    ),
-  .awvalid                  (lsu_awvalid     ),
-  .awready                  (dcache_awready  ),
+  .clock                    (clock            ),
+  .reset                    (reset            ),
+  .flush_valid              (cache_flush_valid),
+  .flush_bvalid             (dcache_f_bvalid  ),
+  .flush_bready             (cache_bready     ),
+  .req_addr                 (lsu_req_addr     ),
+  .arvalid                  (lsu_arvalid      ),
+  .arready                  (dcache_arready   ),
+  .rready                   (lsu_rready       ),
+  .rvalid                   (dcache_rvalid    ),
+  .data_o                   (dcache_rdata     ),
+  .awvalid                  (lsu_awvalid      ),
+  .awready                  (dcache_awready   ),
   // dcache <-> lsu, w channel
-  .wvalid                   (lsu_wvalid      ),
-  .lwdata                   (lsu_wdata       ),
-  .wstrb                    (lsu_wstrb       ),
-  .wready                   (dcache_wready   ),
+  .wvalid                   (lsu_wvalid       ),
+  .lwdata                   (lsu_wdata        ),
+  .wstrb                    (lsu_wstrb        ),
+  .wready                   (dcache_wready    ),
   // dcache <-> lsu, b channel
-  .bvalid                   (dcache_bvalid   ),
-  .bready                   (lsu_bready      ),
+  .bvalid                   (dcache_bvalid    ),
+  .bready                   (lsu_bready       ),
   // dcache <-> axi, ar channel
-  .axi_araddr               (araddrB         ),
-  .axi_arid                 (aridB           ),
-  .axi_arlen                (arlenB          ),
-  .axi_arsize               (arsizeB         ),
-  .axi_arburst              (arburstB        ),
-  .axi_arvalid              (arvalidB        ),
-  .axi_arready              (arreadyB        ),
+  .axi_araddr               (araddrB          ),
+  .axi_arid                 (aridB            ),
+  .axi_arlen                (arlenB           ),
+  .axi_arsize               (arsizeB          ),
+  .axi_arburst              (arburstB         ),
+  .axi_arvalid              (arvalidB         ),
+  .axi_arready              (arreadyB         ),
   // dcache <-> axi, r channel
-  .axi_rdata                (rdataB          ),
-  .axi_rvalid               (rvalidB         ),
-  .axi_rresp                (rrespB          ),
-  .axi_rlast                (rlastB          ),
-  .axi_rid                  (ridB            ),
-  .axi_rready               (rreadyB         ),
+  .axi_rdata                (rdataB           ),
+  .axi_rvalid               (rvalidB          ),
+  .axi_rresp                (rrespB           ),
+  .axi_rlast                (rlastB           ),
+  .axi_rid                  (ridB             ),
+  .axi_rready               (rreadyB          ),
   // dcache <-> axi, aw channel
-  .axi_awready              (awreadyB        ),
-  .axi_awaddr               (awaddrB         ),
-  .axi_awvalid              (awvalidB        ),
-  .axi_awid                 (awidB           ),
-  .axi_awlen                (awlenB          ),
-  .axi_awsize               (awsizeB         ),
-  .axi_awburst              (awburstB        ),
+  .axi_awready              (awreadyB         ),
+  .axi_awaddr               (awaddrB          ),
+  .axi_awvalid              (awvalidB         ),
+  .axi_awid                 (awidB            ),
+  .axi_awlen                (awlenB           ),
+  .axi_awsize               (awsizeB          ),
+  .axi_awburst              (awburstB         ),
   // dcache <-> axi, w channel
-  .axi_wready               (wreadyB         ),
-  .axi_wvalid               (wvalidB         ),
-  .axi_wdata                (wdataB          ),
-  .axi_wstrb                (wstrbB          ),
-  .axi_wlast                (wlastB          ),
+  .axi_wready               (wreadyB          ),
+  .axi_wvalid               (wvalidB          ),
+  .axi_wdata                (wdataB           ),
+  .axi_wstrb                (wstrbB           ),
+  .axi_wlast                (wlastB           ),
   // dcache <-> axi, b channel
-  .axi_bvalid               (bvalidB         ),
-  .axi_bresp                (brespB          ),
-  .axi_bid                  (bidB            ),
-  .axi_bready               (breadyB         )
+  .axi_bvalid               (bvalidB          ),
+  .axi_bresp                (brespB           ),
+  .axi_bid                  (bidB             ),
+  .axi_bready               (breadyB          )
   );
 
 

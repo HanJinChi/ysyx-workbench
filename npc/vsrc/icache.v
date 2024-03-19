@@ -9,6 +9,10 @@
 module ysyx_23060059_icache(
   input    wire           clock,
   input    wire           reset,
+
+  input    wire           flush_valid,
+  input    wire           bready,
+  output   wire           bvalid,
   // icache <-> ifu
   input    wire           arvalid,
   input    wire  [31 :0]  addr_i,
@@ -32,7 +36,6 @@ module ysyx_23060059_icache(
   input    wire           axi_rlast,
   input    wire  [3 :0]   axi_rid,
   output   wire           axi_rready
-  // //
   // output   wire  [5  :0]  io_sram0_addr,
   // output   wire           io_sram0_cen,
   // output   wire           io_sram0_wen,
@@ -80,7 +83,7 @@ module ysyx_23060059_icache(
 
   generate
     for(i = 0; i < 256; i = i+1) begin
-      assign wmeta[i] = (wen == 1) ? ( ((idx*nway+{29'h0, way}) == i) ? {1'b0, 1'b1, align_addr[31:9]} : meta[i]) : meta[i];
+      assign wmeta[i] = flush ? 25'h0 : (wen ? ( ((idx*nway+{29'h0, way}) == i) ? {1'b0, 1'b1, align_addr[31:9]} : meta[i]) : meta[i]);
     end
   endgenerate
 
@@ -92,7 +95,7 @@ module ysyx_23060059_icache(
 
   generate
     for(i = 0; i < 256; i = i+1) begin
-      assign wdata[i] = (wen == 1) ? ( ((idx*nway+{29'h0, way}) == i) ?  data_buffer : data[i]) : data[i];
+      assign wdata[i] = wen ? ( ((idx*nway+{29'h0, way}) == i) ?  data_buffer : data[i]) : data[i];
     end
   endgenerate
 
@@ -146,7 +149,7 @@ module ysyx_23060059_icache(
 
 
   reg  [2:0] state, next_state;
-  typedef enum [2:0] {IDLE, MISSA, MISSB, MISSC, HIT} state_t;
+  typedef enum [2:0] {IDLE, MISSA, MISSB, MISSC, HIT, FLUSH} state_t;
 
 
   always @(posedge clock) begin
@@ -157,13 +160,16 @@ module ysyx_23060059_icache(
   always @(*) begin
     case(state)
       IDLE:
-        if(arvalid)
-          if(hit)
-            next_state = HIT;
-          else
-            next_state = MISSA;
+        if(flush_valid)
+          next_state = FLUSH;
         else
-          next_state = IDLE;
+          if(arvalid)
+            if(hit)
+              next_state = HIT;
+            else
+              next_state = MISSA;
+          else
+            next_state = IDLE;
       MISSA:
         if(axi_arvalid && axi_arready)
           next_state = MISSB;
@@ -190,6 +196,11 @@ module ysyx_23060059_icache(
           next_state = IDLE;
         else
           next_state = HIT;
+      FLUSH:
+        if(bvalid && bready)
+          next_state = IDLE;
+        else
+          next_state = FLUSH;
       default:
         next_state = IDLE;
     endcase
@@ -204,6 +215,9 @@ module ysyx_23060059_icache(
   reg           wen;
   reg  [127:0]  data_buffer;
   reg  [31 :0]  data_r;
+  reg           flush;
+  reg           bvalid_r;
+
 
   assign align_addr = {addr_i[31:4], 4'h0};
 
@@ -274,10 +288,31 @@ module ysyx_23060059_icache(
     end
   end
 
+  always @(posedge clock) begin
+    if(reset) flush <= 0;
+    else begin
+      if(next_state == FLUSH)
+        flush <= 1;
+      else
+        flush <= 0;
+    end
+  end
+
+  always @(posedge clock) begin
+    if(reset) bvalid_r <= 0;
+    else begin
+      if(next_state == FLUSH)
+        bvalid_r <= 1;
+      else
+        bvalid_r <= 0;
+    end
+  end
+
   assign data_o      = data_r;
   assign axi_arvalid = axi_arvalid_r;
   assign rvalid      = rvalid_r;
   assign arready     = 1;
+  assign bvalid      = bvalid_r;
   assign axi_araddr  = axi_araddr_r;
   assign axi_rready  = 1'b1;
   assign axi_arlen   = 8'b0;
@@ -289,9 +324,9 @@ module ysyx_23060059_icache(
   always @(posedge clock) begin
     if(reset) way <= 0;
     else begin
-      if(next_state == MISSA)
+      if(next_state == MISSA && counter == 2'b00)
         way <= rway;
-      else if(next_state == HIT)
+      if(next_state == HIT && state == IDLE)
         way <= hway;
     end
   end
@@ -301,13 +336,9 @@ module ysyx_23060059_icache(
   always @(*) begin
     invalid = 0;
     access  = 0;
-    if(next_state == MISSA) begin
+    if(next_state == MISSA && counter == 2'b11) begin
       if(meta[idx*nway+{29'h0, rway}][23]) invalid = 1;
       else                                 invalid = 0;
-    end
-    if(next_state == MISSC) begin
-      if(counter == 2'b0) access = 1;
-      else                access = 0;
     end
     if(next_state == HIT) begin
       access = 1;
@@ -316,13 +347,14 @@ module ysyx_23060059_icache(
 
 
   ysyx_23060059_replacer u_replacer(
-    .clock        (clock   ),
-    .reset        (reset   ),
-    .idx          (idx     ),
-    .way          (way     ),
-    .access       (access  ),
-    .invalid      (invalid ),
-    .rway_o       (rway    )
+    .clock        (clock      ),
+    .reset        (reset      ),
+    .idx          (idx        ),
+    .way          (way        ),
+    .access       (access     ),
+    .invalid      (invalid    ),
+    .flush        (flush_valid),
+    .rway_o       (rway       )
   );
 
 endmodule

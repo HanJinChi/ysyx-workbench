@@ -59,4 +59,6 @@ skip:
   lw s1,24(sp)
 
   addi sp,sp,28
+  fence.i
+
   ret

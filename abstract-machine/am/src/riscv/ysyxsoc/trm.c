@@ -43,6 +43,7 @@ void fsbl(){
   for(int i = 0; i < (uintptr_t)&_boot_end - (uintptr_t)&_boot_begin; i++){
     dst[i] = src[i];
   }
+  asm volatile("fence.i"); // sync icache and dcache
 }
 
 void halt(int code) {

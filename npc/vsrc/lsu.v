@@ -397,7 +397,7 @@ module ysyx_23060059_lsu (
   // AXITOAPB module 会把wmask再次恢复成四字节对齐
   assign req_addr_v    = exu_result_v;
   assign align_wstrb_v = wmask_v << req_addr_v[2:0];
-  assign align_wdata_v = {32'b0, rsb_v} << (req_addr_v[2]*32);
+  assign align_wdata_v = {32'b0, rsb_v} << (req_addr_v[2:0]*8);
 
 
   // reg  [7 :0] unalign_wstrb_vA;
@@ -562,7 +562,7 @@ module ysyx_23060059_lsu (
 
   always @(posedge clock) begin
     if(reset) bready_r <= 0;
-    else    bready_r <= 1;
+    else      bready_r <= 1;
   end 
 
   assign  lsu_state = (next_state != IDLE);

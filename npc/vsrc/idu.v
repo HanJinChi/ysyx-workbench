@@ -51,32 +51,56 @@ module ysyx_23060059_idu(
   output   wire  [31:0]  instruction_o,
   output   wire          send_to_ifu_valid,
   output   wire          send_valid,
-  output   wire          send_ready
+  output   wire          send_ready,
+  // idu <-> dcache, icache
+  input    wire          icache_bvalid,
+  input    wire          dcache_bvalid,
+  output   wire          cache_flush_valid,
+  output   wire          cache_bready
 );
 
-  parameter   IDLE = 0, DECODE = 1;
-  reg         state, next_state;
+  typedef enum [2:0] {IDLE, DECODE, WAIT, FENCE_I_A, FENCE_I_B} state_t;
+  reg  [2:0]  state, next_state;
   reg         send_to_ifu_valid_r;
   reg         send_valid_r;
 
 
   always @(posedge clock) begin
     if(reset) state <= IDLE;
-    else    state <= next_state;
+    else      state <= next_state;
   end
 
   always@(*) begin
     case(state)
       IDLE:
         if(receive_valid || buffer)
-          next_state = DECODE;
+          if(fence_i)
+            next_state = WAIT;
+          else
+            next_state = DECODE;
         else
           next_state = IDLE;
       DECODE:
         if(send_valid && receive_ready)
-            next_state = IDLE;
+          next_state = IDLE;
         else
           next_state = DECODE;
+      WAIT: // 等待lsu、wbu、exu的指令都执行完毕
+        if(components_idle)
+          next_state = FENCE_I_A;
+        else
+          next_state = WAIT;
+      FENCE_I_A:
+        if(icache_bvalid && dcache_bvalid)
+          next_state = FENCE_I_B;
+        else
+          next_state = FENCE_I_A;
+      FENCE_I_B:
+        if(send_valid && receive_ready)
+          next_state = IDLE;
+        else
+          next_state = FENCE_I_B;
+      default: next_state = IDLE;
     endcase
   end
 
@@ -90,59 +114,133 @@ module ysyx_23060059_idu(
   always @(posedge clock) begin
     if(reset) begin
       instruction_b  <=  0;
-      pc_b           <=  0;
-      buffer         <=  0;
     end else begin
       if(buffer == 0) begin
         if(receive_valid && (state != IDLE)) begin
           instruction_b <= instruction_i;
-          pc_b          <= pc_i;
-          buffer        <= 1;
-        end
-      end
-    end
-  end
-  assign send_ready   = !buffer; // buffer长度为1时则不能再接受数据
-  assign instruction  = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
-  assign pc           = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
-  
-  always @(posedge clock) begin
-    if(reset) begin
-      send_valid_r             <= 0;
-      send_to_ifu_valid_r      <= 0;
-      instruction_t            <= 0;
-      pc_t                     <= 0;
-    end else begin
-      if(next_state == DECODE) begin
-        if(receive_valid) begin
-          instruction_t <= instruction_i;
-          pc_t          <= pc_i;
-        end
-        else if(buffer) begin
-          instruction_t <= instruction_b;
-          pc_t          <= pc_b;
-        end
-        if((send_valid_r == 0) && !conflict) begin
-          send_valid_r        <= 1;
-          send_to_ifu_valid_r <= 1;
-          if(buffer)
-            buffer                <= 0;
-        end
-      end else begin  // next_state == IDLE
-        if(send_valid_r) begin
-          send_valid_r        <= 0;
-          send_to_ifu_valid_r <= 0;
         end
       end
     end
   end
 
+  always @(posedge clock) begin
+    if(reset) begin
+      pc_b  <=  0;
+    end else begin
+      if(buffer == 0) begin
+        if(receive_valid && (state != IDLE)) begin
+          pc_b <= pc_i;
+        end
+      end
+    end
+  end
+
+  assign send_ready   = !buffer; // buffer长度为1时则不能再接受数据
+  // assign instruction  = (next_state == DECODE && state == DECODE) ? instruction_t : (buffer ? instruction_b : instruction_i);
+  // assign pc           = (next_state == DECODE && state == DECODE) ? pc_t          : (buffer ? pc_b           : pc_i);
+  assign instruction  = (state == IDLE) ? (buffer ? instruction_b : instruction_i) : instruction_t;
+  assign pc           = (state == IDLE) ? (buffer ? pc_b          : pc_i)          : pc_t;
+
+  reg cache_bready_r;
+  always @(posedge clock) begin
+    if(reset) cache_bready_r <= 0;
+    else begin
+      if(next_state == FENCE_I_B) 
+        cache_bready_r <= 1;
+      else
+        cache_bready_r <= 0;
+    end
+  end
+  assign cache_bready = cache_bready_r;
+
+  always @(posedge clock) begin
+    if(reset) send_valid_r <= 0;
+    else begin
+      if(next_state == DECODE) begin
+        if(!conflict)  send_valid_r <= 1;
+      end 
+      else if(next_state == FENCE_I_B) begin
+        send_valid_r <= 1;
+      end else 
+        send_valid_r <= 0;
+    end
+  end
+
+  always @(posedge clock) begin
+    if(reset) send_to_ifu_valid_r <= 0;
+    else begin
+      if(next_state == DECODE) begin
+        if(!conflict) send_to_ifu_valid_r <= 1;
+      end
+      else if(next_state == FENCE_I_B) begin
+        send_to_ifu_valid_r <= 1;
+      end else 
+        send_to_ifu_valid_r <= 0;
+    end
+  end
+
+  always @(posedge clock) begin
+    if(reset) instruction_t <= 0;
+    else begin
+      if(next_state == DECODE || next_state == WAIT) begin
+        if(receive_valid) instruction_t <= instruction_i; 
+        else begin
+          if(buffer) instruction_t <= instruction_b;
+        end       
+      end
+    end
+  end
+
+  always @(posedge clock) begin
+    if(reset) pc_t <= 0;
+    else begin
+      if(next_state == DECODE || next_state == WAIT) begin
+        if(receive_valid) pc_t <= pc_i; 
+        else begin
+          if(buffer) pc_t <= pc_b;
+        end       
+      end
+    end
+  end
+
+  always @(posedge clock) begin
+    if(reset) buffer <= 0;
+    else      begin
+      if(buffer == 0) begin
+        if(receive_valid && state!=IDLE)
+          buffer <= 1;
+      end else begin // buffer == 1
+        if(next_state == DECODE) begin
+          if(send_valid == 0 && !conflict)
+            buffer <= 0;
+        end 
+        else if(next_state == FENCE_I_B)
+          buffer <= 0;
+      end
+    end
+  end
+
+  reg cache_flush_valid_r;
+  always @(posedge clock) begin
+    if(reset) cache_flush_valid_r <= 0;
+    else begin
+      if(next_state == FENCE_I_A)
+        cache_flush_valid_r <= 1;
+      else
+        cache_flush_valid_r <= 0;
+    end
+  end
+  assign cache_flush_valid = cache_flush_valid_r;
+
   reg idu_to_exu_en;
   always @(*) begin
-    if(next_state == DECODE && (send_valid_r == 0) && !conflict) 
+    if(next_state == DECODE && (send_valid == 0) && !conflict) 
       idu_to_exu_en = 1;
     else
-      idu_to_exu_en = 0;
+      if(next_state == FENCE_I_B && (send_valid == 0))
+        idu_to_exu_en = 1;
+      else
+        idu_to_exu_en = 0;
   end
 
   assign send_valid           = send_valid_r;
@@ -260,6 +358,9 @@ module ysyx_23060059_idu(
     end
   end
 
+  wire   components_idle;
+  assign components_idle = (exu_state[0]==0) && (exu_state[1]==0) && (lsu_state==0) && (wbu_state[0]==0);
+
 
   wire  [2: 0]  instruction_type;
   wire  [31:0]  immI, immU, immS, immJ, immB, immV;
@@ -283,6 +384,7 @@ module ysyx_23060059_idu(
   wire          csreg_en;
   wire          ecall;
   wire          ebreak;
+  wire          fence_i;
   wire  [31:0]  pc_next;
 
   MuxKeyWithDefault #(10, 7, 3) idu_i0 (instruction_type, instruction[6:0], 3'b0, {
@@ -316,10 +418,12 @@ module ysyx_23060059_idu(
   });
 
   // ecall 
-  assign ecall = (instruction == 32'h73);
+  assign ecall   = (instruction == 32'h73);
   // mret
   wire   mret;
-  assign mret = (instruction == 32'h30200073);
+  assign mret    = (instruction == 32'h30200073);
+  // fence
+  assign fence_i = (instruction == 32'h100f); 
 
   wire [1:0] csr_rsA;
   MuxKeyWithDefault #(4, 32, 2) idu_i25(csr_rsA, immV, 2'b11, {
@@ -518,7 +622,7 @@ module ysyx_23060059_idu(
 
 
   // wen
-  assign wen = (instruction_type == `YSYX_23060059_TYPE_S);
+  assign wen    = (instruction_type == `YSYX_23060059_TYPE_S);
 
   assign ebreak = (instruction == 32'h100073); // if the instruction is ebreak, end the simluation
 

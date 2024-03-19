@@ -132,6 +132,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, csrrwrs(rd, src1, imm, true););
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, s->dnpc = isa_raise_intr(Reg(15), s->pc); difftest_skip_ref();); // R(17) is $a17
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , R, s->dnpc = cpu.csr.mepc; difftest_skip_ref(););
+  INSTPAT("0000000 00000 00000 001 00000 00011 11", fence_i, N, );
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, Reg(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();

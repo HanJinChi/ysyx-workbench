@@ -9,6 +9,9 @@
 module ysyx_23060059_dcache(
   input    wire           clock,
   input    wire           reset,
+  input    wire           flush_valid,
+  output   wire           flush_bvalid,
+  input    wire           flush_bready,
   // dcache <-> lsu, ar channel
   input    wire  [31 :0]  req_addr,
   input    wire           arvalid,
@@ -109,7 +112,7 @@ module ysyx_23060059_dcache(
 
   generate
     for(i = 0; i < 256; i = i+1) begin
-      assign wmeta[i] = (wen == 1) ? ( ((idx*nway+{29'h0, way}) == i) ? write_meta : meta[i]) : meta[i];
+      assign wmeta[i] = wen ? ( is_flushing ? ((fidx == i) ? write_meta: meta[i]) : (((idx*nway+{29'h0, way}) == i) ? write_meta : meta[i])) : meta[i];
     end
   endgenerate
 
@@ -121,7 +124,7 @@ module ysyx_23060059_dcache(
 
   generate
     for(i = 0; i < 256; i = i+1) begin
-      assign wdata[i] = (wen == 1) ? ( ((idx*nway+{29'h0, way}) == i) ? concat_write_data : data[i]) : data[i];
+      assign wdata[i] = data_wen ? ( ((idx*nway+{29'h0, way}) == i) ? concat_write_data : data[i]) : data[i];
     end
   endgenerate
 
@@ -151,11 +154,19 @@ module ysyx_23060059_dcache(
 
   assign hit_meta       = meta[idx*nway+{29'h0, hway}];
   assign hit_data       = data[idx*nway+{29'h0, hway}];
-  assign mux_write_data = (state == IDLE) ? hit_data : data_buffer; 
+  assign mux_write_data = hit ? hit_data : data_buffer; 
 
   always @(*) begin
-    if(state == IDLE) write_meta = {1'b1, hit_meta[23:0]};
-    else              write_meta = {1'b0, 1'b1, align_addr[31:9]};
+    if(state == IDLE) // write and hit
+      write_meta = {1'b1, hit_meta[23:0]};
+    else
+      if(state == WRITEB) // writeback
+        write_meta = is_flushing ? {1'b0, fmeta[23:0]} : {1'b0, meta[idx*nway+{29'h0, rway}][23:0]};
+      else // unhit
+        if(is_write)              
+          write_meta = {1'b1, 1'b1, align_addr[31:9]};
+        else
+          write_meta = {1'b0, 1'b1, align_addr[31:9]};
   end
 
   integer j;
@@ -164,7 +175,7 @@ module ysyx_23060059_dcache(
       for(j = 0; j < 8; j = j+1)
         write_data[j] = mux_write_data[8*(j+1)-1 -: 8];
       for(j = 8; j < 16; j = j+1)
-        write_data[j] = is_write ? (wstrb[j-8] ? lwdata[(j-7)*8-1 -: 8] : mux_write_data[8*(j-7)-1 -:8]) : mux_write_data[8*(j+1)-1 -:8];
+        write_data[j] = is_write ? (wstrb[j-8] ? lwdata[(j-7)*8-1 -: 8] : mux_write_data[8*(j+1)-1 -:8]) : mux_write_data[8*(j+1)-1 -:8];
     end else begin
       for(j = 0; j < 8; j = j+1)
         write_data[j] = is_write ? (wstrb[j] ? lwdata[(j+1)*8-1 -: 8] : mux_write_data[8*(j+1)-1 -: 8]) : mux_write_data[8*(j+1)-1 -: 8];
@@ -189,9 +200,9 @@ module ysyx_23060059_dcache(
           4'b0100, 4'b0101, 4'b0110, 4'b0111:
             rdata = {32'h0, data_buffer[63:32]};
           4'b1000, 4'b1001, 4'b1010, 4'b1011:
-            rdata = {data_buffer[95:64], 32'h0};
+            rdata = {32'h0, data_buffer[95:64]};
           4'b1100, 4'b1101, 4'b1110, 4'b1111:
-            rdata = {data_buffer[127:96], 32'h0};
+            rdata = {32'h0, data_buffer[127:96]};
           default: rdata = 64'b0;
         endcase
       else
@@ -209,8 +220,8 @@ module ysyx_23060059_dcache(
   end
 
 
-  reg  [2:0] state, next_state;
-  typedef enum [2:0] {IDLE, WRITEA, WRITEB, MISSA, MISSB, MISSC, HIT} state_t;
+  reg  [3:0] state, next_state;
+  typedef enum [3:0] {IDLE, WRITEA, WRITEB, MISSA, MISSB, MISSC, HIT, FLUSHA, FLUSHB} state_t;
 
   always @(posedge clock) begin
     if(reset) state <= IDLE;
@@ -225,17 +236,20 @@ module ysyx_23060059_dcache(
           else
             if(awvalid) next_state = WRITEA;
             else        next_state = IDLE;
-        else 
-          if(arvalid || awvalid)
-            if(hit)
-              next_state = HIT;
-            else
-              if(writeback)
-                next_state = WRITEA;
-              else
-                next_state = MISSA;
+        else
+          if(flush_valid)
+            next_state = FLUSHA;
           else
-            next_state = IDLE;
+            if(arvalid || awvalid)
+              if(hit)
+                next_state = HIT;
+              else
+                if(writeback)
+                  next_state = WRITEA;
+                else
+                  next_state = MISSA;
+            else
+              next_state = IDLE;
       WRITEA:
         if(axi_awvalid && axi_awready)
           next_state = WRITEB;
@@ -247,10 +261,13 @@ module ysyx_23060059_dcache(
             if(io)
               next_state = IDLE;
             else
-              if(wcounter == 2'b11)
+              if(wcounter != 3'b100)
                 next_state = WRITEA;
               else
-                next_state = MISSA;
+                if(is_flushing)
+                  next_state = FLUSHA;
+                else
+                  next_state = MISSA;
           else begin
             next_state = WRITEB;
             $display("bresp != 0, error!\n");
@@ -278,7 +295,7 @@ module ysyx_23060059_dcache(
         if(io)
           next_state = HIT;
         else
-          if(counter == 2'b0)
+          if(counter == 3'b100)
             next_state = HIT;
           else
             next_state = MISSA;
@@ -287,6 +304,19 @@ module ysyx_23060059_dcache(
           next_state = IDLE;
         else
           next_state = HIT;
+      FLUSHA:
+        if(fidx[8])
+          next_state = FLUSHB;
+        else
+          if(fmeta[24])
+            next_state = WRITEA;
+          else
+            next_state = FLUSHA;
+      FLUSHB:
+        if(flush_bvalid && flush_bready)
+          next_state = IDLE;
+        else
+          next_state = FLUSHB;
       default: next_state = IDLE;
     endcase
   end
@@ -299,8 +329,8 @@ module ysyx_23060059_dcache(
   reg  [31 :0]  axi_araddr_r;
   reg           rvalid_r;
   reg           bvalid_r;
-  reg  [1  :0]  counter;
-  reg  [1  :0]  wcounter;
+  reg  [2  :0]  counter;
+  reg  [2  :0]  wcounter;
   reg           wen;
   reg  [127:0]  data_buffer;
   reg  [63 :0]  data_r;
@@ -312,7 +342,7 @@ module ysyx_23060059_dcache(
   reg           axi_wstrb_r;
 
   assign align_addr     = {req_addr[31:4], 4'h0};
-  assign writeback_addr = {meta[idx*nway+{29'h0, rway}][22:0], idx, 4'h0};
+  assign writeback_addr = is_flushing ? {fmeta[22:0], fidx[7:3], 4'h0} : {meta[idx*nway+{29'h0, rway}][22:0], idx, 4'h0};
   assign io             = (req_addr >= `YSYX_23060059_UART_L  && req_addr <= `YSYX_23060059_UART_H  ) ||
                           (req_addr >= `YSYX_23060059_CLINT_L && req_addr <= `YSYX_23060059_CLINT_H ) || 
                           (req_addr >= `YSYX_23060059_GPIO_L  && req_addr <= `YSYX_23060059_GPIO_H  ) || 
@@ -321,15 +351,15 @@ module ysyx_23060059_dcache(
 
   reg  [31 :0]  awdata;
   always @(*) begin
-    case(wcounter)
+    case(wcounter[1:0])
       2'b00:
-        awdata = data[idx*nway+{29'h0, rway}][31:0];
+        awdata = is_flushing ? fdata[31:0] : data[idx*nway+{29'h0, rway}][31:0];
       2'b01:
-        awdata = data[idx*nway+{29'h0, rway}][63:32];
+        awdata = is_flushing ? fdata[63:32] : data[idx*nway+{29'h0, rway}][63:32];
       2'b10:
-        awdata = data[idx*nway+{29'h0, rway}][95:64];
+        awdata = is_flushing ? fdata[95:64] : data[idx*nway+{29'h0, rway}][95:64];
       2'b11:
-        awdata = data[idx*nway+{29'h0, rway}][127:96];
+        awdata = is_flushing ? fdata[127:96] : data[idx*nway+{29'h0, rway}][127:96];
     endcase
   end
 
@@ -342,6 +372,14 @@ module ysyx_23060059_dcache(
     end
   end
 
+  reg is_flushing;
+  always @(posedge clock) begin
+    if(reset) is_flushing <= 0;
+    else begin
+      if(state == IDLE && next_state != IDLE)
+        is_flushing <= flush_valid ? 1'b1 : 1'b0;
+    end
+  end
 
   always @(posedge clock) begin
     if(reset)
@@ -372,7 +410,7 @@ module ysyx_23060059_dcache(
       axi_awaddr_r <= 0;
     else begin
       if(next_state == WRITEA)
-        axi_awaddr_r <= io ? req_addr : (writeback_addr + {28'h0, wcounter, 2'h0});
+        axi_awaddr_r <= io ? req_addr : (writeback_addr + {28'h0, wcounter[1:0], 2'h0});
     end
   end
 
@@ -418,6 +456,7 @@ module ysyx_23060059_dcache(
   assign axi_awvalid   = axi_awvalid_r;
   assign axi_wvalid    = axi_wvalid_r;
   assign axi_awaddr    = axi_awaddr_r;
+  assign axi_wlast     = 1;
 
 
   always @(posedge clock) begin
@@ -436,7 +475,7 @@ module ysyx_23060059_dcache(
       axi_araddr_r <= 0;
     else begin
       if(next_state == MISSA) 
-        axi_araddr_r <= align_addr + {28'h0,counter,2'h0} ;
+        axi_araddr_r <= io ? req_addr : align_addr + {28'h0,counter[1:0],2'h0} ;
     end
   end
 
@@ -450,18 +489,42 @@ module ysyx_23060059_dcache(
           if(state == IDLE) wen <= awvalid ? 1'b1 : 1'b0;
           else              wen <= 1'b1;
         end
+        else if(next_state == WRITEB)
+          wen <= 1'b1;
         else
           wen <= 1'b0;
       end
     end
   end
 
+  reg data_wen;
+  always @(posedge clock) begin
+    if(reset) data_wen <= 0;
+    else begin
+      if(io)
+        data_wen <= 1'b0;
+      else begin
+        if(next_state == HIT) begin
+          if(state == IDLE) data_wen <= awvalid ? 1'b1 : 1'b0; // hit
+          else              data_wen <= 1'b1; // unhit
+        end
+        else 
+          data_wen <= 1'b0;
+      end
+    end
+  end
+
+
   always @(posedge clock) begin
     if(reset) counter <= 0;
     else begin
-      if(next_state == MISSB)
+      if(next_state == MISSB) begin
         if(!io && axi_arvalid && axi_arready) 
           counter <= counter + 1;
+      end
+      else
+        if(next_state == IDLE)
+          counter <= 0;
     end
   end
 
@@ -493,27 +556,58 @@ module ysyx_23060059_dcache(
   always @(posedge clock) begin
     if(reset) bvalid_r <= 0;
     else begin
-      if(next_state == HIT) begin
-        if(state == IDLE) begin 
-          if(awvalid)
-            bvalid_r <= 1;
-        end
+      if(io) begin
+        if(next_state == WRITEB)
+          bvalid_r <= 1;
         else
-          if(is_write)
-            bvalid_r <= 1;
+          bvalid_r <= 0;
       end
-      else
-        bvalid_r <= 0;
+      else begin
+        if(next_state == HIT) begin
+          if(state == IDLE) begin 
+            if(awvalid)
+              bvalid_r <= 1;
+          end
+          else
+            if(is_write)
+              bvalid_r <= 1;
+        end
+        else 
+          bvalid_r <= 0;
+      end
     end
   end
 
   always @(posedge clock) begin
     if(reset) data_r <= 0;
     else begin
-      if(next_state == HIT)
-        data_r <= io ? axi_rdata : rdata;
+      if(io) begin
+        if(next_state == MISSC)
+          data_r <= axi_rdata;
+      end
+      else
+        if(next_state == HIT)
+          data_r <= rdata;
     end
   end
+
+  reg [8:0] fidx; // flush_idx
+  always @(posedge clock) begin
+    if(reset) fidx <= 0;
+    else begin
+      if(next_state == FLUSHA && is_flushing)
+        fidx <= fidx+1;
+      else begin
+        if(!is_flushing) fidx <= 0;
+      end
+    end
+  end
+
+  wire [24:0] fmeta; // flush meta
+  assign fmeta = meta[fidx[7:0]];
+
+  wire [127:0] fdata;
+  assign fdata = data[fidx[7:0]];
 
   assign data_o      = data_r;
   assign axi_arvalid = axi_arvalid_r;
@@ -533,10 +627,24 @@ module ysyx_23060059_dcache(
   always @(posedge clock) begin
     if(reset) way <= 0;
     else begin
-      if(next_state == MISSA && counter == 2'b00)
+      if(next_state == WRITEA && wcounter[1:0] == 2'b00) // 在counter == 00就改变的原因是需要在writeback的时候修改meta
         way <= rway;
+      if(next_state == MISSA && counter[1:0] == 2'b00) // 在counter == 00就改变的原因是需要在writeback的时候修改meta
+        way <= rway;
+      if(next_state == HIT && state == IDLE)
+        way <= hway;
     end
   end
+
+  reg flush_bvalid_r;
+  always @(posedge clock) begin
+    if(reset) flush_bvalid_r <= 0;
+    else if(next_state == FLUSHB)
+      flush_bvalid_r <= 1;
+    else
+      flush_bvalid_r <= 0;
+  end
+  assign flush_bvalid = flush_bvalid_r;
 
   reg       invalid;
   reg       access;
@@ -544,7 +652,7 @@ module ysyx_23060059_dcache(
     invalid = 0;
     access  = 0;
     if(!io) begin
-      if(next_state == MISSA && counter == 2'b11) begin
+      if(next_state == MISSA && counter[1:0] == 2'b11) begin
         if(meta[idx*nway+{29'h0, rway}][23]) invalid = 1;
         else                                 invalid = 0;
       end
@@ -561,11 +669,21 @@ module ysyx_23060059_dcache(
     else                                 writeback = 0;
   end
 
+  wire [7:0] ridx;
+  assign ridx = idx*nway+{5'h0, rway};
+
+  wire [24:0] remeta;
+  assign remeta = meta[ridx];
+
+  wire [127:0] redata;
+  assign redata = data[ridx];
+
   ysyx_23060059_replacer u_replacer(
     .clock        (clock   ),
     .reset        (reset   ),
     .idx          (idx     ),
     .way          (way     ),
+    .flush        (0       ),
     .access       (access  ),
     .invalid      (invalid ),
     .rway_o       (rway    )
