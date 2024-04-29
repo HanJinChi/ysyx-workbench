@@ -618,7 +618,7 @@ module ysyx_23060059_dcache(
   assign axi_araddr  = axi_araddr_r;
   assign axi_rready  = 1'b1;
   assign axi_arlen   = 8'b0;
-  assign axi_arsize  = 3'b010;
+  assign axi_arsize  = io ? 3'b000 : 3'b010; // 3'b000代表每次请求一个字节， 3'b010代表每次请求四个字节
   assign axi_arburst = 2'b01;
   assign axi_arid    = 4'b0;
   assign axi_bready  = 1'b1;

@@ -4,7 +4,7 @@
 // #define CONFIG_VCD_TRACE 1
 
 #define CONFIG_TRACE 1
-#define CONFIG_FTRACE 1
+// #define CONFIG_FTRACE 1
 #define CONFIG_MTRACE 1
 // #define CONFIG_VTRACE 1
 // #define CONFIG_XTRACE 1
@@ -33,8 +33,6 @@
 #define CONFIG_I8042_DATA_MMIO 0xa0000060
 
 // nvboard
-#define CONFIG_HAS_NVBOARD 1
-
-
+// #define CONFIG_HAS_NVBOARD 1
 
 #endif
